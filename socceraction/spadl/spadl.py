@@ -62,9 +62,14 @@ def convert_optah5(optah5, spadlh5):
     actiontypesdf = pd.DataFrame(list(enumerate(actiontypes)), columns=["type_id", "type_name"])
     actiontypesdf.to_hdf(spadlh5, key="actiontypes")
 
+    bodypartsdf = pd.DataFrame(list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"])
+    bodypartsdf.to_hdf(spadlh5, key="bodyparts")
+
+    resultsdf = pd.DataFrame(list(enumerate(results)), columns=["result_id", "result_name"])
+    resultsdf.to_hdf(spadlh5, key="results")
+
     
     eventtypes = pd.read_hdf(optah5,"eventtypes")
-    
     for game in tqdm.tqdm(list(games.itertuples())):
         
         events = pd.read_hdf(optah5,f"events/game_{game.game_id}")
