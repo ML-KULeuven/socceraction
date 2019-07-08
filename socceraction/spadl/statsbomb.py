@@ -29,7 +29,7 @@ def add_players_and_teams(lineups_url,h5file):
         with open(competition_file,'r') as fh:
             lineups += json.load(fh)
             for lineup in lineups:
-                players += [flatten_with_prefix(p) for p in lineup["lineup"]]
+                players += [flatten_id(p) for p in lineup["lineup"]]
     players = pd.DataFrame(players)
     players.drop_duplicates("player_id").reset_index(drop=True).to_hdf(h5file,"players")
     teams = pd.DataFrame(lineups)[["team_id","team_name"]]
@@ -39,11 +39,10 @@ def get_match_id(url):
     return url.split("/")[-1].replace(".json","")
 
 def add_events(events_url,h5file):
-    eventsdfs = []
     for events_file in tqdm.tqdm(get_jsonfiles(events_url),desc = f"converting events files to {h5file}"):
         with open(events_file,'r') as fh:
             events = json.load(fh)
-        eventsdf = pd.DataFrame([flatten_with_prefix(e) for e in events])
+        eventsdf = pd.DataFrame([flatten_id(e) for e in events])
         match_id =  get_match_id(events_file)
         eventsdf["match_id"] = match_id
         eventsdf.to_hdf(h5file,f"events/match_{match_id}")
@@ -52,7 +51,8 @@ def get_jsonfiles(folder):
     return [
         os.path.join(folder, f) for f in os.listdir(folder) if ".json" in f
     ]
-        
+
+
 def flatten(d):
     newd = {}
     for k,v in d.items():
@@ -62,14 +62,18 @@ def flatten(d):
             newd[k] = v
     return newd
         
-def flatten_with_prefix(d,prefix=""):
+def flatten_id(d):
     newd = {}
+    extra = {}
     for k,v in d.items():
         if isinstance(v,dict):
-            newd = {**newd,**flatten_with_prefix(v,k)}
+            if len(v) == 2 and "id" in v and "name" in v:
+                newd[k + "_id"] = v["id"]
+                newd[k + "_name"] = v["name"]
+            else:
+                extra[k] = v
         else:
-            if prefix != "":
-                k = prefix + "_" + k
             newd[k] = v
+    newd["extra"] = extra
     return newd
 
