@@ -47,7 +47,7 @@ def add_players_and_teams(lineups_url, h5file):
 
 
 def get_match_id(url):
-    return url.split("/")[-1].replace(".json", "")
+    return int(url.split("/")[-1].replace(".json", ""))
 
 
 def add_events(events_url, h5file):
@@ -62,8 +62,14 @@ def add_events(events_url, h5file):
         eventsdf.to_hdf(h5file, f"events/match_{match_id}")
 
 
-def get_jsonfiles(folder):
-    return [os.path.join(folder, f) for f in os.listdir(folder) if ".json" in f]
+def get_jsonfiles(path):
+    files = []
+    # r=root, d=directories, f = files
+    for r, d, f in os.walk(path):
+        for file in f:
+            if ".json" in file:
+                files.append(os.path.join(r, file))
+    return files
 
 
 def flatten(d):
@@ -186,17 +192,18 @@ def convert_to_actions(events, home_team_id):
     actions = fix_clearances(actions)
     actions = add_dribbles(actions)
 
+    for col in actions.columns:
+        if "_id" in col:
+            actions[col] = actions[col].astype(int)
     return actions
 
 
 def get_end_location(q):
     start_location, extra = q
-    if "pass" in extra and "end_location" in extra["pass"]:
-        return extra["pass"]["end_location"]
-    elif "shot" in extra and "end_location" in extra["shot"]:
-        return extra["shot"]["end_location"]
-    else:
-        return start_location
+    for event in ["pass", "shot", "carry"]:
+        if event in extra and "end_location" in extra[event]:
+            return extra[event]["end_location"]
+    return start_location
 
 
 def get_type_id(q):
@@ -227,9 +234,9 @@ def get_type_id(q):
         else:
             a = "pass"
     elif t == "Dribble":
-        a = "dribble"
-    elif t == "Dribbled Past":
         a = "take_on"
+    elif t == "Carry":
+        a = "dribble"
     elif t == "Foul Committed":
         a = "foul"
     elif t == "Duel" and extra.get("duel", {}).get("type", {}).get("name") == "Tackle":
