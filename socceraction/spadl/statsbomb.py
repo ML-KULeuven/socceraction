@@ -10,8 +10,11 @@ import os
 
 
 def jsonfiles_to_h5(datafolder, h5file):
+    print(f"...Adding competitions to {h5file}")
     add_competitions(os.path.join(datafolder, "competitions.json"), h5file)
+    print(f"...Adding matches to {h5file}")
     add_matches(os.path.join(datafolder, "matches/"), h5file)
+    print(f"...Adding players and teams to {h5file}")
     add_players_and_teams(os.path.join(datafolder, "lineups/"), h5file)
     add_events(os.path.join(datafolder, "events/"), h5file)
 
@@ -102,7 +105,7 @@ def flatten_id(d):
 # Convert statbomb.h5 to spadl.h5
 ###################################
 
-import socceraction.spadl.spadlcfg as spadlcfg
+import socceraction.spadl.config as spadlcfg
 
 spadl_length = spadlcfg.spadl_length
 spadl_width = spadlcfg.spadl_width
@@ -117,36 +120,80 @@ max_dribble_duration = 10
 
 
 def convert_to_spadl(sbh5, spadlh5):
+    print("...Converting matches to games")
     matches = pd.read_hdf(sbh5, "matches")
     matches["game_id"] = matches.match_id
     games = matches
     games.to_hdf(spadlh5, "games")
+    for key in ["players","teams","competitions"]:
+        print(f"...Converting {key}")
+        pd.read_hdf(sbh5, key).to_hdf(spadlh5, key)
 
-    pd.read_hdf(sbh5, "players").to_hdf(spadlh5, "players")
-    pd.read_hdf(sbh5, "teams").to_hdf(spadlh5, "teams")
-    pd.read_hdf(sbh5, "competitions").to_hdf(spadlh5, "competitions")
-
+    print("...Inserting actiontypes")
     actiontypesdf = pd.DataFrame(
         list(enumerate(actiontypes)), columns=["type_id", "type_name"]
     )
     actiontypesdf.to_hdf(spadlh5, key="actiontypes")
 
+    print("...Inserting bodyparts")
     bodypartsdf = pd.DataFrame(
         list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
     )
     bodypartsdf.to_hdf(spadlh5, key="bodyparts")
 
+    print("...Inserting results")
     resultsdf = pd.DataFrame(
         list(enumerate(results)), columns=["result_id", "result_name"]
     )
     resultsdf.to_hdf(spadlh5, key="results")
 
+    print("... computing playergames (minutes played in each game")
+    player_games = []
+    for game_id in tqdm.tqdm(list(games.game_id),unit="game"):
+        events = pd.read_hdf(sbh5, f"events/match_{game_id}")
+        pg = get_playergames(events,game_id)
+        player_games.append(pg)
+    player_gamesdf = pd.concat(player_games)
+    player_gamesdf.to_hdf(spadlh5,key="player_games")
+
+    print("...Converting events to actions")
     for game in tqdm.tqdm(
-        list(games.itertuples()), desc="converting statsbomb events to spadl actions"
+        list(games.itertuples()), 
+        unit="game"
     ):
         events = pd.read_hdf(sbh5, f"events/match_{game.game_id}")
         actions = convert_to_actions(events, game.home_team_id)
         actions.to_hdf(spadlh5, f"actions/game_{game.game_id}")
+
+def get_playergames(events,game_id):
+    game_minutes = max(events[events.type_name == "Half End"].minute)
+
+    players = {}
+    for startxi in events[events.type_name == 'Starting XI'].itertuples():
+        team_id,team_name = startxi.team_id,startxi.team_name
+        for player in startxi.extra["tactics"]["lineup"]:
+            player = flatten_id(player)
+            player = {**player,**{"game_id" : game_id, 
+                                  "team_id": team_id, 
+                                  "team_name": team_name,
+                                  "minutes_played" : game_minutes}
+                     }
+            players[player["player_id"]] = player
+    for substitution in events[events.type_name == 'Substitution'].itertuples():
+        replacement = substitution.extra["substitution"]["replacement"]
+        replacement = {"player_id": replacement["id"],"player_name" : replacement["name"],
+                       "minutes_played": game_minutes - substitution.minute,
+                      "team_id": substitution.team_id,
+                      "game_id": game_id,
+                      "team_name": substitution.team_name}
+        players[replacement["player_id"]] = replacement
+        #minutes_played = substitution.minute
+        players[substitution.player_id]["minutes_played"] = substitution.minute
+    pg = pd.DataFrame(players.values()).fillna(0)
+    for col in pg.columns:
+        if '_id' in col:
+            pg[col] = pg[col].astype(int)
+    return pg
 
 
 def convert_to_actions(events, home_team_id):

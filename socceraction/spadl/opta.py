@@ -461,7 +461,7 @@ eventtypes = [
 # Convert opta.h5 to spadl.h5
 ##############################
 
-import socceraction.spadl.spadlcfg as spadlcfg
+import socceraction.spadl.config as spadlcfg
 
 spadl_length = spadlcfg.spadl_length
 spadl_width = spadlcfg.spadl_width

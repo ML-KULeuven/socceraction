@@ -1,5 +1,5 @@
 import pandas as pd
-import socceraction.spadl as spadl
+import socceraction.spadl.config as spadl
 
 def scores(actions, nr_actions=10):
     """

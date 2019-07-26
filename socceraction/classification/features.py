@@ -1,4 +1,4 @@
-import socceraction.spadl as spadl
+import socceraction.spadl.config as spadl
 import pandas as pd
 import numpy as np
 
