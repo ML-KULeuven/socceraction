@@ -27,6 +27,8 @@ SPADL is a language for describing player actions, as opposed to the formats by 
 This package currently supports converters for [Opta](https://www.optasports.com), [Wyscout](https://www.wyscout.com), and [StatsBomb](https://www.statsbomb.com) event stream data.
 
 Here is an example of five actions in the SPADL format leading up to Belgium's second goal against England in the third place play-off in the 2018 FIFA world cup.
+
+
 |   game_id |   period_id |   seconds | team    | player          |   start_x |   start_y |   end_x |   end_y | actiontype   | result   | bodypart   |
 |-----------|-------------|-----------|---------|-----------------|-----------|-----------|---------|---------|--------------|----------|------------|
 |      8657 |           2 |      2179 | Belgium | Axel Witsel     |      37.1 |      44.8 |    53.8 |    48.2 | pass         | success  | foot       |
@@ -34,6 +36,7 @@ Here is an example of five actions in the SPADL format leading up to Belgium's s
 |      8657 |           2 |      2184 | Belgium | Kevin De Bruyne |      70.6 |      42.2 |    87.4 |    49.1 | pass         | success  | foot       |
 |      8657 |           2 |      2185 | Belgium | Eden Hazard     |      87.4 |      49.1 |    97.9 |    38.7 | dribble      | success  | foot       |
 |      8657 |           2 |      2187 | Belgium | Eden Hazard     |      97.9 |      38.7 |   105   |    37.4 | shot         | success  | foot       |
+
 
 Here is the same phase visualized using the `matplotsoccer` package
 ```
