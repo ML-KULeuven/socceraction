@@ -1,0 +1,60 @@
+Tag;Label;Description
+101;Goal;Goal
+102;own_goal;Own goal
+301;assist;Assist
+302;keyPass;Key pass
+1901;counter_attack;Counter attack
+401;Left;Left foot
+402;Right;Right foot
+403;head/body;Head/body
+1101;direct;Direct
+1102;indirect;Indirect
+2001;dangerous_ball_lost;Dangerous ball lost
+2101;blocked;Blocked
+801;high;High
+802;low;Low
+1401;interception;Interception
+1501;clearance;Clearance
+201;opportunity;Opportunity
+1301;Feint;Feint
+1302;missed ball;Missed ball
+501;free_space_r;Free space right
+502;free_space_l;Free space left
+503;take_on_l;Take on left
+504;take_on_r;Take on right
+1601;sliding_tackle;Sliding tackle
+601;anticipated;Anticipated
+602;anticipation;Anticipation
+1701;red_card;Red card
+1702;yellow_card;Yellow card
+1703;second_yellow_card;Second yellow card
+1201;gb;Position: Goal low center
+1202;gbr;Position: Goal low right
+1203;gc;Position: Goal center
+1204;gl;Position: Goal center left
+1205;glb;Position: Goal low left
+1206;gr;Position: Goal center right
+1207;gt;Position: Goal high center
+1208;gtl;Position: Goal high left
+1209;gtr;Position: Goal high right
+1210;obr;Position: Out low right
+1211;ol;Position: Out center left
+1212;olb;Position: Out low left
+1213;or;Position: Out center right
+1214;ot;Position: Out high center
+1215;otl;Position: Out high left
+1216;otr;Position: Out high right
+1217;pbr;Position: Post low right
+1218;pl;Position: Post center left
+1219;plb;Position: Post low left
+1220;pr;Position: Post center right
+1221;pt;Position: Post high center
+1222;ptl;Position: Post high left
+1223;ptr;Position: Post high right
+901;through;Through
+1001;fairplay;Fairplay
+701;lost;Lost
+702;neutral;Neutral
+703;won;Won
+1801;accurate;Accurate
+1802;not accurate;Not accurate
