@@ -189,7 +189,7 @@ def get_playergames(events,game_id):
         players[replacement["player_id"]] = replacement
         #minutes_played = substitution.minute
         players[substitution.player_id]["minutes_played"] = substitution.minute
-    pg = pd.DataFrame({"players":players.values()}).fillna(0)
+    pg = pd.DataFrame({k:v for k, v in zip(players.keys(),players.values())}).T.fillna(0)
     for col in pg.columns:
         if '_id' in col:
             pg[col] = pg[col].astype(int)
