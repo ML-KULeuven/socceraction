@@ -20,7 +20,7 @@ def jsonfiles_to_h5(datafolder, h5file):
 
 
 def add_competitions(competitions_url, h5file):
-    with open(competitions_url, "r") as fh:
+    with open(competitions_url, "rt", encoding='utf-8') as fh:
         competitions = json.load(fh)
     pd.DataFrame(competitions).to_hdf(h5file, "competitions")
 
@@ -28,7 +28,7 @@ def add_competitions(competitions_url, h5file):
 def add_matches(matches_url, h5file):
     matches = []
     for competition_file in get_jsonfiles(matches_url):
-        with open(competition_file, "r") as fh:
+        with open(competition_file, "rt", encoding='utf-8') as fh:
             matches += json.load(fh)
     pd.DataFrame([flatten(m) for m in matches]).to_hdf(h5file, "matches")
 
@@ -37,7 +37,7 @@ def add_players_and_teams(lineups_url, h5file):
     lineups = []
     players = []
     for competition_file in get_jsonfiles(lineups_url):
-        with open(competition_file, "r") as fh:
+        with open(competition_file, "rt", encoding='utf-8') as fh:
             lineups += json.load(fh)
             for lineup in lineups:
                 players += [flatten_id(p) for p in lineup["lineup"]]
@@ -57,7 +57,7 @@ def add_events(events_url, h5file):
     for events_file in tqdm.tqdm(
         get_jsonfiles(events_url), desc=f"converting events files to {h5file}"
     ):
-        with open(events_file, "r") as fh:
+        with open(events_file, "rt", encoding='utf-8') as fh:
             events = json.load(fh)
         eventsdf = pd.DataFrame([flatten_id(e) for e in events])
         match_id = get_match_id(events_file)
