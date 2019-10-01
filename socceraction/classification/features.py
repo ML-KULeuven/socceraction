@@ -145,19 +145,21 @@ _goal_y = spadl.spadl_width / 2
 @simple
 def startpolar(actions):
     polardf = pd.DataFrame()
-    dx = _goal_x - actions["start_x"]
+    dx = abs(_goal_x - actions["start_x"])
     dy = abs(_goal_y - actions["start_y"])
     polardf["start_dist_to_goal"] = np.sqrt(dx ** 2 + dy ** 2)
-    polardf["start_tan_angle_to_goal"] = np.divide(dx, dy, where=dy != 0)
+    with np.errstate(divide='ignore',invalid="ignore"):
+        polardf["start_angle_to_goal"] = np.nan_to_num(np.arctan(dy/dx))
     return polardf
 
 @simple
 def endpolar(actions):
     polardf = pd.DataFrame()
-    dx = _goal_x - actions["end_x"]
+    dx = abs(_goal_x - actions["end_x"])
     dy = abs(_goal_y - actions["end_y"])
     polardf["end_dist_to_goal"] = np.sqrt(dx ** 2 + dy ** 2)
-    polardf["end_tan_angle_to_goal"] = np.divide(dx, dy, where=dy != 0)
+    with np.errstate(divide='ignore',invalid="ignore"):
+        polardf["end_angle_to_goal"] = np.nan_to_num(np.arctan(dy/dx))
     return polardf
 
 
