@@ -1,26 +1,31 @@
 # Socceraction
-Socceraction is a python package containing
-- **SPADL** (Soccer Player Action Description Language): a unified and expressive language for on-the-ball player actions in soccer
-- **VAEP** (Valuing Actions by Estimating Probabilities): a framework to value actions on their expected impact on the score line
+`socceraction` is a Python package for objectively quantifying the impact of the individual actions performed by soccer players. It contains two components:
 
-## Installing and using this package
+- **SPADL** (Soccer Player Action Description Language): a unified and expressive language for on-the-ball player actions.
+- **VAEP** (Valuing Actions by Estimating Probabilities): a framework to value actions on their expected impact on the score line.
 
-To install this package, simply do: `pip install socceraction`
+<br/>
+<p align="center">
+  <img src="docs/actions_bra-bel.png" width="650" title="Example Brazil-Belgium">
+</p>
 
-The folder `public-notebooks` in the git repository provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings using all available functions in the three subpackages:
+## Installation / Getting started
+
+The recommended way to install `socceraction` is to simply use pip:
+
 ```
-socceraction.spadl
-socceraction.classification
-socceraction.vaep
+$ pip install socceraction
 ```
 
+`socceraction` officially supports Python 3.6--3.8.
 
-## Why SPADL?
-Processing existing event stream formats poses a number of challenges.
-- _Inclusion of useless events._ For example, Opta event stream data includes "weather changes".
-- _Gaps in the data._ For example, one actions ends at a specific location on the field and another action starts 5 seconds later on a completely different location on the field
-- _Vendor specific terminology._ Opta, WyScout and StatsBomb all use their own terminology to describe events on the field.
-- _Optional information._ All event stream data contains some optional information snippets per event. For example, a pass could have been an assist, low over the ground, offside, etc. The inclusion of these optional information snippets means that all event stream data is encoded in dynamic file format such as XML or JSON. This makes for a rich data source, but is also incredibly tricky to process.
+The folder `public-notebooks` provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings.
+
+## How it works
+`socceraction` uses event stream data to value the individual actions performed by soccer players. Computing these action values requires the three steps described below. 
+
+
+### 1. Conversion from event stream format to SPADL
 
 SPADL is a language for describing player actions, as opposed to the formats by commercial vendors that describe events. The distinction is that actions are a subset of events that require a player to perform the action. For example, a passing event is an action, whereas an event signifying the end of the game is not an action. SPADL was designed to be _human-interpretable_, _simple_ and _complete_ to accurately define and describe actions on the pitch. Unlike all other event stream formats, we always store the same attributes for each action. Excluding optional information snippets enables us to store our data in a table and more easily apply automatic analysis tools.
 
@@ -52,10 +57,26 @@ matplotsoccer.actions(
 ```
 ![](docs/eden_hazard_goal.png)
 
-## Why VAEP?
-Valuing actions is a key task in soccer analytics. Unfortunately this is a hard task because >99% actions do not directly affect the score. VAEP is a framework to value actions on their expected impact on the score line. The intuition is that all good actions should aim to (a) increase the chance of scoring a goal in the short-term future and/or (b) decrease the chance of conceding a goal in the short-term future.
 
-## Info
+### 2. Estimating scoring and conceding probabilities
+
+The intuition is that all good actions should aim to  
+
+<ol type="a">
+  <li>increase the <i>chance of scoring</i> a goal in the short-term future and/or,</li>
+  <li>decrease the <i>chance of conceding</i> a goal in the short-term future.</li>
+</ol>
+
+Valuing an action for a team then requires assessing the change in probability for both scoring and conceding as a result of an action. Therefore, `socceraction` converts each game state to a feature-vector format and trains a probabilistic classifier to estimate the probabilities of scoring and conceding in the near future for both teams.
+
+### 3. Compute VAEP values
+
+An action moves the game state from one state to another. Using the probabilities computed in the previous step, we can define the *offensive value* of an action as the change in scoring probability before and after the action. This change will be positive if the action increased the probability that the team which performed the action will score (e.g., a successful tackle to recover the ball). Similarly, we define the *defensive value* of an action as the change in conceding probability. This change will be positive if the action increased the probability that the team will concede a goal (e.g., a failed pass). Finally, the total VAEP value of an action is the difference between that action's offensive value and defensive value.
+
+We can also aggregate the individual action values into a player rating for multiple time granularities (i.e., a single game or a full season) as well as per action type.
+
+
+## Research
 
 For more information about SPADL and VAEP, read our SIGKDD paper **"Actions Speak Louder Than Goals: Valuing Player Actions in Soccer"** available on ACM (https://dl.acm.org/citation.cfm?doid=3292500.3330758) and Arxiv (https://arxiv.org/abs/1802.07127).
 
