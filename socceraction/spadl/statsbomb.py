@@ -1,8 +1,11 @@
-import pandas as pd
+import os
+
 import numpy as np
+import pandas as pd
+
+import socceraction.spadl.config as spadlcfg
 import tqdm
 import ujson as json
-import os
 
 ###############################################
 # Convert statbomb json files to statsbomb.h5
@@ -14,7 +17,6 @@ def jsonfiles_to_h5(datafolder, h5file):
     add_competitions(os.path.join(datafolder, "competitions.json"), h5file)
     print(f"...Adding matches to {h5file}")
     add_matches(os.path.join(datafolder, "matches/"), h5file)
-    print(f"...Adding players and teams to {h5file}")
     add_players_and_teams(os.path.join(datafolder, "lineups/"), h5file)
     add_events(os.path.join(datafolder, "events/"), h5file)
 
@@ -35,14 +37,17 @@ def add_matches(matches_url, h5file):
 
 def add_players_and_teams(lineups_url, h5file):
     lineups = []
-    players = []
-    for competition_file in get_jsonfiles(lineups_url):
-        with open(competition_file, "rt", encoding='utf-8') as fh:
+    players = {}
+    for lineup_file in tqdm.tqdm(
+            get_jsonfiles(lineups_url), desc=f"...Adding players and teams to {h5file}"
+    ):
+        with open(lineup_file, "r") as fh:
             lineups += json.load(fh)
             for lineup in lineups:
-                players += [flatten_id(p) for p in lineup["lineup"]]
-    players = pd.DataFrame(players)
-    players.drop_duplicates("player_id").reset_index(drop=True).to_hdf(
+                for p in [flatten_id(p) for p in lineup["lineup"]]:
+                    players[p["player_id"]] = p
+    players = pd.DataFrame(players.values())
+    players.to_hdf(
         h5file, "players"
     )
     teams = pd.DataFrame(lineups)[["team_id", "team_name"]]
@@ -54,15 +59,16 @@ def get_match_id(url):
 
 
 def add_events(events_url, h5file):
-    for events_file in tqdm.tqdm(
-        get_jsonfiles(events_url), desc=f"converting events files to {h5file}"
-    ):
-        with open(events_file, "rt", encoding='utf-8') as fh:
-            events = json.load(fh)
-        eventsdf = pd.DataFrame([flatten_id(e) for e in events])
-        match_id = get_match_id(events_file)
-        eventsdf["match_id"] = match_id
-        eventsdf.to_hdf(h5file, f"events/match_{match_id}")
+    with pd.HDFStore(h5file) as store:
+        for events_file in tqdm.tqdm(
+            get_jsonfiles(events_url), desc=f"converting events files to {h5file}"
+        ):
+            with open(events_file, "r") as fh:
+                events = json.load(fh)
+            eventsdf = pd.DataFrame([flatten_id(e) for e in events])
+            match_id = get_match_id(events_file)
+            eventsdf["match_id"] = match_id
+            store[f"events/match_{match_id}"] = eventsdf
 
 
 def get_jsonfiles(path):
@@ -105,7 +111,6 @@ def flatten_id(d):
 # Convert statbomb.h5 to spadl.h5
 ###################################
 
-import socceraction.spadl.config as spadlcfg
 
 spadl_length = spadlcfg.spadl_length
 spadl_width = spadlcfg.spadl_width
@@ -120,50 +125,51 @@ max_dribble_duration = 10
 
 
 def convert_to_spadl(sbh5, spadlh5):
-    print("...Converting matches to games")
-    matches = pd.read_hdf(sbh5, "matches")
-    matches["game_id"] = matches.match_id
-    games = matches
-    games.to_hdf(spadlh5, "games")
-    for key in ["players","teams","competitions"]:
-        print(f"...Converting {key}")
-        pd.read_hdf(sbh5, key).to_hdf(spadlh5, key)
+    with pd.HDFStore(sbh5) as sb_store, pd.HDFStore(spadlh5) as spadl_store:
+        print("...Converting matches to games")
+        matches = sb_store["matches"]
+        matches["game_id"] = matches.match_id
+        games = matches
+        spadl_store["games"] = games
+        for key in ["players","teams","competitions"]:
+            print(f"...Converting {key}")
+            spadl_store[key] = sb_store[key]
 
-    print("...Inserting actiontypes")
-    actiontypesdf = pd.DataFrame(
-        list(enumerate(actiontypes)), columns=["type_id", "type_name"]
-    )
-    actiontypesdf.to_hdf(spadlh5, key="actiontypes")
+        print("...Inserting actiontypes")
+        actiontypesdf = pd.DataFrame(
+            list(enumerate(actiontypes)), columns=["type_id", "type_name"]
+        )
+        spadl_store["actiontypes"] = actiontypesdf
 
-    print("...Inserting bodyparts")
-    bodypartsdf = pd.DataFrame(
-        list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
-    )
-    bodypartsdf.to_hdf(spadlh5, key="bodyparts")
+        print("...Inserting bodyparts")
+        bodypartsdf = pd.DataFrame(
+            list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
+        )
+        spadl_store["bodyparts"] = bodypartsdf
 
-    print("...Inserting results")
-    resultsdf = pd.DataFrame(
-        list(enumerate(results)), columns=["result_id", "result_name"]
-    )
-    resultsdf.to_hdf(spadlh5, key="results")
+        print("...Inserting results")
+        resultsdf = pd.DataFrame(
+            list(enumerate(results)), columns=["result_id", "result_name"]
+        )
+        spadl_store["results"] = resultsdf
 
-    print("... computing playergames (minutes played in each game")
-    player_games = []
-    for game_id in tqdm.tqdm(list(games.game_id),unit="game"):
-        events = pd.read_hdf(sbh5, f"events/match_{game_id}")
-        pg = get_playergames(events,game_id)
-        player_games.append(pg)
-    player_gamesdf = pd.concat(player_games)
-    player_gamesdf.to_hdf(spadlh5,key="player_games")
+        print("...Computing playergames (minutes played in each game")
+        player_games = []
+        for game_id in tqdm.tqdm(list(games.game_id),unit="game"):
+            events = sb_store[f"events/match_{game_id}"]
+            pg = get_playergames(events, game_id)
+            player_games.append(pg)
+        player_gamesdf = pd.concat(player_games)
+        spadl_store["player_games"] = player_gamesdf
 
-    print("...Converting events to actions")
-    for game in tqdm.tqdm(
-        list(games.itertuples()), 
-        unit="game"
-    ):
-        events = pd.read_hdf(sbh5, f"events/match_{game.game_id}")
-        actions = convert_to_actions(events, game.home_team_id)
-        actions.to_hdf(spadlh5, f"actions/game_{game.game_id}")
+        print("...Converting events to actions")
+        for game in tqdm.tqdm(
+            list(games.itertuples()), 
+            unit="game"
+        ):
+            events = sb_store[f"events/match_{game.game_id}"]
+            actions = convert_to_actions(events, game.home_team_id)
+            spadl_store[f"actions/game_{game.game_id}"] = actions
 
 def get_playergames(events,game_id):
     game_minutes = max(events[events.type_name == "Half End"].minute)
