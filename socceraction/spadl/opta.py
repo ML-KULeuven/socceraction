@@ -35,57 +35,58 @@ def jsonfiles_to_h5(jsonfiles, h5file, append=True):
             "files",
         ]
     }
-    for jsonfile_url in tqdm.tqdm(jsonfiles):
-        try:
-            data = extract_data(jsonfile_url)
-
-            d["games"] += [data["game"]]
-            d["players"] += data["players"]
-            d["teams"] += data["teams"]
-            d["referees"] += [data["referee"]]
-            d["teamgamestats"] += data["teamgamestats"]
-            d["playergamestats"] += data["playergamestats"]
-
-            game_id = data["game"]["game_id"]
-            key = f"events/game_{game_id}"
-            eventsdf = pd.DataFrame(data["events"])
-            eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"])
-            eventsdf.to_hdf(h5file, key=key)
-            d["files"] += [{"file_url": jsonfile_url, "corrupt": False}]
-        except (ValueError, MissingDataError):
-            d["files"] += [{"file_url": jsonfile_url, "corrupt": True}]
-
-    deduplic = dict(
-        games=("game_id", "game_id"),
-        teams=(["team_id", "team_name", "team_short", "team_abbr"], "team_id"),
-        players=(
-            ["player_id", "firstname", "lastname", "fullname", "knownname"],
-            "player_id",
-        ),
-        referees=(["referee_firstname", "referee_lastname"], "referee_id"),
-        teamgamestats=(["game_id", "team_id"], ["game_id", "team_id"]),
-        playergamestats=(
-            ["game_id", "team_id", "player_id"],
-            ["game_id", "team_id", "player_id"],
-        ),
-        files=("file_url", "file_url"),
-    )
-
-    for k,v in d.items():
-        d[k] = pd.DataFrame(v)
-    d["games"]["game_date"] = pd.to_datetime(d["games"]["game_date"])
-
-    for k, df in d.items():
-        if append:
+    with pd.HDFStore(h5file) as optastore:
+        for jsonfile_url in tqdm.tqdm(jsonfiles):
             try:
-                ori_df = pd.read_hdf(h5file, key=k)
-                df = pd.concat([ori_df, df])
-            except (FileNotFoundError, KeyError):
-                pass
-        sortcols, idcols = deduplic[k]
-        df.sort_values(by=sortcols, ascending=False, inplace=True)
-        df.drop_duplicates(subset=idcols, inplace=True)
-        df.to_hdf(h5file, key=k)
+                data = extract_data(jsonfile_url)
+
+                d["games"] += [data["game"]]
+                d["players"] += data["players"]
+                d["teams"] += data["teams"]
+                d["referees"] += [data["referee"]]
+                d["teamgamestats"] += data["teamgamestats"]
+                d["playergamestats"] += data["playergamestats"]
+
+                game_id = data["game"]["game_id"]
+                key = f"events/game_{game_id}"
+                eventsdf = pd.DataFrame(data["events"])
+                eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"])
+                optastore[key] = h5file
+                d["files"] += [{"file_url": jsonfile_url, "corrupt": False}]
+            except (ValueError, MissingDataError):
+                d["files"] += [{"file_url": jsonfile_url, "corrupt": True}]
+
+        deduplic = dict(
+            games=("game_id", "game_id"),
+            teams=(["team_id", "team_name", "team_short", "team_abbr"], "team_id"),
+            players=(
+                ["player_id", "firstname", "lastname", "fullname", "knownname"],
+                "player_id",
+            ),
+            referees=(["referee_firstname", "referee_lastname"], "referee_id"),
+            teamgamestats=(["game_id", "team_id"], ["game_id", "team_id"]),
+            playergamestats=(
+                ["game_id", "team_id", "player_id"],
+                ["game_id", "team_id", "player_id"],
+            ),
+            files=("file_url", "file_url"),
+        )
+
+        for k,v in d.items():
+            d[k] = pd.DataFrame(v)
+        d["games"]["game_date"] = pd.to_datetime(d["games"]["game_date"])
+
+        for k, df in d.items():
+            if append:
+                try:
+                    ori_df = optastore[k]
+                    df = pd.concat([ori_df, df])
+                except (FileNotFoundError, KeyError):
+                    pass
+            sortcols, idcols = deduplic[k]
+            df.sort_values(by=sortcols, ascending=False, inplace=True)
+            df.drop_duplicates(subset=idcols, inplace=True)
+            optastore[k] = df
 
 
 def extract_data(jsonfile):
@@ -472,67 +473,65 @@ actiontypes = spadlcfg.actiontypes
 
 def convert_to_spadl(optah5, spadlh5):
 
-    games = pd.read_hdf(optah5, key="games")
-    games.to_hdf(spadlh5, key="games")
+    with pd.HDFStore(optah5) as optastore, pd.HDFStore(spadlh5) as spadlstore:
+        games = optastore["games"]
+        spadlstore["games"] = games
 
-    players = pd.read_hdf(optah5, key="players")
-    players = players.rename(
-        index=str,
-        columns={
-            "firstname": "first_name",
-            "lastname": "last_name",
-            "knownname": "soccer_name",
-        },
-    )
-    players["birthday"] = pd.NaT  # unavailabe
-    players["nation_id"] = np.nan  # unavailable
-    players.to_hdf(spadlh5, key="players")
-
-    teams = pd.read_hdf(optah5, key="teams")
-    teams.to_hdf(spadlh5, key="teams")
-
-    teamgames = pd.read_hdf(optah5, key="teamgamestats")
-    teamgames = teamgames.rename(index=str, columns={"formation_used": "formation"})
-    teamgames.to_hdf(spadlh5, key="team_games")
-
-    playergames = pd.read_hdf(optah5, key="playergamestats")
-    playergames = teamgames.rename(
-        index=str,
-        columns={
-            "mins_played": "minutes_played",
-            "goal_assists": "assists",
-            "total_att_assist": "keypasses",
-            "second_goal_assist": "pre_assists",
-        },
-    )
-    playergames.to_hdf(spadlh5, key="player_games")
-
-    actiontypesdf = pd.DataFrame(
-        list(enumerate(actiontypes)), columns=["type_id", "type_name"]
-    )
-    actiontypesdf.to_hdf(spadlh5, key="actiontypes")
-
-    bodypartsdf = pd.DataFrame(
-        list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
-    )
-    bodypartsdf.to_hdf(spadlh5, key="bodyparts")
-
-    resultsdf = pd.DataFrame(
-        list(enumerate(results)), columns=["result_id", "result_name"]
-    )
-    resultsdf.to_hdf(spadlh5, key="results")
-
-    eventtypes = pd.read_hdf(optah5, "eventtypes")
-    for game in tqdm.tqdm(list(games.itertuples())):
-
-        events = pd.read_hdf(optah5, f"events/game_{game.game_id}")
-        events = (
-            events.merge(eventtypes, on="type_id")
-            .sort_values(["game_id", "period_id", "minute", "second","timestamp"])
-            .reset_index(drop=True)
+        players = optastore["players"]
+        players = players.rename(
+            index=str,
+            columns={
+                "firstname": "first_name",
+                "lastname": "last_name",
+                "knownname": "soccer_name",
+            },
         )
-        actions = convert_to_actions(events, home_team_id=game.home_team_id)
-        actions.to_hdf(spadlh5, f"actions/game_{game.game_id}")
+        #players["birthday"] = pd.NaT  # unavailabe
+        #players["nation_id"] = np.nan  # unavailable
+        spadlstore["players"] = players
+
+        teams = optastore["teams"]
+        spadlstore["teams"] = teams
+
+        teamgames = optastore["teamgamestats"]
+        teamgames = teamgames.rename(index=str, columns={"formation_used": "formation"})
+        spadlstore["teamgames"] = teamgames
+
+        playergames = optastore["playergamestats"]
+        playergames = playergames.rename(
+            index=str,
+            columns={
+                "mins_played": "minutes_played",
+                "goal_assists": "assists",
+                "total_att_assist": "keypasses",
+                "second_goal_assist": "pre_assists",
+            },
+        )
+        spadlstore["playergames"] = playergames
+
+        spadlstore["actiontypes"] = pd.DataFrame(
+            list(enumerate(actiontypes)), columns=["type_id", "type_name"]
+        )
+
+        spadlstore["bodyparts"] = pd.DataFrame(
+            list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
+        )
+
+        spadlstore["results"] = pd.DataFrame(
+            list(enumerate(results)), columns=["result_id", "result_name"]
+        )
+
+        eventtypes = optastore["eventtypes"]
+        for game in tqdm.tqdm(list(games.itertuples())):
+
+            events = optastore[f"events/game_{game.game_id}"]
+            events = (
+                events.merge(eventtypes, on="type_id",how="left")
+                .sort_values(["game_id", "period_id", "minute", "second","timestamp"])
+                .reset_index(drop=True)
+            )
+            actions = convert_to_actions(events, home_team_id=game.home_team_id)
+            spadlstore[f"actions/game_{game.game_id}"] = actions
 
 
 def convert_to_actions(events, home_team_id):
@@ -593,7 +592,7 @@ def get_result_id(args):
     if e == "offside pass":
         r = "offside"  # offside
     elif e == "foul":
-        r = "success"
+        r = "fail"
     elif e in ["attempt saved", "miss", "post"]:
         r = "fail"
     elif e == "goal":
