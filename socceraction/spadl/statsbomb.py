@@ -22,7 +22,7 @@ def jsonfiles_to_h5(datafolder, h5file):
 
 
 def add_competitions(competitions_url, h5file):
-    with open(competitions_url, "rt", encoding='utf-8') as fh:
+    with open(competitions_url, "rt", encoding="utf-8") as fh:
         competitions = json.load(fh)
     pd.DataFrame(competitions).to_hdf(h5file, "competitions")
 
@@ -30,7 +30,7 @@ def add_competitions(competitions_url, h5file):
 def add_matches(matches_url, h5file):
     matches = []
     for competition_file in get_jsonfiles(matches_url):
-        with open(competition_file, "rt", encoding='utf-8') as fh:
+        with open(competition_file, "rt", encoding="utf-8") as fh:
             matches += json.load(fh)
     pd.DataFrame([flatten(m) for m in matches]).to_hdf(h5file, "matches")
 
@@ -39,7 +39,7 @@ def add_players_and_teams(lineups_url, h5file):
     lineups = []
     players = {}
     for lineup_file in tqdm.tqdm(
-            get_jsonfiles(lineups_url), desc=f"...Adding players and teams to {h5file}"
+        get_jsonfiles(lineups_url), desc=f"...Adding players and teams to {h5file}"
     ):
         with open(lineup_file, "r") as fh:
             lineups += json.load(fh)
@@ -47,9 +47,7 @@ def add_players_and_teams(lineups_url, h5file):
                 for p in [flatten_id(p) for p in lineup["lineup"]]:
                     players[p["player_id"]] = p
     players = pd.DataFrame(players.values())
-    players.to_hdf(
-        h5file, "players"
-    )
+    players.to_hdf(h5file, "players")
     teams = pd.DataFrame(lineups)[["team_id", "team_name"]]
     teams.drop_duplicates("team_id").reset_index(drop=True).to_hdf(h5file, "teams")
 
@@ -131,7 +129,7 @@ def convert_to_spadl(sbh5, spadlh5):
         matches["game_id"] = matches.match_id
         games = matches
         spadl_store["games"] = games
-        for key in ["players","teams","competitions"]:
+        for key in ["players", "teams", "competitions"]:
             print(f"...Converting {key}")
             spadl_store[key] = sb_store[key]
 
@@ -155,7 +153,7 @@ def convert_to_spadl(sbh5, spadlh5):
 
         print("...Computing playergames (minutes played in each game")
         player_games = []
-        for game_id in tqdm.tqdm(list(games.game_id),unit="game"):
+        for game_id in tqdm.tqdm(list(games.game_id), unit="game"):
             events = sb_store[f"events/match_{game_id}"]
             pg = get_playergames(events, game_id)
             player_games.append(pg)
@@ -163,41 +161,46 @@ def convert_to_spadl(sbh5, spadlh5):
         spadl_store["player_games"] = player_gamesdf
 
         print("...Converting events to actions")
-        for game in tqdm.tqdm(
-            list(games.itertuples()), 
-            unit="game"
-        ):
+        for game in tqdm.tqdm(list(games.itertuples()), unit="game"):
             events = sb_store[f"events/match_{game.game_id}"]
             actions = convert_to_actions(events, game.home_team_id)
             spadl_store[f"actions/game_{game.game_id}"] = actions
 
-def get_playergames(events,game_id):
+
+def get_playergames(events, game_id):
     game_minutes = max(events[events.type_name == "Half End"].minute)
 
     players = {}
-    for startxi in events[events.type_name == 'Starting XI'].itertuples():
-        team_id,team_name = startxi.team_id,startxi.team_name
+    for startxi in events[events.type_name == "Starting XI"].itertuples():
+        team_id, team_name = startxi.team_id, startxi.team_name
         for player in startxi.extra["tactics"]["lineup"]:
             player = flatten_id(player)
-            player = {**player,**{"game_id" : game_id, 
-                                  "team_id": team_id, 
-                                  "team_name": team_name,
-                                  "minutes_played" : game_minutes}
-                     }
+            player = {
+                **player,
+                **{
+                    "game_id": game_id,
+                    "team_id": team_id,
+                    "team_name": team_name,
+                    "minutes_played": game_minutes,
+                },
+            }
             players[player["player_id"]] = player
-    for substitution in events[events.type_name == 'Substitution'].itertuples():
+    for substitution in events[events.type_name == "Substitution"].itertuples():
         replacement = substitution.extra["substitution"]["replacement"]
-        replacement = {"player_id": replacement["id"],"player_name" : replacement["name"],
-                       "minutes_played": game_minutes - substitution.minute,
-                      "team_id": substitution.team_id,
-                      "game_id": game_id,
-                      "team_name": substitution.team_name}
+        replacement = {
+            "player_id": replacement["id"],
+            "player_name": replacement["name"],
+            "minutes_played": game_minutes - substitution.minute,
+            "team_id": substitution.team_id,
+            "game_id": game_id,
+            "team_name": substitution.team_name,
+        }
         players[replacement["player_id"]] = replacement
-        #minutes_played = substitution.minute
+        # minutes_played = substitution.minute
         players[substitution.player_id]["minutes_played"] = substitution.minute
     pg = pd.DataFrame(players.values()).fillna(0)
     for col in pg.columns:
-        if '_id' in col:
+        if "_id" in col:
             pg[col] = pg[col].astype(int)
     return pg
 
@@ -240,9 +243,10 @@ def convert_to_actions(events, home_team_id):
         .sort_values(["game_id", "period_id", "time_seconds", "timestamp"])
         .reset_index(drop=True)
     )
-
     actions = fix_direction_of_play(actions, home_team_id)
     actions = fix_clearances(actions)
+
+    actions["action_id"] = range(len(actions))
     actions = add_dribbles(actions)
 
     for col in actions.columns:
@@ -465,6 +469,7 @@ def add_dribbles(actions):
     nex = next_actions[dribble_idx]
     dribbles["game_id"] = nex.game_id
     dribbles["period_id"] = nex.period_id
+    dribbles["action_id"] = prev.action_id + 0.1
     dribbles["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
     dribbles["timestamp"] = nex.timestamp
     dribbles["team_id"] = nex.team_id
@@ -478,6 +483,8 @@ def add_dribbles(actions):
     dribbles["result_id"] = results.index("success")
 
     actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "time_seconds", "timestamp"])
-    actions.reset_index(drop=True, inplace=True)
+    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
+        drop=True
+    )
+    actions["action_id"] = range(len(actions))
     return actions
