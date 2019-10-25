@@ -151,7 +151,7 @@ def convert_to_spadl(sbh5, spadlh5):
         )
         spadl_store["results"] = resultsdf
 
-        print("...Computing playergames (minutes played in each game")
+        print("...Computing playergames (minutes played in each game)")
         player_games = []
         for game_id in tqdm.tqdm(list(games.game_id), unit="game"):
             events = sb_store[f"events/match_{game_id}"]
