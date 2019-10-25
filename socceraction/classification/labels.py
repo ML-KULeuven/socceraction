@@ -21,7 +21,7 @@ def scores(actions, nr_actions=10):
     for i in range(1, nr_actions):
         for c in ["team_id", "goal", "owngoal"]:
             shifted = y[c].shift(-i)
-            shifted[-i:] = y[c][len(y) - i]
+            shifted[-i:] = y[c][len(y) - 1]
             y["%s+%d" % (c, i)] = shifted
 
     res = y["goal"]
@@ -51,7 +51,7 @@ def concedes(actions, nr_actions=10):
     for i in range(1, nr_actions):
         for c in ["team_id", "goal", "owngoal"]:
             shifted = y[c].shift(-i)
-            shifted[-i:] = y[c][len(y) - i]
+            shifted[-i:] = y[c][len(y) - 1]
             y["%s+%d" % (c, i)] = shifted
 
     res = y["owngoal"]
