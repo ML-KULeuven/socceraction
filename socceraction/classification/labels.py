@@ -1,6 +1,7 @@
 import pandas as pd
 import socceraction.spadl.config as spadl
 
+
 def scores(actions, nr_actions=10):
     """
     This function determines whether a goal was scored by the team possessing 
@@ -30,7 +31,8 @@ def scores(actions, nr_actions=10):
         ogi = y["owngoal+%d" % i] & (y["team_id+%d" % i] != y["team_id"])
         res = res | gi | ogi
 
-    return pd.DataFrame(res,columns=["scores"])
+    return pd.DataFrame(res, columns=["scores"])
+
 
 def concedes(actions, nr_actions=10):
     """
@@ -60,11 +62,13 @@ def concedes(actions, nr_actions=10):
         ogi = y["owngoal+%d" % i] & (y["team_id+%d" % i] == y["team_id"])
         res = res | gi | ogi
 
-    return pd.DataFrame(res,columns=["concedes"])
+    return pd.DataFrame(res, columns=["concedes"])
+
 
 def goal_from_shot(actions):
     goals = actions["type_name"].str.contains("shot") & (
         actions["result_id"] == spadl.results.index("success")
     )
 
-    return pd.DataFrame(goals,columns=["goal"])
+    return pd.DataFrame(goals, columns=["goal"])
+

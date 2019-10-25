@@ -9,6 +9,7 @@ import unidecode
 # Convert opta json files to opta.h5
 #####################################
 
+
 def jsonfiles_to_h5(jsonfiles, h5file, append=True):
 
     eventtypesdf = pd.DataFrame(eventtypes, columns=["type_id", "type_name"])
@@ -72,7 +73,7 @@ def jsonfiles_to_h5(jsonfiles, h5file, append=True):
             files=("file_url", "file_url"),
         )
 
-        for k,v in d.items():
+        for k, v in d.items():
             d[k] = pd.DataFrame(v)
         d["games"]["game_date"] = pd.to_datetime(d["games"]["game_date"])
 
@@ -166,7 +167,7 @@ def extract_game(root):
         venue_id=int(venue["@attributes"]["uID"].replace("v", "")),
         referee_id=int(matchofficial["@attributes"]["uID"].replace("o", "")),
         game_date=pd.to_datetime(assertget(matchinfo, "Date")),
-        attendance=int(matchinfo.get("Attendance",0)),
+        attendance=int(matchinfo.get("Attendance", 0)),
         duration=int(stat["@value"]),
     )
     return game_dict
@@ -467,9 +468,10 @@ import socceraction.spadl.config as spadlcfg
 spadl_length = spadlcfg.spadl_length
 spadl_width = spadlcfg.spadl_width
 
-bodyparts =  spadlcfg.bodyparts
+bodyparts = spadlcfg.bodyparts
 results = spadlcfg.results
 actiontypes = spadlcfg.actiontypes
+
 
 def convert_to_spadl(optah5, spadlh5):
 
@@ -486,8 +488,8 @@ def convert_to_spadl(optah5, spadlh5):
                 "knownname": "soccer_name",
             },
         )
-        #players["birthday"] = pd.NaT  # unavailabe
-        #players["nation_id"] = np.nan  # unavailable
+        # players["birthday"] = pd.NaT  # unavailabe
+        # players["nation_id"] = np.nan  # unavailable
         spadlstore["players"] = players
 
         teams = optastore["teams"]
@@ -526,8 +528,8 @@ def convert_to_spadl(optah5, spadlh5):
 
             events = optastore[f"events/game_{game.game_id}"]
             events = (
-                events.merge(eventtypes, on="type_id",how="left")
-                .sort_values(["game_id", "period_id", "minute", "second","timestamp"])
+                events.merge(eventtypes, on="type_id", how="left")
+                .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
                 .reset_index(drop=True)
             )
             actions = convert_to_actions(events, home_team_id=game.home_team_id)
@@ -684,7 +686,7 @@ def add_dribbles(actions):
     next_actions = actions.shift(-1)
 
     same_team = actions.team_id == next_actions.team_id
-    #not_clearance = actions.type_id != actiontypes.index("clearance")
+    # not_clearance = actions.type_id != actiontypes.index("clearance")
 
     dx = actions.end_x - next_actions.start_x
     dy = actions.end_y - next_actions.start_y
@@ -718,12 +720,14 @@ def add_dribbles(actions):
     actions.reset_index(drop=True, inplace=True)
     return actions
 
+
 def fix_clearances(actions):
     next_actions = actions.shift(-1)
     clearance_idx = actions.type_id == actiontypes.index("clearance")
-    actions.loc[clearance_idx,"end_x"] = next_actions[clearance_idx].start_x.values
-    actions.loc[clearance_idx,"end_y"] = next_actions[clearance_idx].start_y.values
+    actions.loc[clearance_idx, "end_x"] = next_actions[clearance_idx].start_x.values
+    actions.loc[clearance_idx, "end_y"] = next_actions[clearance_idx].start_y.values
     return actions
+
 
 def fix_direction_of_play(actions, home_team_id):
     away_idx = (actions.team_id != home_team_id).values

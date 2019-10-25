@@ -3,19 +3,34 @@ import pandas as pd
 import numpy as np
 
 
-_spadlcolumns =["game_id","period_id",
-                    "time_seconds","timestamp",
-                    "team_id","player_id","start_x","start_y",
-                    "end_x","end_y","result_id","result_name",
-                    "bodypart_id","bodypart_name","type_id","type_name"]
-_dummy_actions = pd.DataFrame(np.zeros((10,len(_spadlcolumns))),columns = _spadlcolumns)
+_spadlcolumns = [
+    "game_id",
+    "period_id",
+    "time_seconds",
+    "timestamp",
+    "team_id",
+    "player_id",
+    "start_x",
+    "start_y",
+    "end_x",
+    "end_y",
+    "result_id",
+    "result_name",
+    "bodypart_id",
+    "bodypart_name",
+    "type_id",
+    "type_name",
+]
+_dummy_actions = pd.DataFrame(np.zeros((10, len(_spadlcolumns))), columns=_spadlcolumns)
 for c in _spadlcolumns:
     if "name" in c:
         _dummy_actions[c] = _dummy_actions[c].astype(str)
 
-def feature_column_names(fs,nb_prev_actions=3):
-    gs = gamestates(_dummy_actions,nb_prev_actions)
-    return list(pd.concat([f(gs) for f in fs],axis=1).columns)
+
+def feature_column_names(fs, nb_prev_actions=3):
+    gs = gamestates(_dummy_actions, nb_prev_actions)
+    return list(pd.concat([f(gs) for f in fs], axis=1).columns)
+
 
 def gamestates(actions, nb_prev_actions=3):
     """This function take a dataframe <actions> and outputs gamestates.
@@ -94,6 +109,7 @@ def result_onehot(actions):
         X[col] = actions["result_name"] == result_name
     return X
 
+
 @simple
 def actiontype_result_onehot(actions):
     res = result_onehot(actions)
@@ -102,8 +118,7 @@ def actiontype_result_onehot(actions):
     for tyscol in list(tys.columns):
         for rescol in list(res.columns):
             df[tyscol + "_" + rescol] = tys[tyscol] & res[rescol]
-    return df 
-
+    return df
 
 
 @simple
@@ -133,6 +148,7 @@ def time(actions):
 def startlocation(actions):
     return actions[["start_x", "start_y"]]
 
+
 @simple
 def endlocation(actions):
     return actions[["end_x", "end_y"]]
@@ -148,9 +164,10 @@ def startpolar(actions):
     dx = abs(_goal_x - actions["start_x"])
     dy = abs(_goal_y - actions["start_y"])
     polardf["start_dist_to_goal"] = np.sqrt(dx ** 2 + dy ** 2)
-    with np.errstate(divide='ignore',invalid="ignore"):
-        polardf["start_angle_to_goal"] = np.nan_to_num(np.arctan(dy/dx))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        polardf["start_angle_to_goal"] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
+
 
 @simple
 def endpolar(actions):
@@ -158,8 +175,8 @@ def endpolar(actions):
     dx = abs(_goal_x - actions["end_x"])
     dy = abs(_goal_y - actions["end_y"])
     polardf["end_dist_to_goal"] = np.sqrt(dx ** 2 + dy ** 2)
-    with np.errstate(divide='ignore',invalid="ignore"):
-        polardf["end_angle_to_goal"] = np.nan_to_num(np.arctan(dy/dx))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        polardf["end_angle_to_goal"] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
 
 

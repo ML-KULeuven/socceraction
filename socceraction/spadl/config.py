@@ -2,7 +2,14 @@ spadl_length = 105
 spadl_width = 68
 
 bodyparts = ["foot", "head", "other"]
-results = ["fail", "success", "offside", "owngoal", "yellow_card","red_card"]  # todo: add yellow and red card
+results = [
+    "fail",
+    "success",
+    "offside",
+    "owngoal",
+    "yellow_card",
+    "red_card",
+]  # todo: add yellow and red card
 actiontypes = [
     "pass",
     "cross",
