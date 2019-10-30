@@ -189,7 +189,7 @@ def get_player_games(match, events):
             for player in formation.get("lineup", [])
         }
 
-        substitutions = formation.get("substitutions") or []
+        substitutions = formation.get("substitutions", [])
         for substitution in substitutions:
             substitute = {
                 "game_id": game_id,
