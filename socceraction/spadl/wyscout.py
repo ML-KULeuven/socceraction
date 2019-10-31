@@ -228,7 +228,7 @@ def augment_events(events_df):
         else events_df.subEventName
     )
     events_df["period_id"] = events_df.matchPeriod.apply(
-        lambda x: int(x.replace("H", ""))
+        lambda x: wyscout_periods[x]
     )
     events_df["player_id"] = events_df["playerId"]
     events_df["team_id"] = events_df["teamId"]
@@ -247,6 +247,14 @@ def get_tagsdf(events):
     for (tag_id, column) in wyscout_tags:
         tagsdf[column] = tags.apply(lambda x: tag_id in x)
     return tagsdf
+
+wyscout_periods = {
+    '1H':1,
+    '2H':2,
+    'E1':3,
+    'E2':4,
+    'P':5
+}
 
 
 wyscout_tags = [
