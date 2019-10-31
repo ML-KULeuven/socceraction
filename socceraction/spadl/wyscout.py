@@ -190,15 +190,17 @@ def get_player_games(match, events):
         }
 
         substitutions = formation.get("substitutions", [])
-        for substitution in substitutions:
-            substitute = {
-                "game_id": game_id,
-                "team_id": team_id,
-                "player_id": substitution["playerIn"],
-                "minutes_played": duration - substitution["minute"],
-            }
-            pg[substitution["playerIn"]] = substitute
-            pg[substitution["playerOut"]]["minutes_played"] = substitution["minute"]
+        
+        if substitutions != 'null':
+            for substitution in substitutions:
+                substitute = {
+                    "game_id": game_id,
+                    "team_id": team_id,
+                    "player_id": substitution["playerIn"],
+                    "minutes_played": duration - substitution["minute"],
+                }
+                pg[substitution["playerIn"]] = substitute
+                pg[substitution["playerOut"]]["minutes_played"] = substitution["minute"]
         playergames = {**playergames, **pg}
     return pd.DataFrame(playergames.values())
 
