@@ -18,7 +18,7 @@ def jsonfiles_to_h5(jsonfiles, h5file):
     with pd.HDFStore(h5file) as store:
         for jsonfile in jsonfiles:
             with open(jsonfile, "r") as fh:
-                root = json.load(fh)
+                root = json.load(fh, encoding='utf-8')
             matches.append(get_match(root))
             teams += get_teams(root)
             players += get_players(root)
