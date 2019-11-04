@@ -18,7 +18,7 @@ def jsonfiles_to_h5(jsonfiles, h5file):
     with pd.HDFStore(h5file) as store:
         for jsonfile in jsonfiles:
             with open(jsonfile, "r") as fh:
-                root = json.load(fh)
+                root = json.load(fh, encoding='utf-8')
             matches.append(get_match(root))
             teams += get_teams(root)
             players += get_players(root)
@@ -189,16 +189,18 @@ def get_player_games(match, events):
             for player in formation.get("lineup", [])
         }
 
-        substitutions = formation.get("substitutions") or []
-        for substitution in substitutions:
-            substitute = {
-                "game_id": game_id,
-                "team_id": team_id,
-                "player_id": substitution["playerIn"],
-                "minutes_played": duration - substitution["minute"],
-            }
-            pg[substitution["playerIn"]] = substitute
-            pg[substitution["playerOut"]]["minutes_played"] = substitution["minute"]
+        substitutions = formation.get("substitutions", [])
+        
+        if substitutions != 'null':
+            for substitution in substitutions:
+                substitute = {
+                    "game_id": game_id,
+                    "team_id": team_id,
+                    "player_id": substitution["playerIn"],
+                    "minutes_played": duration - substitution["minute"],
+                }
+                pg[substitution["playerIn"]] = substitute
+                pg[substitution["playerOut"]]["minutes_played"] = substitution["minute"]
         playergames = {**playergames, **pg}
     return pd.DataFrame(playergames.values())
 
@@ -226,7 +228,7 @@ def augment_events(events_df):
         else events_df.subEventName
     )
     events_df["period_id"] = events_df.matchPeriod.apply(
-        lambda x: int(x.replace("H", ""))
+        lambda x: wyscout_periods[x]
     )
     events_df["player_id"] = events_df["playerId"]
     events_df["team_id"] = events_df["teamId"]
@@ -245,6 +247,14 @@ def get_tagsdf(events):
     for (tag_id, column) in wyscout_tags:
         tagsdf[column] = tags.apply(lambda x: tag_id in x)
     return tagsdf
+
+wyscout_periods = {
+    '1H':1,
+    '2H':2,
+    'E1':3,
+    'E2':4,
+    'P':5
+}
 
 
 wyscout_tags = [

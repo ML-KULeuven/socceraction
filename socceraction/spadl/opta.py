@@ -92,7 +92,7 @@ def jsonfiles_to_h5(jsonfiles, h5file, append=True):
 
 def extract_data(jsonfile):
     with open(jsonfile) as fh:
-        root = json.load(fh)
+        root = json.load(fh, encoding='utf-8')
 
     return {
         "game": extract_game(root),

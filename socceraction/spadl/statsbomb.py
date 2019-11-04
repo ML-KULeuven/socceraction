@@ -41,7 +41,7 @@ def add_players_and_teams(lineups_url, h5file):
     for lineup_file in tqdm.tqdm(
         get_jsonfiles(lineups_url), desc=f"...Adding players and teams to {h5file}"
     ):
-        with open(lineup_file, "r") as fh:
+        with open(lineup_file, "r", encoding='utf-8') as fh:
             lineups += json.load(fh)
             for lineup in lineups:
                 for p in [flatten_id(p) for p in lineup["lineup"]]:
@@ -61,7 +61,7 @@ def add_events(events_url, h5file):
         for events_file in tqdm.tqdm(
             get_jsonfiles(events_url), desc=f"converting events files to {h5file}"
         ):
-            with open(events_file, "r") as fh:
+            with open(events_file, "r", encoding='utf-8') as fh:
                 events = json.load(fh)
             eventsdf = pd.DataFrame([flatten_id(e) for e in events])
             match_id = get_match_id(events_file)
