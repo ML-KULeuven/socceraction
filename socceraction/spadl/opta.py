@@ -602,7 +602,7 @@ def get_result_id(args):
             r = "owngoal"  # own goal, x and y must be switched
         else:
             r = "success"
-    elif e == "bad touch":
+    elif e == "ball touch":
         r = "fail"
     elif outcome:
         r = "success"
