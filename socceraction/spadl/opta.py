@@ -1,5 +1,5 @@
 import tqdm
-import ujson as json
+import json
 import pandas as pd
 import numpy as np
 import unidecode
@@ -91,8 +91,8 @@ def jsonfiles_to_h5(jsonfiles, h5file, append=True):
 
 
 def extract_data(jsonfile):
-    with open(jsonfile) as fh:
-        root = json.load(fh, encoding='utf-8')
+    with open(jsonfile, encoding="utf-8") as fh:
+        root = json.load(fh)
 
     return {
         "game": extract_game(root),
