@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import tqdm
-import ujson as json
+import json
 import os
 
 ###############################################
@@ -17,8 +17,8 @@ def jsonfiles_to_h5(jsonfiles, h5file):
 
     with pd.HDFStore(h5file) as store:
         for jsonfile in jsonfiles:
-            with open(jsonfile, "r") as fh:
-                root = json.load(fh, encoding='utf-8')
+            with open(jsonfile, "r", encoding="utf-8") as fh:
+                root = json.load(fh)
             matches.append(get_match(root))
             teams += get_teams(root)
             players += get_players(root)
