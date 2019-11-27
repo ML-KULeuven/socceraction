@@ -82,10 +82,10 @@ For more information about SPADL and VAEP, read our SIGKDD paper **"Actions Spea
 
 If you make use of this package or the ideas in our paper, please use the following citation:
 ```
-@inproceedings{Decroos:2019:ASL:3292500.3330758,
+@inproceedings{Decroos2019actions,
  author = {Decroos, Tom and Bransen, Lotte and Van Haaren, Jan and Davis, Jesse},
  title = {Actions Speak Louder Than Goals: Valuing Player Actions in Soccer},
- booktitle = {Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \&\#38; Data Mining},
+ booktitle = {Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
  series = {KDD '19},
  year = {2019},
  isbn = {978-1-4503-6201-6},
