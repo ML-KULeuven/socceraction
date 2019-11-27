@@ -5,7 +5,7 @@ import pandas as pd
 
 import socceraction.spadl.config as spadlcfg
 import tqdm
-import ujson as json
+import json
 
 ###############################################
 # Convert statbomb json files to statsbomb.h5
