@@ -52,7 +52,7 @@ def jsonfiles_to_h5(jsonfiles, h5file, append=True):
                 key = f"events/game_{game_id}"
                 eventsdf = pd.DataFrame(data["events"])
                 eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"])
-                optastore[key] = h5file
+                optastore[key] = eventsdf
                 d["files"] += [{"file_url": jsonfile_url, "corrupt": False}]
             except (ValueError, MissingDataError):
                 d["files"] += [{"file_url": jsonfile_url, "corrupt": True}]
