@@ -85,20 +85,20 @@ def move_transition_matrix(actions, l=N, w=M):
     """ Compute the move transition matrix from the given actions.
 
     This is, when a player chooses to move, the probability that he will
-    end up in each of the other cells of the grid.
+    end up in each of the other cells of the grid successfully.
 
     :param actions: Actions, in SPADL format.
     :param l: Amount of grid cells in the x-dimension of the grid.
     :param w: Amount of grid cells in the y-dimension of the grid.
     :return: The transition matrix.
     """
-    move_actions = actions[(((actions.type_name == "pass") | (actions.type_name == "dribble")
-                             | (actions.type_name == "cross"))
-                            & (actions.result_name == "success"))]
+    move_actions = actions[((actions.type_name == "pass") | (actions.type_name == "dribble")
+                             | (actions.type_name == "cross"))]
 
     X = pd.DataFrame()
     X["start_cell"] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
     X["end_cell"] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
+    X["result_name"] = move_actions.result_name
 
     vc = X.start_cell.value_counts(sort=False)
     start_counts = np.zeros(w * l)
@@ -107,7 +107,7 @@ def move_transition_matrix(actions, l=N, w=M):
     transition_matrix = np.zeros((w * l, w * l))
 
     for i in range(0, w * l):
-        vc2 = X[(X.start_cell == i)].end_cell.value_counts(sort=False)
+        vc2 = X[((X.start_cell == i) & (X.result_name == "success"))].end_cell.value_counts(sort=False)
         transition_matrix[i, vc2.index] = vc2 / start_counts[i]
 
     return transition_matrix
@@ -116,7 +116,7 @@ def move_transition_matrix(actions, l=N, w=M):
 class ExpectedThreat:
     """An implementation of Karun Singh's Expected Threat model (https://karun.in/blog/expected-threat.html)."""
 
-    def __init__(self, l=N, w=M, eps=0.01):
+    def __init__(self, l=N, w=M, eps=1e-5):
         self.l = l
         self.w = w
         self.eps = eps
@@ -256,5 +256,3 @@ class ExpectedThreat:
 
         except ImportError:
             warnings.warn("Could not import the following package: plotly.")
-
-
