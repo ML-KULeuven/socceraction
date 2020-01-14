@@ -190,8 +190,8 @@ def get_player_games(match, events):
         }
 
         substitutions = formation.get("substitutions", [])
-        
-        if substitutions != 'null':
+
+        if substitutions != "null":
             for substitution in substitutions:
                 substitute = {
                     "game_id": game_id,
@@ -227,9 +227,7 @@ def augment_events(events_df):
         if "subEventId" in events_df.columns
         else events_df.subEventName
     )
-    events_df["period_id"] = events_df.matchPeriod.apply(
-        lambda x: wyscout_periods[x]
-    )
+    events_df["period_id"] = events_df.matchPeriod.apply(lambda x: wyscout_periods[x])
     events_df["player_id"] = events_df["playerId"]
     events_df["team_id"] = events_df["teamId"]
     events_df["game_id"] = events_df["matchId"]
@@ -248,13 +246,8 @@ def get_tagsdf(events):
         tagsdf[column] = tags.apply(lambda x: tag_id in x)
     return tagsdf
 
-wyscout_periods = {
-    '1H':1,
-    '2H':2,
-    'E1':3,
-    'E2':4,
-    'P':5
-}
+
+wyscout_periods = {"1H": 1, "2H": 2, "E1": 3, "E2": 4, "P": 5}
 
 
 wyscout_tags = [

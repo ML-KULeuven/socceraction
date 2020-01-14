@@ -58,7 +58,9 @@ def scoring_prob(actions, l=N, w=M):
 
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
     goalmatrix = _count(goals.start_x, goals.start_y, l, w)
-    return np.divide(goalmatrix, shotmatrix, out=np.zeros_like(shotmatrix), where=shotmatrix != 0)
+    return np.divide(
+        goalmatrix, shotmatrix, out=np.zeros_like(shotmatrix), where=shotmatrix != 0
+    )
 
 
 def action_prob(actions, l=N, w=M):
@@ -70,9 +72,16 @@ def action_prob(actions, l=N, w=M):
     :return: 2 matrices, denoting for each cell the probability of choosing to shoot
     and the probability of choosing to move. Summing both results in a probability of 1 for each cell.
     """
-    move_actions = actions[(((actions.type_name == "pass") | (actions.type_name == "dribble")
-                             | (actions.type_name == "cross"))
-                            & (actions.result_name == "success"))]
+    move_actions = actions[
+        (
+            (
+                (actions.type_name == "pass")
+                | (actions.type_name == "dribble")
+                | (actions.type_name == "cross")
+            )
+            & (actions.result_name == "success")
+        )
+    ]
     shot_actions = actions[(actions.type_name == "shot")]
 
     movematrix = _count(move_actions.start_x, move_actions.start_y, l, w)
@@ -92,11 +101,18 @@ def move_transition_matrix(actions, l=N, w=M):
     :param w: Amount of grid cells in the y-dimension of the grid.
     :return: The transition matrix.
     """
-    move_actions = actions[((actions.type_name == "pass") | (actions.type_name == "dribble")
-                             | (actions.type_name == "cross"))]
+    move_actions = actions[
+        (
+            (actions.type_name == "pass")
+            | (actions.type_name == "dribble")
+            | (actions.type_name == "cross")
+        )
+    ]
 
     X = pd.DataFrame()
-    X["start_cell"] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
+    X["start_cell"] = _get_flat_indexes(
+        move_actions.start_x, move_actions.start_y, l, w
+    )
     X["end_cell"] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
     X["result_name"] = move_actions.result_name
 
@@ -107,7 +123,9 @@ def move_transition_matrix(actions, l=N, w=M):
     transition_matrix = np.zeros((w * l, w * l))
 
     for i in range(0, w * l):
-        vc2 = X[((X.start_cell == i) & (X.result_name == "success"))].end_cell.value_counts(sort=False)
+        vc2 = X[
+            ((X.start_cell == i) & (X.result_name == "success"))
+        ].end_cell.value_counts(sort=False)
         transition_matrix[i, vc2.index] = vc2 / start_counts[i]
 
     return transition_matrix
@@ -147,7 +165,10 @@ class ExpectedThreat:
                 for x in range(0, self.l):
                     for q in range(0, self.w):
                         for z in range(0, self.l):
-                            total_payoff[y, x] += transition_matrix[self.l * y + x, self.l * q + z] * self.xT[q, z]
+                            total_payoff[y, x] += (
+                                transition_matrix[self.l * y + x, self.l * q + z]
+                                * self.xT[q, z]
+                            )
 
             newxT = gs + (p_move * total_payoff)
             diff = newxT - self.xT
@@ -163,9 +184,16 @@ class ExpectedThreat:
         :param actions: Actions, in SPADL format.
         """
         self.scoring_prob_matrix = scoring_prob(actions, self.l, self.w)
-        self.shot_prob_matrix, self.move_prob_matrix = action_prob(actions, self.l, self.w)
+        self.shot_prob_matrix, self.move_prob_matrix = action_prob(
+            actions, self.l, self.w
+        )
         self.transition_matrix = move_transition_matrix(actions, self.l, self.w)
-        self.__solve(self.scoring_prob_matrix, self.shot_prob_matrix, self.move_prob_matrix, self.transition_matrix)
+        self.__solve(
+            self.scoring_prob_matrix,
+            self.shot_prob_matrix,
+            self.move_prob_matrix,
+            self.transition_matrix,
+        )
 
     def predict(self, actions, use_interpolation=True):
         """ Predicts the xT values for the given actions.
@@ -176,35 +204,62 @@ class ExpectedThreat:
         """
         predictions = actions.copy()
         predictions["xT_value"] = np.nan
-        mask = (((predictions.type_name == "pass") | (predictions.type_name == "dribble")
-                 | (predictions.type_name == "cross"))
-                & (predictions.result_name == "success") & (~predictions.start_x.isna()) & (~predictions.start_y.isna())
-                & (~predictions.end_x.isna()) & (~predictions.end_y.isna()))
+        mask = (
+            (
+                (predictions.type_name == "pass")
+                | (predictions.type_name == "dribble")
+                | (predictions.type_name == "cross")
+            )
+            & (predictions.result_name == "success")
+            & (~predictions.start_x.isna())
+            & (~predictions.start_y.isna())
+            & (~predictions.end_x.isna())
+            & (~predictions.end_y.isna())
+        )
         candidates = predictions[mask]
 
         if not use_interpolation:
-            startxc, startyc = _get_cell_indexes(candidates.start_x, candidates.start_y, self.l, self.w)
-            endxc, endyc = _get_cell_indexes(candidates.end_x, candidates.end_y, self.l, self.w)
+            startxc, startyc = _get_cell_indexes(
+                candidates.start_x, candidates.start_y, self.l, self.w
+            )
+            endxc, endyc = _get_cell_indexes(
+                candidates.end_x, candidates.end_y, self.l, self.w
+            )
             xT_start = self.xT[self.w - 1 - startyc, startxc]
             xT_end = self.xT[self.w - 1 - endyc, endxc]
             xT_diffs = xT_end - xT_start
         else:
             from scipy.interpolate import interp2d
-            interp_xs = np.arange(0.0, spadl_length, spadl_length / N) + (0.5 * spadl_length / N)
-            interp_ys = np.arange(0.0, spadl_width, spadl_width / M) + (0.5 * spadl_width / M)
+
+            interp_xs = np.arange(0.0, spadl_length, spadl_length / N) + (
+                0.5 * spadl_length / N
+            )
+            interp_ys = np.arange(0.0, spadl_width, spadl_width / M) + (
+                0.5 * spadl_width / M
+            )
             # Reverse y-axis for inference
-            interp = interp2d(x=interp_xs, y=interp_ys[::-1], z=self.xT, kind='linear', bounds_error=False)
+            interp = interp2d(
+                x=interp_xs,
+                y=interp_ys[::-1],
+                z=self.xT,
+                kind="linear",
+                bounds_error=False,
+            )
             xT_diffs = []
             for index, row in candidates.iterrows():
-                xT_diffs.append(interp(row["end_x"], row["end_y"]) - interp(row["start_x"], row["start_y"]))
+                xT_diffs.append(
+                    interp(row["end_x"], row["end_y"])
+                    - interp(row["start_x"], row["start_y"])
+                )
 
-        predictions.loc[mask,"xT_value"] = xT_diffs
+        predictions.loc[mask, "xT_value"] = xT_diffs
         return predictions
 
     def visualize_heatmaps(self):
         """ Visualizes the heatmap of each iteration of the model. """
         try:
             import matplotsoccer
+
             for hm in self.heatmaps:
                 matplotsoccer.heatmap(hm)
         except ImportError:
@@ -222,17 +277,25 @@ class ExpectedThreat:
             camera = dict(
                 up=dict(x=0, y=0, z=1),
                 center=dict(x=0, y=0, z=0),
-                eye=dict(x=-2.25, y=-1, z=0.5)
+                eye=dict(x=-2.25, y=-1, z=0.5),
             )
 
             max_z = np.around(self.xT.max() + 0.05, decimals=1)
 
-            layout = go.Layout(title='Expected Threat', autosize=True,
-                               width=500, height=500,
-                               margin=dict(l=65, r=50, b=65, t=90),
-                               scene=dict(camera=camera, aspectmode='auto',
-                                          xaxis=dict(), yaxis=dict(),
-                                          zaxis=dict(autorange=False, range=[0, max_z])))
+            layout = go.Layout(
+                title="Expected Threat",
+                autosize=True,
+                width=500,
+                height=500,
+                margin=dict(l=65, r=50, b=65, t=90),
+                scene=dict(
+                    camera=camera,
+                    aspectmode="auto",
+                    xaxis=dict(),
+                    yaxis=dict(),
+                    zaxis=dict(autorange=False, range=[0, max_z]),
+                ),
+            )
 
             fig = go.Figure(layout=layout)
 
@@ -240,30 +303,27 @@ class ExpectedThreat:
                 fig.add_trace(go.Surface(z=i))
 
             # Make last trace visible
-            for i in range(len(fig.data)-1):
+            for i in range(len(fig.data) - 1):
                 fig.data[i].visible = False
-            fig.data[len(fig.data)-1].visible = True
+            fig.data[len(fig.data) - 1].visible = True
 
             # Create and add slider
             steps = []
             for i in range(len(fig.data)):
-                step = dict(
-                    method="restyle",
-                    args=["visible", [False] * len(fig.data)],
-                )
+                step = dict(method="restyle", args=["visible", [False] * len(fig.data)])
                 step["args"][1][i] = True  # Toggle i'th trace to "visible"
                 steps.append(step)
 
-            sliders = [dict(
-                active=(len(fig.data) - 1),
-                currentvalue={"prefix": "Iteration: "},
-                pad={"t": 50},
-                steps=steps
-            )]
+            sliders = [
+                dict(
+                    active=(len(fig.data) - 1),
+                    currentvalue={"prefix": "Iteration: "},
+                    pad={"t": 50},
+                    steps=steps,
+                )
+            ]
 
-            fig.update_layout(
-                sliders=sliders
-            )
+            fig.update_layout(sliders=sliders)
 
             fig.show()
 
