@@ -63,6 +63,17 @@ def scoring_prob(actions, l=N, w=M):
     )
 
 
+def get_move_actions(actions):
+    return actions[
+        (actions.type_name == "pass")
+        | (actions.type_name == "dribble")
+        | (actions.type_name == "cross")
+    ]
+
+def get_successful_move_actions(actions):
+    move_actions = get_move_actions(actions) 
+    return move_actions[move_actions.result_name == "success"]
+
 def action_prob(actions, l=N, w=M):
     """ Compute the probability of taking an action in each cell of the grid. The options are: shooting or moving.
 
@@ -72,16 +83,7 @@ def action_prob(actions, l=N, w=M):
     :return: 2 matrices, denoting for each cell the probability of choosing to shoot
     and the probability of choosing to move. Summing both results in a probability of 1 for each cell.
     """
-    move_actions = actions[
-        (
-            (
-                (actions.type_name == "pass")
-                | (actions.type_name == "dribble")
-                | (actions.type_name == "cross")
-            )
-            & (actions.result_name == "success")
-        )
-    ]
+    move_actions = get_move_actions(actions)
     shot_actions = actions[(actions.type_name == "shot")]
 
     movematrix = _count(move_actions.start_x, move_actions.start_y, l, w)
@@ -101,13 +103,7 @@ def move_transition_matrix(actions, l=N, w=M):
     :param w: Amount of grid cells in the y-dimension of the grid.
     :return: The transition matrix.
     """
-    move_actions = actions[
-        (
-            (actions.type_name == "pass")
-            | (actions.type_name == "dribble")
-            | (actions.type_name == "cross")
-        )
-    ]
+    move_actions = get_move_actions(actions)
 
     X = pd.DataFrame()
     X["start_cell"] = _get_flat_indexes(
@@ -202,28 +198,13 @@ class ExpectedThreat:
         :param use_interpolation: Indicates whether to use bilinear interpolation when inferring xT values.
         :return: Each action, including its xT value.
         """
-        predictions = actions.copy()
-        predictions["xT_value"] = np.nan
-        mask = (
-            (
-                (predictions.type_name == "pass")
-                | (predictions.type_name == "dribble")
-                | (predictions.type_name == "cross")
-            )
-            & (predictions.result_name == "success")
-            & (~predictions.start_x.isna())
-            & (~predictions.start_y.isna())
-            & (~predictions.end_x.isna())
-            & (~predictions.end_y.isna())
-        )
-        candidates = predictions[mask]
 
         if not use_interpolation:
             startxc, startyc = _get_cell_indexes(
-                candidates.start_x, candidates.start_y, self.l, self.w
+                actions.start_x, actions.start_y, self.l, self.w
             )
             endxc, endyc = _get_cell_indexes(
-                candidates.end_x, candidates.end_y, self.l, self.w
+                actions.end_x, actions.end_y, self.l, self.w
             )
             xT_start = self.xT[self.w - 1 - startyc, startxc]
             xT_end = self.xT[self.w - 1 - endyc, endxc]
@@ -246,14 +227,13 @@ class ExpectedThreat:
                 bounds_error=False,
             )
             xT_diffs = []
-            for index, row in candidates.iterrows():
+            for index, row in actions.iterrows():
                 xT_diffs.append(
                     interp(row["end_x"], row["end_y"])
                     - interp(row["start_x"], row["start_y"])
                 )
-
-        predictions.loc[mask, "xT_value"] = xT_diffs
-        return predictions
+        
+        return xT_diffs
 
     def visualize_heatmaps(self):
         """ Visualizes the heatmap of each iteration of the model. """
