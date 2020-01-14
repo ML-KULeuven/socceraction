@@ -723,6 +723,7 @@ def add_dribbles(actions):
 
 def fix_clearances(actions):
     next_actions = actions.shift(-1)
+    next_actions[-1:] = actions[-1:]
     clearance_idx = actions.type_id == actiontypes.index("clearance")
     actions.loc[clearance_idx, "end_x"] = next_actions[clearance_idx].start_x.values
     actions.loc[clearance_idx, "end_y"] = next_actions[clearance_idx].start_y.values
