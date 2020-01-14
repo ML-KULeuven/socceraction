@@ -45,6 +45,10 @@ def _count(x, y, l=N, w=M):
     return vector.reshape((w, l))
 
 
+def safe_divide(a, b):
+    return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
+
+
 def scoring_prob(actions, l=N, w=M):
     """ Compute the probability of scoring when taking a shot for each cell.
 
@@ -58,9 +62,7 @@ def scoring_prob(actions, l=N, w=M):
 
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
     goalmatrix = _count(goals.start_x, goals.start_y, l, w)
-    return np.divide(
-        goalmatrix, shotmatrix, out=np.zeros_like(shotmatrix), where=shotmatrix != 0
-    )
+    return safe_divide(goalmatrix, shotmatrix)
 
 
 def get_move_actions(actions):
@@ -91,7 +93,8 @@ def action_prob(actions, l=N, w=M):
     movematrix = _count(move_actions.start_x, move_actions.start_y, l, w)
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
     totalmatrix = movematrix + shotmatrix
-    return shotmatrix / totalmatrix, movematrix / totalmatrix
+
+    return safe_divide(shotmatrix, totalmatrix), safe_divide(movematrix, totalmatrix)
 
 
 def move_transition_matrix(actions, l=N, w=M):
@@ -202,8 +205,7 @@ class ExpectedThreat:
         x = np.arange(0.0, spadl_length, cell_length) + 0.5 * cell_length
         y = np.arange(0.0, spadl_width, cell_width) + 0.5 * cell_width
 
-        # Reverse y-axis for inference
-        return interp2d(x=x, y=y[::-1], z=self.xT, kind=kind, bounds_error=False)
+        return interp2d(x=x, y=y, z=self.xT, kind=kind, bounds_error=False)
 
     def predict(self, actions, use_interpolation=True):
         """ Predicts the xT values for the given actions.
@@ -214,93 +216,23 @@ class ExpectedThreat:
         """
 
         if not use_interpolation:
-            startxc, startyc = _get_cell_indexes(
-                actions.start_x, actions.start_y, self.l, self.w
-            )
-            endxc, endyc = _get_cell_indexes(
-                actions.end_x, actions.end_y, self.l, self.w
-            )
-            xT_start = self.xT[self.w - 1 - startyc, startxc]
-            xT_end = self.xT[self.w - 1 - endyc, endxc]
-
+            l = self.l
+            w = self.w
+            grid = self.xT
         else:
+            # Use interpolation to create a
+            # more fine-grained 1050 x 680 grid
             interp = self.interpolator()
-            xT_start = interp(actions.start_x, actions.start_y)
-            xT_end = interp(actions.end_x, actions.end_y)
+            l = spadl_length * 10
+            w = spadl_width * 10
+            xs = np.linspace(0, spadl_length, l)
+            ys = np.linspace(0, spadl_width, w)
+            grid = interp(xs, ys)
+
+        startxc, startyc = _get_cell_indexes(actions.start_x, actions.start_y, l, w)
+        endxc, endyc = _get_cell_indexes(actions.end_x, actions.end_y, l, w)
+
+        xT_start = grid[w - 1 - startyc, startxc]
+        xT_end = grid[w - 1 - endyc, endxc]
 
         return xT_end - xT_start
-
-    def visualize_heatmaps(self):
-        """ Visualizes the heatmap of each iteration of the model. """
-        try:
-            import matplotsoccer
-
-            for hm in self.heatmaps:
-                matplotsoccer.heatmap(hm)
-        except ImportError:
-            warnings.warn("Could not import the following package: matplotsoccer.")
-
-    def visualize_surface_plots(self):
-        """ Visualizes the surface plot of each iteration of the model.
-
-            See https://plot.ly/python/sliders/ and https://karun.in/blog/expected-threat.html#visualizing-xt
-            NOTE: y-axis is mirrored in plotly.
-        """
-        try:
-            import plotly.graph_objects as go
-
-            camera = dict(
-                up=dict(x=0, y=0, z=1),
-                center=dict(x=0, y=0, z=0),
-                eye=dict(x=-2.25, y=-1, z=0.5),
-            )
-
-            max_z = np.around(self.xT.max() + 0.05, decimals=1)
-
-            layout = go.Layout(
-                title="Expected Threat",
-                autosize=True,
-                width=500,
-                height=500,
-                margin=dict(l=65, r=50, b=65, t=90),
-                scene=dict(
-                    camera=camera,
-                    aspectmode="auto",
-                    xaxis=dict(),
-                    yaxis=dict(),
-                    zaxis=dict(autorange=False, range=[0, max_z]),
-                ),
-            )
-
-            fig = go.Figure(layout=layout)
-
-            for i in self.heatmaps:
-                fig.add_trace(go.Surface(z=i))
-
-            # Make last trace visible
-            for i in range(len(fig.data) - 1):
-                fig.data[i].visible = False
-            fig.data[len(fig.data) - 1].visible = True
-
-            # Create and add slider
-            steps = []
-            for i in range(len(fig.data)):
-                step = dict(method="restyle", args=["visible", [False] * len(fig.data)])
-                step["args"][1][i] = True  # Toggle i'th trace to "visible"
-                steps.append(step)
-
-            sliders = [
-                dict(
-                    active=(len(fig.data) - 1),
-                    currentvalue={"prefix": "Iteration: "},
-                    pad={"t": 50},
-                    steps=steps,
-                )
-            ]
-
-            fig.update_layout(sliders=sliders)
-
-            fig.show()
-
-        except ImportError:
-            warnings.warn("Could not import the following package: plotly.")
