@@ -1,8 +1,9 @@
 # Socceraction
-`socceraction` is a Python package for objectively quantifying the impact of the individual actions performed by soccer players. It contains two components:
+`socceraction` is a Python package for objectively quantifying the impact of the individual actions performed by soccer players. It contains three components:
 
 - **SPADL** (Soccer Player Action Description Language): a unified and expressive language for on-the-ball player actions.
 - **VAEP** (Valuing Actions by Estimating Probabilities): a framework to value actions on their expected impact on the score line.
+- **xT** (Expected Threat): an alternative framework to value ball-progressing actions using a possession-based Markov model.
 
 <br/>
 <p align="center">
@@ -79,6 +80,8 @@ We can also aggregate the individual action values into a player rating for mult
 ## Research
 
 For more information about SPADL and VAEP, read our SIGKDD paper **"Actions Speak Louder Than Goals: Valuing Player Actions in Soccer"** available on ACM (https://dl.acm.org/citation.cfm?doid=3292500.3330758) and Arxiv (https://arxiv.org/abs/1802.07127).
+
+For more information about xT, read Karun Singh's blog post: https://karun.in/blog/expected-threat.html
 
 If you make use of this package or the ideas in our paper, please use the following citation:
 ```
