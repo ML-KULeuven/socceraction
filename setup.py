@@ -4,12 +4,12 @@ long_description = """
 Socceraction is a python package containing
 - **SPADL** (Soccer Player Action Description Language): a unified and expressive language for on-the-ball player actions in soccer
 - **VAEP** (Valuing Actions by Estimating Probabilities): a framework to value actions on their expected impact on the score line
-
+- **xT** (Expected Threat): an alternative framework to value ball-progressing actions using a possession-based Markov model.
 For more information, see https://github.com/ML-KULeuven/socceraction
 """
 
 setuptools.setup(name='socceraction',
-      version='0.0.8',
+      version='0.0.9',
       description='Convert soccer event stream data to the SPADL format and value on-the-ball player actions in soccer',
       url='http://github.com/tomdecroos/matplotsoccer',
       author='Tom Decroos',
