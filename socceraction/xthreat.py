@@ -85,7 +85,7 @@ def action_prob(actions, l=N, w=M):
     :param l: Amount of grid cells in the x-dimension of the grid.
     :param w: Amount of grid cells in the y-dimension of the grid.
     :return: 2 matrices, denoting for each cell the probability of choosing to shoot
-    and the probability of choosing to move. Summing both results in a probability of 1 for each cell.
+    and the probability of choosing to move.
     """
     move_actions = get_move_actions(actions)
     shot_actions = actions[(actions.type_name == "shot")]
