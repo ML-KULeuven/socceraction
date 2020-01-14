@@ -70,9 +70,11 @@ def get_move_actions(actions):
         | (actions.type_name == "cross")
     ]
 
+
 def get_successful_move_actions(actions):
-    move_actions = get_move_actions(actions) 
+    move_actions = get_move_actions(actions)
     return move_actions[move_actions.result_name == "success"]
+
 
 def action_prob(actions, l=N, w=M):
     """ Compute the probability of taking an action in each cell of the grid. The options are: shooting or moving.
@@ -191,6 +193,18 @@ class ExpectedThreat:
             self.transition_matrix,
         )
 
+    def interpolator(self, kind="linear"):
+        from scipy.interpolate import interp2d
+
+        cell_length = spadl_length / self.l
+        cell_width = spadl_width / self.w
+
+        x = np.arange(0.0, spadl_length, cell_length) + 0.5 * cell_length
+        y = np.arange(0.0, spadl_width, cell_width) + 0.5 * cell_width
+
+        # Reverse y-axis for inference
+        return interp2d(x=x, y=y[::-1], z=self.xT, kind=kind, bounds_error=False)
+
     def predict(self, actions, use_interpolation=True):
         """ Predicts the xT values for the given actions.
 
@@ -208,32 +222,13 @@ class ExpectedThreat:
             )
             xT_start = self.xT[self.w - 1 - startyc, startxc]
             xT_end = self.xT[self.w - 1 - endyc, endxc]
-            xT_diffs = xT_end - xT_start
-        else:
-            from scipy.interpolate import interp2d
 
-            interp_xs = np.arange(0.0, spadl_length, spadl_length / N) + (
-                0.5 * spadl_length / N
-            )
-            interp_ys = np.arange(0.0, spadl_width, spadl_width / M) + (
-                0.5 * spadl_width / M
-            )
-            # Reverse y-axis for inference
-            interp = interp2d(
-                x=interp_xs,
-                y=interp_ys[::-1],
-                z=self.xT,
-                kind="linear",
-                bounds_error=False,
-            )
-            xT_diffs = []
-            for index, row in actions.iterrows():
-                xT_diffs.append(
-                    interp(row["end_x"], row["end_y"])
-                    - interp(row["start_x"], row["start_y"])
-                )
-        
-        return xT_diffs
+        else:
+            interp = self.interpolator()
+            xT_start = interp(actions.start_x, actions.start_y)
+            xT_end = interp(actions.end_x, actions.end_y)
+
+        return xT_end - xT_start
 
     def visualize_heatmaps(self):
         """ Visualizes the heatmap of each iteration of the model. """
