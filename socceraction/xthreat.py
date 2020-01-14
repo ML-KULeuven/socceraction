@@ -167,10 +167,11 @@ class ExpectedThreat:
         self.transition_matrix = move_transition_matrix(actions, self.l, self.w)
         self.__solve(self.scoring_prob_matrix, self.shot_prob_matrix, self.move_prob_matrix, self.transition_matrix)
 
-    def predict(self, actions):
+    def predict(self, actions, use_interpolation=True):
         """ Predicts the xT values for the given actions.
 
         :param actions: Actions, in SPADL format.
+        :param use_interpolation: Indicates whether to use bilinear interpolation when inferring xT values.
         :return: Each action, including its xT value.
         """
         predictions = actions.copy()
@@ -181,11 +182,23 @@ class ExpectedThreat:
                 & (~predictions.end_x.isna()) & (~predictions.end_y.isna()))
         candidates = predictions[mask]
 
-        startxc, startyc = _get_cell_indexes(candidates.start_x, candidates.start_y, self.l, self.w)
-        endxc, endyc = _get_cell_indexes(candidates.end_x, candidates.end_y, self.l, self.w)
-        xT_start = self.xT[self.w - 1 - startyc, startxc]
-        xT_end = self.xT[self.w - 1 - endyc, endxc]
-        predictions.loc[mask,"xT_value"] = xT_end - xT_start
+        if not use_interpolation:
+            startxc, startyc = _get_cell_indexes(candidates.start_x, candidates.start_y, self.l, self.w)
+            endxc, endyc = _get_cell_indexes(candidates.end_x, candidates.end_y, self.l, self.w)
+            xT_start = self.xT[self.w - 1 - startyc, startxc]
+            xT_end = self.xT[self.w - 1 - endyc, endxc]
+            xT_diffs = xT_end - xT_start
+        else:
+            from scipy.interpolate import interp2d
+            interp_xs = np.arange(0.0, spadl_length, spadl_length / N) + (0.5 * spadl_length / N)
+            interp_ys = np.arange(0.0, spadl_width, spadl_width / M) + (0.5 * spadl_width / M)
+            # Reverse y-axis for inference
+            interp = interp2d(x=interp_xs, y=interp_ys[::-1], z=self.xT, kind='linear', bounds_error=False)
+            xT_diffs = []
+            for index, row in candidates.iterrows():
+                xT_diffs.append(interp(row["end_x"], row["end_y"]) - interp(row["start_x"], row["start_y"]))
+
+        predictions.loc[mask,"xT_value"] = xT_diffs
         return predictions
 
     def visualize_heatmaps(self):
