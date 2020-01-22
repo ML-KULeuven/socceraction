@@ -9,7 +9,7 @@ results = [
     "owngoal",
     "yellow_card",
     "red_card",
-]  # todo: add yellow and red card
+]
 actiontypes = [
     "pass",
     "cross",

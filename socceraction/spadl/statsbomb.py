@@ -155,7 +155,7 @@ def convert_to_spadl(sbh5, spadlh5):
         player_games = []
         for game_id in tqdm.tqdm(list(games.game_id), unit="game"):
             events = sb_store[f"events/match_{game_id}"]
-            pg = get_playergames(events, game_id)
+            pg = extract_player_games(events)
             player_games.append(pg)
         player_gamesdf = pd.concat(player_games)
         spadl_store["player_games"] = player_gamesdf
@@ -167,9 +167,10 @@ def convert_to_spadl(sbh5, spadlh5):
             spadl_store[f"actions/game_{game.game_id}"] = actions
 
 
-def get_playergames(events, game_id):
+def extract_player_games(events):
     game_minutes = max(events[events.type_name == "Half End"].minute)
 
+    game_id = events.match_id.mode().values[0]
     players = {}
     for startxi in events[events.type_name == "Starting XI"].itertuples():
         team_id, team_name = startxi.team_id, startxi.team_name
