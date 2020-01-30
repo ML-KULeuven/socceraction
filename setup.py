@@ -1,4 +1,4 @@
-import setuptools
+import setuptools # type: ignore
 
 long_description = """
 Socceraction is a python package containing
@@ -9,7 +9,7 @@ For more information, see https://github.com/ML-KULeuven/socceraction
 """
 
 setuptools.setup(name='socceraction',
-      version='0.0.9',
+      version='0.1.1',
       description='Convert soccer event stream data to the SPADL format and value on-the-ball player actions in soccer',
       url='http://github.com/tomdecroos/matplotsoccer',
       author='Tom Decroos',
