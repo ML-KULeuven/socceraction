@@ -1,7 +1,8 @@
-import socceraction.spadl.config as spadl
-import pandas as pd
-import numpy as np
+import socceraction.spadl.config as spadlconfig
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
 
+from typing import List,Callable
 
 _spadlcolumns = [
     "game_id",
@@ -27,12 +28,12 @@ for c in _spadlcolumns:
         _dummy_actions[c] = _dummy_actions[c].astype(str)
 
 
-def feature_column_names(fs, nb_prev_actions=3):
+def feature_column_names(fs : List[Callable], nb_prev_actions : int =3) -> List[str]:
     gs = gamestates(_dummy_actions, nb_prev_actions)
     return list(pd.concat([f(gs) for f in fs], axis=1).columns)
 
 
-def gamestates(actions, nb_prev_actions=3):
+def gamestates(actions : pd.DataFrame, nb_prev_actions: int =3) -> List[pd.DataFrame]:
     """This function take a dataframe <actions> and outputs gamestates.
      Each gamestate is represented as the <nb_prev_actions> previous actions.
 
@@ -48,17 +49,17 @@ def gamestates(actions, nb_prev_actions=3):
     return states
 
 
-def play_left_to_right(gamestates, home_team_id):
+def play_left_to_right(gamestates: List[pd.DataFrame], home_team_id) -> List[pd.DataFrame]:
     a0 = gamestates[0]
     away_idx = a0.team_id != home_team_id
     for actions in gamestates:
         for col in ["start_x", "end_x"]:
             actions.loc[away_idx, col] = (
-                spadl.spadl_length - actions[away_idx][col].values
+                spadlconfig.field_length - actions[away_idx][col].values
             )
         for col in ["start_y", "end_y"]:
             actions.loc[away_idx, col] = (
-                spadl.spadl_width - actions[away_idx][col].values
+                spadlconfig.field_width - actions[away_idx][col].values
             )
     return gamestates
 
@@ -90,7 +91,7 @@ def actiontype(actions):
 @simple
 def actiontype_onehot(actions):
     X = pd.DataFrame()
-    for type_name in spadl.actiontypes:
+    for type_name in spadlconfig.actiontypes:
         col = "type_" + type_name
         X[col] = actions["type_name"] == type_name
     return X
@@ -104,7 +105,7 @@ def result(actions):
 @simple
 def result_onehot(actions):
     X = pd.DataFrame()
-    for result_name in spadl.results:
+    for result_name in spadlconfig.results:
         col = "result_" + result_name
         X[col] = actions["result_name"] == result_name
     return X
@@ -129,7 +130,7 @@ def bodypart(actions):
 @simple
 def bodypart_onehot(actions):
     X = pd.DataFrame()
-    for bodypart_name in spadl.bodyparts:
+    for bodypart_name in spadlconfig.bodyparts:
         col = "bodypart_" + bodypart_name
         X[col] = actions["bodypart_name"] == bodypart_name
     return X
@@ -154,8 +155,8 @@ def endlocation(actions):
     return actions[["end_x", "end_y"]]
 
 
-_goal_x = spadl.spadl_length
-_goal_y = spadl.spadl_width / 2
+_goal_x : float = spadlconfig.field_length
+_goal_y : float = spadlconfig.field_width / 2
 
 
 @simple
@@ -231,10 +232,10 @@ def goalscore(gamestates):
     actions = gamestates[0]
     teamA = actions["team_id"].values[0]
     goals = actions["type_name"].str.contains("shot") & (
-        actions["result_id"] == spadl.results.index("success")
+        actions["result_id"] == spadlconfig.results.index("success")
     )
     owngoals = actions["type_name"].str.contains("shot") & (
-        actions["result_id"] == spadl.results.index("owngoal")
+        actions["result_id"] == spadlconfig.results.index("owngoal")
     )
     teamisA = actions["team_id"] == teamA
     teamisB = ~teamisA

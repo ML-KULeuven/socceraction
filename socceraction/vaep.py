@@ -1,16 +1,18 @@
-import pandas as pd
+import pandas as pd  # type: ignore
 
 
-def _prev(x):
+def _prev(x: pd.Series) -> pd.Series:
     prev_x = x.shift(1)
     prev_x[:1] = x.values[0]
     return prev_x
 
 
-_samephase_nb = 10
+_samephase_nb: int = 10
 
 
-def offensive_value(actions, scores, concedes):
+def offensive_value(
+    actions: pd.DataFrame, scores: pd.Series, concedes: pd.Series
+) -> pd.Series:
     sameteam = _prev(actions.team_id) == actions.team_id
     prev_scores = _prev(scores) * sameteam + _prev(concedes) * (~sameteam)
 
@@ -37,7 +39,9 @@ def offensive_value(actions, scores, concedes):
     return scores - prev_scores
 
 
-def defensive_value(actions, scores, concedes):
+def defensive_value(
+    actions: pd.DataFrame, scores: pd.Series, concedes: pd.Series
+) -> pd.Series:
     sameteam = _prev(actions.team_id) == actions.team_id
     prev_concedes = _prev(concedes) * sameteam + _prev(scores) * (~sameteam)
 
@@ -55,7 +59,9 @@ def defensive_value(actions, scores, concedes):
     return -(concedes - prev_concedes)
 
 
-def value(actions, Pscores, Pconcedes):
+def value(
+    actions: pd.DataFrame, Pscores: pd.Series, Pconcedes: pd.Series
+) -> pd.DataFrame:
     v = pd.DataFrame()
     v["offensive_value"] = offensive_value(actions, Pscores, Pconcedes)
     v["defensive_value"] = defensive_value(actions, Pscores, Pconcedes)

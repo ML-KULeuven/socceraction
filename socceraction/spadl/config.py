@@ -1,8 +1,12 @@
-spadl_length = 105
-spadl_width = 68
+import pandas as pd  # type: ignore
 
-bodyparts = ["foot", "head", "other"]
-results = [
+from typing import List
+
+field_length: float = 105.0  # unit: meters
+field_width: float = 68.0  # unit: meters
+
+bodyparts: List[str] = ["foot", "head", "other"]
+results: List[str] = [
     "fail",
     "success",
     "offside",
@@ -10,7 +14,7 @@ results = [
     "yellow_card",
     "red_card",
 ]
-actiontypes = [
+actiontypes: List[str] = [
     "pass",
     "cross",
     "throw_in",
@@ -36,3 +40,16 @@ actiontypes = [
     "goalkick",
 ]
 
+
+def actiontypes_df() -> pd.DataFrame:
+    return pd.DataFrame(list(enumerate(actiontypes)), columns=["type_id", "type_name"])
+
+
+def results_df() -> pd.DataFrame:
+    return pd.DataFrame(list(enumerate(results)), columns=["result_id", "result_name"])
+
+
+def bodyparts_df() -> pd.DataFrame:
+    return pd.DataFrame(
+        list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
+    )

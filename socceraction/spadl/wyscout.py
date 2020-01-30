@@ -1,6 +1,6 @@
-import pandas as pd
-import numpy as np
-import tqdm
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
+import tqdm # type: ignore
 import json
 import os
 
@@ -12,8 +12,8 @@ import os
 def jsonfiles_to_h5(jsonfiles, h5file):
 
     matches = []
-    players = []
-    teams = []
+    players : list = []
+    teams: list = []
 
     with pd.HDFStore(h5file) as store:
         for jsonfile in jsonfiles:
@@ -66,8 +66,8 @@ def get_events(root):
 
 import socceraction.spadl.config as spadlcfg
 
-spadl_length = spadlcfg.spadl_length
-spadl_width = spadlcfg.spadl_width
+spadl_length = spadlcfg.field_length
+spadl_width = spadlcfg.field_width
 
 bodyparts = spadlcfg.bodyparts
 results = spadlcfg.results
@@ -176,7 +176,7 @@ def get_player_games(match, events):
     game_id = match.wyId
     teamsData = match.teamsData
     duration = 45 + events[events.matchPeriod == "2H"].eventSec.max() / 60
-    playergames = {}
+    playergames : dict = {}
     for team_id, teamData in teamsData.items():
         formation = teamData.get("formation", {})
         pg = {
@@ -611,7 +611,7 @@ def convert_touches(df_events):
     selector_same_player = df_events["player_id"] == df_events1["player_id"]
     selector_same_team = df_events["team_id"] == df_events1["team_id"]
 
-    selector_touch_same_player = selector_touch & selector_same_player
+    #selector_touch_same_player = selector_touch & selector_same_player
     selector_touch_same_team = (
         selector_touch & ~selector_same_player & selector_same_team
     )

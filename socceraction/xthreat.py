@@ -1,32 +1,34 @@
-import numpy as np
-import pandas as pd
-import warnings
+import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
+import warnings  # type: ignore
 
-import socceraction.spadl.config as spadlcfg
+from typing import Tuple, List, Callable
 
-spadl_length = spadlcfg.spadl_length
-spadl_width = spadlcfg.spadl_width
-M = 12
-N = 16
+import socceraction.spadl.config as spadlconfig
+
+M : int = 12
+N: int = 16
 
 
-def _get_cell_indexes(x, y, l=N, w=M):
+def _get_cell_indexes(
+    x: pd.Series, y: pd.Series, l: int = N, w: int = M
+) -> Tuple[pd.Series, pd.Series]:
     xmin = 0
     ymin = 0
 
-    xi = (x - xmin) / spadl_length * l
-    yj = (y - ymin) / spadl_width * w
+    xi = (x - xmin) / spadlconfig.field_length * l
+    yj = (y - ymin) / spadlconfig.field_width * w
     xi = xi.astype(int).clip(0, l - 1)
     yj = yj.astype(int).clip(0, w - 1)
     return xi, yj
 
 
-def _get_flat_indexes(x, y, l=N, w=M):
+def _get_flat_indexes(x: pd.Series, y: pd.Series, l: int = N, w: int = M) -> pd.Series:
     xi, yj = _get_cell_indexes(x, y, l, w)
     return l * (w - 1 - yj) + xi
 
 
-def _count(x, y, l=N, w=M):
+def _count(x: pd.Series, y: pd.Series, l: int = N, w: int = M) -> np.ndarray:
     """ Count the number of actions occurring in each cell of the grid.
 
     :param x: The x-coordinates of the actions.
@@ -45,11 +47,11 @@ def _count(x, y, l=N, w=M):
     return vector.reshape((w, l))
 
 
-def safe_divide(a, b):
+def safe_divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
 
-def scoring_prob(actions, l=N, w=M):
+def scoring_prob(actions: pd.DataFrame, l: int = N, w: int = M) -> np.ndarray:
     """ Compute the probability of scoring when taking a shot for each cell.
 
     :param actions: Actions, in SPADL format.
@@ -65,7 +67,7 @@ def scoring_prob(actions, l=N, w=M):
     return safe_divide(goalmatrix, shotmatrix)
 
 
-def get_move_actions(actions):
+def get_move_actions(actions: pd.DataFrame) -> pd.DataFrame:
     return actions[
         (actions.type_name == "pass")
         | (actions.type_name == "dribble")
@@ -73,12 +75,14 @@ def get_move_actions(actions):
     ]
 
 
-def get_successful_move_actions(actions):
+def get_successful_move_actions(actions: pd.DataFrame) -> pd.DataFrame:
     move_actions = get_move_actions(actions)
     return move_actions[move_actions.result_name == "success"]
 
 
-def action_prob(actions, l=N, w=M):
+def action_prob(
+    actions: pd.DataFrame, l: int = N, w: int = M
+) -> Tuple[np.ndarray, np.ndarray]:
     """ Compute the probability of taking an action in each cell of the grid. The options are: shooting or moving.
 
     :param actions: Actions, in SPADL format.
@@ -97,7 +101,9 @@ def action_prob(actions, l=N, w=M):
     return safe_divide(shotmatrix, totalmatrix), safe_divide(movematrix, totalmatrix)
 
 
-def move_transition_matrix(actions, l=N, w=M):
+def move_transition_matrix(
+    actions: pd.DataFrame, l: int = N, w: int = M
+) -> Tuple[np.ndarray, np.ndarray]:
     """ Compute the move transition matrix from the given actions.
 
     This is, when a player chooses to move, the probability that he will
@@ -135,18 +141,24 @@ def move_transition_matrix(actions, l=N, w=M):
 class ExpectedThreat:
     """An implementation of Karun Singh's Expected Threat model (https://karun.in/blog/expected-threat.html)."""
 
-    def __init__(self, l=N, w=M, eps=1e-5):
+    def __init__(self, l: int = N, w: int = M, eps: float = 1e-5):
         self.l = l
         self.w = w
         self.eps = eps
-        self.heatmaps = []
-        self.xT = np.zeros((w, l))
-        self.scoring_prob_matrix = np.zeros((w, l))
-        self.shot_prob_matrix = np.zeros((w, l))
-        self.move_prob_matrix = np.zeros((w, l))
-        self.transition_matrix = np.zeros((w * l, w * l))
+        self.heatmaps: List[np.ndarray] = []
+        self.xT: np.ndarray = np.zeros((w, l))
+        self.scoring_prob_matrix: np.ndarray = np.zeros((w, l))
+        self.shot_prob_matrix: np.ndarray = np.zeros((w, l))
+        self.move_prob_matrix: np.ndarray = np.zeros((w, l))
+        self.transition_matrix: np.ndarray = np.zeros((w * l, w * l))
 
-    def __solve(self, p_scoring, p_shot, p_move, transition_matrix):
+    def __solve(
+        self,
+        p_scoring: np.ndarray,
+        p_shot: np.ndarray,
+        p_move: np.ndarray,
+        transition_matrix: np.ndarray,
+    ) -> None:
         """Solves the expected threat equation with dynamic programming.
 
         :param p_scoring (matrix, shape(M, N)): Probability of scoring at each grid cell, when shooting from that cell.
@@ -179,7 +191,7 @@ class ExpectedThreat:
 
         print("# iterations: ", it)
 
-    def fit(self, actions):
+    def fit(self, actions: pd.DataFrame):
         """ Fits the xT model with the given actions.
 
         :param actions: Actions, in SPADL format.
@@ -195,19 +207,26 @@ class ExpectedThreat:
             self.move_prob_matrix,
             self.transition_matrix,
         )
+        return self
 
-    def interpolator(self, kind="linear"):
-        from scipy.interpolate import interp2d
 
-        cell_length = spadl_length / self.l
-        cell_width = spadl_width / self.w
 
-        x = np.arange(0.0, spadl_length, cell_length) + 0.5 * cell_length
-        y = np.arange(0.0, spadl_width, cell_width) + 0.5 * cell_width
+    def interpolator(
+        self, kind: str = "linear"
+    ) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+        from scipy.interpolate import interp2d  # type: ignore
+
+        cell_length = spadlconfig.field_length / self.l
+        cell_width = spadlconfig.field_width / self.w
+
+        x = np.arange(0.0, spadlconfig.field_length, cell_length) + 0.5 * cell_length
+        y = np.arange(0.0, spadlconfig.field_width, cell_width) + 0.5 * cell_width
 
         return interp2d(x=x, y=y, z=self.xT, kind=kind, bounds_error=False)
 
-    def predict(self, actions, use_interpolation=True):
+    def predict(
+        self, actions: pd.DataFrame, use_interpolation: bool = True
+    ) -> pd.Series:
         """ Predicts the xT values for the given actions.
 
         :param actions: Actions, in SPADL format.
@@ -223,10 +242,10 @@ class ExpectedThreat:
             # Use interpolation to create a
             # more fine-grained 1050 x 680 grid
             interp = self.interpolator()
-            l = spadl_length * 10
-            w = spadl_width * 10
-            xs = np.linspace(0, spadl_length, l)
-            ys = np.linspace(0, spadl_width, w)
+            l = int(spadlconfig.field_length * 10)
+            w = int(spadlconfig.field_width * 10)
+            xs = np.linspace(0, spadlconfig.field_length, l)
+            ys = np.linspace(0, spadlconfig.field_width, w)
             grid = interp(xs, ys)
 
         startxc, startyc = _get_cell_indexes(actions.start_x, actions.start_y, l, w)

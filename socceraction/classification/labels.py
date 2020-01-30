@@ -1,8 +1,8 @@
-import pandas as pd
+import pandas as pd # type: ignore
 import socceraction.spadl.config as spadl
 
 
-def scores(actions, nr_actions=10):
+def scores(actions : pd.DataFrame, nr_actions : int =10) -> pd.DataFrame:
     """
     This function determines whether a goal was scored by the team possessing 
     the ball within the next x actions
@@ -34,7 +34,7 @@ def scores(actions, nr_actions=10):
     return pd.DataFrame(res, columns=["scores"])
 
 
-def concedes(actions, nr_actions=10):
+def concedes(actions: pd.DataFrame, nr_actions=10) -> pd.DataFrame:
     """
     This function determines whether a goal was scored by the team not 
     possessing the ball within the next x actions
@@ -65,10 +65,10 @@ def concedes(actions, nr_actions=10):
     return pd.DataFrame(res, columns=["concedes"])
 
 
-def goal_from_shot(actions):
+def goal_from_shot(actions : pd.DataFrame) -> pd.DataFrame:
     goals = actions["type_name"].str.contains("shot") & (
         actions["result_id"] == spadl.results.index("success")
     )
 
-    return pd.DataFrame(goals, columns=["goal"])
+    return pd.DataFrame(goals, columns=["goal_from_shot"])
 

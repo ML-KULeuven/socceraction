@@ -1,95 +1,81 @@
 import os
-
-import numpy as np
-import pandas as pd
-
-import socceraction.spadl.config as spadlcfg
-import tqdm
+import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
 import json
-
-###############################################
-# Convert statbomb json files to statsbomb.h5
-###############################################
-
-
-def jsonfiles_to_h5(datafolder, h5file):
-    print(f"...Adding competitions to {h5file}")
-    add_competitions(os.path.join(datafolder, "competitions.json"), h5file)
-    print(f"...Adding matches to {h5file}")
-    add_matches(os.path.join(datafolder, "matches/"), h5file)
-    add_players_and_teams(os.path.join(datafolder, "lineups/"), h5file)
-    add_events(os.path.join(datafolder, "events/"), h5file)
+import requests
+from typing import Tuple, List, Dict
+import socceraction.spadl.config as spadlconfig
 
 
-def add_competitions(competitions_url, h5file):
-    with open(competitions_url, "rt", encoding="utf-8") as fh:
-        competitions = json.load(fh)
-    pd.DataFrame(competitions).to_hdf(h5file, "competitions")
+_free_open_data: str = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
 
 
-def add_matches(matches_url, h5file):
-    matches = []
-    for competition_file in get_jsonfiles(matches_url):
-        with open(competition_file, "rt", encoding="utf-8") as fh:
-            matches += json.load(fh)
-    pd.DataFrame([flatten(m) for m in matches]).to_hdf(h5file, "matches")
+def _remoteloadjson(path: str) -> List[Dict]:
+    return requests.get(path).json()
 
 
-def add_players_and_teams(lineups_url, h5file):
-    lineups = []
-    players = {}
-    for lineup_file in tqdm.tqdm(
-        get_jsonfiles(lineups_url), desc=f"...Adding players and teams to {h5file}"
-    ):
-        with open(lineup_file, "r", encoding="utf-8") as fh:
-            lineups += json.load(fh)
-            for lineup in lineups:
-                for p in [flatten_id(p) for p in lineup["lineup"]]:
-                    players[p["player_id"]] = p
-    players = pd.DataFrame(players.values())
-    players.to_hdf(h5file, "players")
-    teams = pd.DataFrame(lineups)[["team_id", "team_name"]]
-    teams.drop_duplicates("team_id").reset_index(drop=True).to_hdf(h5file, "teams")
+def _localloadjson(path: str) -> List[Dict]:
+    with open(path, "rt", encoding="utf-8") as fh:
+        return json.load(fh)
 
 
-def get_match_id(url):
-    return int(url.split("/")[-1].replace(".json", ""))
+class StatsBombLoader:
+    """
+    Load Statsbomb data either from a remote location
+    (e.g., "https://raw.githubusercontent.com/statsbomb/open-data/master/data/")
+    or from a local folder.
 
+    This is a temporary class until statsbombpy* becomes compatible with socceraction
+    https://github.com/statsbomb/statsbombpy
+    """
 
-def add_events(events_url, h5file):
-    with pd.HDFStore(h5file) as store:
-        for events_file in tqdm.tqdm(
-            get_jsonfiles(events_url), desc=f"converting events files to {h5file}"
-        ):
-            with open(events_file, "r", encoding="utf-8") as fh:
-                events = json.load(fh)
-            eventsdf = pd.DataFrame([flatten_id(e) for e in events])
-            match_id = get_match_id(events_file)
-            eventsdf["match_id"] = match_id
-            store[f"events/match_{match_id}"] = eventsdf
+    def __init__(self, root: str = _free_open_data, getter: str = "remote"):
+        """
+        Initalize the StatsBombLoader
 
+        :param root: root-path of the data
+        :param getter: "remote" or "local"
+        """
+        self.root = root
 
-def get_jsonfiles(path):
-    files = []
-    # r=root, d=directories, f = files
-    for r, d, f in os.walk(path):
-        for file in f:
-            if ".json" in file:
-                files.append(os.path.join(r, file))
-    return files
-
-
-def flatten(d):
-    newd = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            newd = {**newd, **flatten(v)}
+        if getter == "remote":
+            self.get = _remoteloadjson
+        elif getter == "local":
+            self.get = _localloadjson
         else:
-            newd[k] = v
-    return newd
+            raise Exception("invalid getter specified")
+
+    def competitions(self) -> pd.DataFrame:
+        return pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))
+
+    def matches(self, competition_id: int, season_id: int) -> pd.DataFrame:
+        path = os.path.join(self.root, f"matches/{competition_id}/{season_id}.json")
+        return pd.DataFrame(_flatten(m) for m in self.get(path))
+
+    def _lineups(self, match_id: int) -> List[Dict]:
+        path = os.path.join(self.root, f"lineups/{match_id}.json")
+        return self.get(path)
+
+    def teams(self, match_id: int) -> pd.DataFrame:
+        return pd.DataFrame(self._lineups(match_id))[["team_id", "team_name"]]
+
+    def players(self, match_id: int) -> pd.DataFrame:
+        return pd.DataFrame(
+            _flatten_id(p)
+            for lineup in self._lineups(match_id)
+            for p in lineup["lineup"]
+        )
+
+    def events(self, match_id: int):
+        eventsdf = pd.DataFrame(
+            _flatten_id(e)
+            for e in self.get(os.path.join(self.root, f"events/{match_id}.json"))
+        )
+        eventsdf["match_id"] = match_id
+        return eventsdf
 
 
-def flatten_id(d):
+def _flatten_id(d: dict) -> dict:
     newd = {}
     extra = {}
     for k, v in d.items():
@@ -105,69 +91,20 @@ def flatten_id(d):
     return newd
 
 
-###################################
-# Convert statbomb.h5 to spadl.h5
-###################################
+def _flatten(d: dict) -> dict:
+    newd: dict = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            newd = {**newd, **_flatten(v)}
+        else:
+            newd[k] = v
+    return newd
 
 
-spadl_length = spadlcfg.spadl_length
-spadl_width = spadlcfg.spadl_width
-
-bodyparts = spadlcfg.bodyparts
-results = spadlcfg.results
-actiontypes = spadlcfg.actiontypes
-
-min_dribble_length = 3
-max_dribble_length = 60
-max_dribble_duration = 10
-
-
-def convert_to_spadl(sbh5, spadlh5):
-    with pd.HDFStore(sbh5) as sb_store, pd.HDFStore(spadlh5) as spadl_store:
-        print("...Converting matches to games")
-        matches = sb_store["matches"]
-        matches["game_id"] = matches.match_id
-        games = matches
-        spadl_store["games"] = games
-        for key in ["players", "teams", "competitions"]:
-            print(f"...Converting {key}")
-            spadl_store[key] = sb_store[key]
-
-        print("...Inserting actiontypes")
-        actiontypesdf = pd.DataFrame(
-            list(enumerate(actiontypes)), columns=["type_id", "type_name"]
-        )
-        spadl_store["actiontypes"] = actiontypesdf
-
-        print("...Inserting bodyparts")
-        bodypartsdf = pd.DataFrame(
-            list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
-        )
-        spadl_store["bodyparts"] = bodypartsdf
-
-        print("...Inserting results")
-        resultsdf = pd.DataFrame(
-            list(enumerate(results)), columns=["result_id", "result_name"]
-        )
-        spadl_store["results"] = resultsdf
-
-        print("...Computing playergames (minutes played in each game)")
-        player_games = []
-        for game_id in tqdm.tqdm(list(games.game_id), unit="game"):
-            events = sb_store[f"events/match_{game_id}"]
-            pg = extract_player_games(events)
-            player_games.append(pg)
-        player_gamesdf = pd.concat(player_games)
-        spadl_store["player_games"] = player_gamesdf
-
-        print("...Converting events to actions")
-        for game in tqdm.tqdm(list(games.itertuples()), unit="game"):
-            events = sb_store[f"events/match_{game.game_id}"]
-            actions = convert_to_actions(events, game.home_team_id)
-            spadl_store[f"actions/game_{game.game_id}"] = actions
-
-
-def extract_player_games(events):
+def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extract player games [player_id,game_id,minutes_played] from statsbomb match events
+    """
     game_minutes = max(events[events.type_name == "Half End"].minute)
 
     game_id = events.match_id.mode().values[0]
@@ -175,7 +112,7 @@ def extract_player_games(events):
     for startxi in events[events.type_name == "Starting XI"].itertuples():
         team_id, team_name = startxi.team_id, startxi.team_name
         for player in startxi.extra["tactics"]["lineup"]:
-            player = flatten_id(player)
+            player = _flatten_id(player)
             player = {
                 **player,
                 **{
@@ -206,7 +143,10 @@ def extract_player_games(events):
     return pg
 
 
-def convert_to_actions(events, home_team_id):
+def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+    """
+    Convert StatsBomb events to SPADL actions
+    """
     actions = pd.DataFrame()
 
     events["extra"] = events["extra"].fillna({})
@@ -224,31 +164,31 @@ def convert_to_actions(events, home_team_id):
 
     actions["start_x"] = events.location.apply(lambda x: x[0] if x else 1)
     actions["start_y"] = events.location.apply(lambda x: x[1] if x else 1)
-    actions["start_x"] = ((actions["start_x"] - 1) / 119) * spadl_length
-    actions["start_y"] = 68 - ((actions["start_y"] - 1) / 79) * spadl_width
+    actions["start_x"] = ((actions["start_x"] - 1) / 119) * spadlconfig.field_length
+    actions["start_y"] = 68 - ((actions["start_y"] - 1) / 79) * spadlconfig.field_width
 
-    end_location = events[["location", "extra"]].apply(get_end_location, axis=1)
+    end_location = events[["location", "extra"]].apply(_get_end_location, axis=1)
     actions["end_x"] = end_location.apply(lambda x: x[0] if x else 1)
     actions["end_y"] = end_location.apply(lambda x: x[1] if x else 1)
-    actions["end_x"] = ((actions["end_x"] - 1) / 119) * spadl_length
-    actions["end_y"] = 68 - ((actions["end_y"] - 1) / 79) * spadl_width
+    actions["end_x"] = ((actions["end_x"] - 1) / 119) * spadlconfig.field_length
+    actions["end_y"] = 68 - ((actions["end_y"] - 1) / 79) * spadlconfig.field_width
 
-    actions["type_id"] = events[["type_name", "extra"]].apply(get_type_id, axis=1)
-    actions["result_id"] = events[["type_name", "extra"]].apply(get_result_id, axis=1)
+    actions["type_id"] = events[["type_name", "extra"]].apply(_get_type_id, axis=1)
+    actions["result_id"] = events[["type_name", "extra"]].apply(_get_result_id, axis=1)
     actions["bodypart_id"] = events[["type_name", "extra"]].apply(
-        get_bodypart_id, axis=1
+        _get_bodypart_id, axis=1
     )
 
     actions = (
-        actions[actions.type_id != actiontypes.index("non_action")]
+        actions[actions.type_id != spadlconfig.actiontypes.index("non_action")]
         .sort_values(["game_id", "period_id", "time_seconds", "timestamp"])
         .reset_index(drop=True)
     )
-    actions = fix_direction_of_play(actions, home_team_id)
-    actions = fix_clearances(actions)
+    actions = _fix_direction_of_play(actions, home_team_id)
+    actions = _fix_clearances(actions)
 
     actions["action_id"] = range(len(actions))
-    actions = add_dribbles(actions)
+    actions = _add_dribbles(actions)
 
     for col in actions.columns:
         if "_id" in col:
@@ -256,7 +196,10 @@ def convert_to_actions(events, home_team_id):
     return actions
 
 
-def get_end_location(q):
+Location = Tuple[float, float]
+
+
+def _get_end_location(q: Tuple[Location, dict]) -> Location:
     start_location, extra = q
     for event in ["pass", "shot", "carry"]:
         if event in extra and "end_location" in extra[event]:
@@ -264,7 +207,7 @@ def get_end_location(q):
     return start_location
 
 
-def get_type_id(q):
+def _get_type_id(q: Tuple[str, dict]) -> int:
     t, extra = q
     a = "non_action"
     if t == "Pass":
@@ -327,10 +270,10 @@ def get_type_id(q):
         a = "bad_touch"
     else:
         a = "non_action"
-    return actiontypes.index(a)
+    return spadlconfig.actiontypes.index(a)
 
 
-def get_result_id(q):
+def _get_result_id(q: Tuple[str, dict]) -> int:
     t, x = q
 
     if t == "Pass":
@@ -405,10 +348,10 @@ def get_result_id(q):
     else:
         r = "success"
 
-    return results.index(r)
+    return spadlconfig.results.index(r)
 
 
-def get_bodypart_id(q):
+def _get_bodypart_id(q: Tuple[str, dict]) -> int:
     t, x = q
     if t == "Shot":
         bp = x.get("shot", {}).get("body_part", {}).get("name")
@@ -428,30 +371,39 @@ def get_bodypart_id(q):
     else:
         b = "other"
 
-    return bodyparts.index(b)
+    return spadlconfig.bodyparts.index(b)
 
 
-def fix_clearances(actions):
+def _fix_clearances(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
     next_actions[-1:] = actions[-1:]
-    clearance_idx = actions.type_id == actiontypes.index("clearance")
+    clearance_idx = actions.type_id == spadlconfig.actiontypes.index("clearance")
     actions.loc[clearance_idx, "end_x"] = next_actions[clearance_idx].start_x.values
     actions.loc[clearance_idx, "end_y"] = next_actions[clearance_idx].start_y.values
 
     return actions
 
 
-def fix_direction_of_play(actions, home_team_id):
+def _fix_direction_of_play(actions: pd.DataFrame, home_team_id: int) -> int:
     away_idx = (actions.team_id != home_team_id).values
     for col in ["start_x", "end_x"]:
-        actions.loc[away_idx, col] = spadl_length - actions[away_idx][col].values
+        actions.loc[away_idx, col] = (
+            spadlconfig.field_length - actions[away_idx][col].values
+        )
     for col in ["start_y", "end_y"]:
-        actions.loc[away_idx, col] = spadl_width - actions[away_idx][col].values
+        actions.loc[away_idx, col] = (
+            spadlconfig.field_width - actions[away_idx][col].values
+        )
 
     return actions
 
 
-def add_dribbles(actions):
+min_dribble_length: float = 3.0
+max_dribble_length: float = 60.0
+max_dribble_duration: float = 10.0
+
+
+def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
 
     same_team = actions.team_id == next_actions.team_id
@@ -481,9 +433,9 @@ def add_dribbles(actions):
     dribbles["start_y"] = prev.end_y
     dribbles["end_x"] = nex.start_x
     dribbles["end_y"] = nex.start_y
-    dribbles["bodypart_id"] = bodyparts.index("foot")
-    dribbles["type_id"] = actiontypes.index("dribble")
-    dribbles["result_id"] = results.index("success")
+    dribbles["bodypart_id"] = spadlconfig.bodyparts.index("foot")
+    dribbles["type_id"] = spadlconfig.actiontypes.index("dribble")
+    dribbles["result_id"] = spadlconfig.results.index("success")
 
     actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
     actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
