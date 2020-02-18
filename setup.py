@@ -25,7 +25,9 @@ setuptools.setup(name='socceraction',
        "tqdm",
        "pandas",
        "numpy",
-       "unidecode"],
+       "unidecode",
+       "requests"
+     ],
      long_description=long_description,
      long_description_content_type='text/markdown',
       )
