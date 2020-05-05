@@ -4,7 +4,7 @@
 - **SPADL** (Soccer Player Action Description Language): a unified and expressive language for on-the-ball player actions.
 - **VAEP** (Valuing Actions by Estimating Probabilities): a framework to value actions on their expected impact on the score line.
 - **xT** (Expected Threat): an alternative framework to value ball-progressing actions using a possession-based Markov model.
-
+- **Atomic-SPADL**: an alternative version of SPADL, see [our blogpost](https://dtai.cs.kuleuven.be/sports/blog/introducing-atomic-spadl-a-new-way-to-represent-event-stream-data).
 <br/>
 <p align="center">
   <img src="docs/actions_bra-bel.png" width="650" title="Example Brazil-Belgium">
