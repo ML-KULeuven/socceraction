@@ -1,6 +1,6 @@
 import pandas as pd
 import socceraction.spadl.config as spadl
-import atomic.atomic_spadl as atomic
+import socceraction.atomic.spadl as atomicspadl
 
 
 def scores(actions, nr_actions=10):
@@ -9,8 +9,8 @@ def scores(actions, nr_actions=10):
     the ball within the next x actions
     """
     # merging goals, owngoals and team_ids
-    goals = actions["type_id"] == atomic.atomic_actiontypes.index("goal")
-    owngoals = actions["type_id"] == atomic.atomic_actiontypes.index("owngoal")
+    goals = actions["type_id"] == atomicspadl.actiontypes.index("goal")
+    owngoals = actions["type_id"] == atomicspadl.actiontypes.index("owngoal")
     y = pd.concat([goals, owngoals, actions["team_id"]], axis=1)
     y.columns = ["goal", "owngoal", "team_id"]
 
@@ -36,8 +36,8 @@ def concedes(actions, nr_actions=10):
     possessing the ball within the next x actions
     """
     # merging goals, owngoals and team_ids
-    goals = actions["type_id"] == atomic.atomic_actiontypes.index("goal")
-    owngoals = actions["type_id"] == atomic.atomic_actiontypes.index("owngoal")
+    goals = actions["type_id"] == atomicspadl.actiontypes.index("goal")
+    owngoals = actions["type_id"] == atomicspadl.actiontypes.index("owngoal")
     y = pd.concat([goals, owngoals, actions["team_id"]], axis=1)
     y.columns = ["goal", "owngoal", "team_id"]
 
@@ -59,8 +59,8 @@ def concedes(actions, nr_actions=10):
 
 def goal_from_shot(actions):
     next_actions = actions.shift(-1)
-    goals = ((actions["type_id"] == atomic.atomic_actiontypes.index("shot"))
-            & (actions["type_id"] == atomic.atomic_actiontypes.index("goal")))
+    goals = ((actions["type_id"] == atomicspadl.actiontypes.index("shot"))
+            & (actions["type_id"] == atomicspadl.actiontypes.index("goal")))
 
     return pd.DataFrame(goals, columns=["goal"])
 

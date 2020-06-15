@@ -2,20 +2,18 @@ import os
 import numpy as np
 import pandas as pd
 
-import socceraction.spadl.config as spadlcfg
+import socceraction.spadl as spadl
 import tqdm
 
-
-bodyparts = spadlcfg.bodyparts
-results = spadlcfg.results
-actiontypes = spadlcfg.actiontypes
+bodyparts = spadl.bodyparts
+bodyparts_df = spadl.bodyparts_df
 
 min_dribble_length = 3
 max_dribble_length = 60
 max_dribble_duration = 10
 # max_pass_duration = 15
 
-atomic_actiontypes = actiontypes + [
+actiontypes = spadl.actiontypes + [
     "receival",
     "interception",
     "out",
@@ -29,9 +27,9 @@ atomic_actiontypes = actiontypes + [
 ]
 
 
-def atomic_actiontypes_df():
+def actiontypes_df():
     return pd.DataFrame(
-        list(enumerate(atomic_actiontypes)), columns=["type_id", "type_name"]
+        list(enumerate(actiontypes)), columns=["type_id", "type_name"]
     )
 
 
@@ -48,13 +46,13 @@ def convert_to_atomic(actions):
 
 def simplify(actions):
     a = actions
-    ar = atomic_actiontypes
+    ar = actiontypes
 
     cornerlike = ["corner_crossed","corner_short"]
-    corner_ids = list(actiontypes.index(ty) for ty in cornerlike)
+    corner_ids = list(spadl.actiontypes.index(ty) for ty in cornerlike)
 
     freekicklike = ["freekick_crossed","freekick_short","shot_freekick"]
-    freekick_ids = list(actiontypes.index(ty) for ty in freekicklike)
+    freekick_ids = list(spadl.actiontypes.index(ty) for ty in freekicklike)
 
     a["type_id"] = a.type_id.mask(a.type_id.isin(corner_ids), ar.index("corner"))
     a["type_id"] = a.type_id.mask(a.type_id.isin(freekick_ids), ar.index("freekick"))
@@ -76,7 +74,7 @@ def extra_from_passes(actions):
         "clearance",
         "goalkick",
     ]
-    pass_ids = list(actiontypes.index(ty) for ty in passlike)
+    pass_ids = list(spadl.actiontypes.index(ty) for ty in passlike)
 
     interceptionlike = [
         "interception",
@@ -86,7 +84,7 @@ def extra_from_passes(actions):
         "keeper_claim",
         "keeper_pick_up",
     ]
-    interception_ids = list(actiontypes.index(ty) for ty in interceptionlike)
+    interception_ids = list(spadl.actiontypes.index(ty) for ty in interceptionlike)
 
     samegame = actions.game_id == next_actions.game_id
     sameperiod = actions.period_id == next_actions.period_id
@@ -142,7 +140,7 @@ def extra_from_shots(actions):
     next_actions = actions.shift(-1)
 
     shotlike = ["shot", "shot_freekick", "shot_penalty"]
-    shot_ids = list(actiontypes.index(ty) for ty in shotlike)
+    shot_ids = list(spadl.actiontypes.index(ty) for ty in shotlike)
 
     samegame = actions.game_id == next_actions.game_id
     sameperiod = actions.period_id == next_actions.period_id

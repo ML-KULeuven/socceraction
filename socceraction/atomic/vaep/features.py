@@ -1,9 +1,9 @@
 import socceraction.spadl.config as spadl
-import atomic.atomic_spadl as atomic
+import socceraction.atomic.spadl as atomicspadl
 
 import pandas as pd
 import numpy as np
-from socceraction.classification.features import (
+from socceraction.vaep.features import (
     gamestates,
     simple,
     actiontype,
@@ -55,7 +55,7 @@ def play_left_to_right(gamestates, home_team_id):
 @simple
 def actiontype_onehot(actions):
     X = pd.DataFrame()
-    for type_name in atomic.atomic_actiontypes:
+    for type_name in atomicspadl.actiontypes:
         col = "type_" + type_name
         X[col] = actions["type_name"] == type_name
     return X

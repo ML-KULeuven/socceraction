@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def _prev(x):
     prev_x = x.shift(1)
     prev_x[:1] = x.values[0]
