@@ -2,18 +2,18 @@ import os
 import numpy as np
 import pandas as pd
 
-import socceraction.spadl as spadl
+import socceraction.spadl as _spadl
 import tqdm
 
-bodyparts = spadl.bodyparts
-bodyparts_df = spadl.bodyparts_df
+bodyparts = _spadl.bodyparts
+bodyparts_df = _spadl.bodyparts_df
 
 min_dribble_length = 3
 max_dribble_length = 60
 max_dribble_duration = 10
 # max_pass_duration = 15
 
-actiontypes = spadl.actiontypes + [
+actiontypes = _spadl.actiontypes + [
     "receival",
     "interception",
     "out",
@@ -49,10 +49,10 @@ def simplify(actions):
     ar = actiontypes
 
     cornerlike = ["corner_crossed","corner_short"]
-    corner_ids = list(spadl.actiontypes.index(ty) for ty in cornerlike)
+    corner_ids = list(_spadl.actiontypes.index(ty) for ty in cornerlike)
 
     freekicklike = ["freekick_crossed","freekick_short","shot_freekick"]
-    freekick_ids = list(spadl.actiontypes.index(ty) for ty in freekicklike)
+    freekick_ids = list(_spadl.actiontypes.index(ty) for ty in freekicklike)
 
     a["type_id"] = a.type_id.mask(a.type_id.isin(corner_ids), ar.index("corner"))
     a["type_id"] = a.type_id.mask(a.type_id.isin(freekick_ids), ar.index("freekick"))
@@ -74,7 +74,7 @@ def extra_from_passes(actions):
         "clearance",
         "goalkick",
     ]
-    pass_ids = list(spadl.actiontypes.index(ty) for ty in passlike)
+    pass_ids = list(_spadl.actiontypes.index(ty) for ty in passlike)
 
     interceptionlike = [
         "interception",
@@ -84,7 +84,7 @@ def extra_from_passes(actions):
         "keeper_claim",
         "keeper_pick_up",
     ]
-    interception_ids = list(spadl.actiontypes.index(ty) for ty in interceptionlike)
+    interception_ids = list(_spadl.actiontypes.index(ty) for ty in interceptionlike)
 
     samegame = actions.game_id == next_actions.game_id
     sameperiod = actions.period_id == next_actions.period_id
@@ -112,11 +112,11 @@ def extra_from_passes(actions):
     extra["bodypart_id"] = bodyparts.index("foot")
     extra["result_id"] = -1
 
-    offside = prev.result_id == results.index("offside")
+    offside = prev.result_id == _spadl.results.index("offside")
     out = ((nex.type_id == actiontypes.index("goalkick")) & (~same_team)) | (
         nex.type_id == actiontypes.index("throw_in")
     )
-    ar = atomic_actiontypes
+    ar = actiontypes
     extra["type_id"] = -1
     extra["type_id"] = (
         extra.type_id.mask(same_team, ar.index("receival"))
@@ -140,14 +140,14 @@ def extra_from_shots(actions):
     next_actions = actions.shift(-1)
 
     shotlike = ["shot", "shot_freekick", "shot_penalty"]
-    shot_ids = list(spadl.actiontypes.index(ty) for ty in shotlike)
+    shot_ids = list(_spadl.actiontypes.index(ty) for ty in shotlike)
 
     samegame = actions.game_id == next_actions.game_id
     sameperiod = actions.period_id == next_actions.period_id
 
     shot = actions.type_id.isin(shot_ids)
-    goal = shot & (actions.result_id == results.index("success"))
-    owngoal = shot & (actions.result_id == results.index("owngoal"))
+    goal = shot & (actions.result_id == _spadl.results.index("success"))
+    owngoal = shot & (actions.result_id == _spadl.results.index("owngoal"))
     next_corner_goalkick = next_actions.type_id.isin(
         [
             actiontypes.index("corner_crossed"),
@@ -176,7 +176,7 @@ def extra_from_shots(actions):
     extra["team_id"] = prev.team_id
     extra["player_id"] = prev.player_id
 
-    ar = atomic_actiontypes
+    ar = actiontypes
     extra["type_id"] = -1
     extra["type_id"] = (
         extra.type_id.mask(goal, ar.index("goal"))
@@ -192,8 +192,8 @@ def extra_from_shots(actions):
 
 
 def extra_from_fouls(actions):
-    yellow = actions.result_id == results.index("yellow_card")
-    red = actions.result_id == results.index("red_card")
+    yellow = actions.result_id == _spadl.results.index("yellow_card")
+    red = actions.result_id == _spadl.results.index("red_card")
 
     prev = actions[yellow | red]
     extra = pd.DataFrame()
@@ -211,7 +211,7 @@ def extra_from_fouls(actions):
     extra["team_id"] = prev.team_id
     extra["player_id"] = prev.player_id
 
-    ar = atomic_actiontypes
+    ar = actiontypes
     extra["type_id"] = -1
     extra["type_id"] = extra.type_id.mask(yellow, ar.index("yellow_card")).mask(
         red, ar.index("red_card")
@@ -256,7 +256,7 @@ def add_dribbles(actions):
     dribbles["end_y"] = nex.start_y
     dribbles["bodypart_id"] = bodyparts.index("foot")
     dribbles["type_id"] = actiontypes.index("dribble")
-    dribbles["result_id"] = results.index("success")
+    dribbles["result_id"] = _spadl.results.index("success")
 
     actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
     actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
