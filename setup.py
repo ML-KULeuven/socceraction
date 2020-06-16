@@ -9,7 +9,7 @@ For more information, see https://github.com/ML-KULeuven/socceraction
 """
 
 setuptools.setup(name='socceraction',
-      version='0.2.0',
+      version='0.2.1',
       description='Convert soccer event stream data to the SPADL format and value on-the-ball player actions in soccer',
       url='http://github.com/tomdecroos/matplotsoccer',
       author='Tom Decroos',
