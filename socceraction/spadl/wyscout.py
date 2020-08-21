@@ -212,6 +212,7 @@ def convert_actions(events, home_team_id):
     actions = fix_actions(actions)
     actions = fix_direction_of_play(actions, home_team_id)
     actions = fix_clearances(actions)
+    actions["action_id"] = range(len(actions))
     actions = add_dribbles(actions)
     return actions
 
@@ -975,6 +976,7 @@ def add_dribbles(actions):
     nex = next_actions[dribble_idx]
     dribbles["game_id"] = nex.game_id
     dribbles["period_id"] = nex.period_id
+    dribbles["action_id"] = prev.action_id + 0.1
     dribbles["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
     dribbles["team_id"] = nex.team_id
     dribbles["player_id"] = nex.player_id
@@ -987,6 +989,8 @@ def add_dribbles(actions):
     dribbles["result_id"] = results.index("success")
 
     actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "time_seconds"])
-    actions.reset_index(drop=True, inplace=True)
+    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
+        drop=True
+    )
+    actions["action_id"] = range(len(actions))
     return actions
