@@ -310,7 +310,7 @@ def _get_result_id(q: Tuple[str, dict]) -> int:
             r = "success"
     elif t == "Duel":
         duel_outcome = x.get("duel", {}).get("outcome", {}).get("name")
-        if duel_outcome in ["Lost in Play", "Lost Out"]:
+        if duel_outcome in ["Lost In Play", "Lost Out"]:
             r = "fail"
         elif duel_outcome in ["Success in Play", "Won"]:
             r = "success"
