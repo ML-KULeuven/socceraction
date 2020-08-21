@@ -226,7 +226,7 @@ class ExpectedThreat:
 
     def predict(
         self, actions: pd.DataFrame, use_interpolation: bool = True
-    ) -> pd.Series:
+    ) -> np.ndarray:
         """ Predicts the xT values for the given actions.
 
         :param actions: Actions, in SPADL format.
