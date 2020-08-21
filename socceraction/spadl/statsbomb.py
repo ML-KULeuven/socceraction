@@ -416,8 +416,9 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
 
     dt = next_actions.time_seconds - actions.time_seconds
     same_phase = dt < max_dribble_duration
+    same_period = actions.period_id == next_actions.period_id
 
-    dribble_idx = same_team & far_enough & not_too_far & same_phase
+    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
 
     dribbles = pd.DataFrame()
     prev = actions[dribble_idx]
