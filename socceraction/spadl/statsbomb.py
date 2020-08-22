@@ -156,8 +156,11 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     actions["period_id"] = events.period
 
     actions["time_seconds"] = (
-        60 * events.minute - ((events.period == 2) * 45 * 60) + events.second
-    )
+        60 * events.minute + events.second
+        - ((events.period > 1) * 45 * 60)
+        - ((events.period > 2) * 45 * 60)
+        - ((events.period > 3) * 15 * 60)
+        - ((events.period > 4) * 15 * 60))
     actions["timestamp"] = events.timestamp
     actions["team_id"] = events.team_id
     actions["player_id"] = events.player_id
