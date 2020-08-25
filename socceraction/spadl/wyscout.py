@@ -857,7 +857,7 @@ def determine_type_id(event):
         action_type = "keeper_save"
     elif event["subtype_id"] == 71:
         action_type = "clearance"
-    elif event["subtype_id"] == 72 and event["not_accurate"]:
+    elif event["subtype_id"] == 72 and (event["not_accurate"] or event["own_goal"]):
         action_type = "bad_touch"
     elif event["subtype_id"] == 70:
         action_type = "dribble"
