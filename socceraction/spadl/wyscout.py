@@ -668,6 +668,7 @@ def insert_interception_passes(df_events):
     ].copy()
 
     if not df_events_interceptions.empty:
+        df_events_interceptions.loc[:, [t[1] for t in wyscout_tags]] = False
         df_events_interceptions["interception"] = True
         df_events_interceptions["type_id"] = 0
         df_events_interceptions["subtype_id"] = 0
