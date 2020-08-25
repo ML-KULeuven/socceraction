@@ -806,8 +806,10 @@ def determine_bodypart_id(event):
     """
     if event["subtype_id"] in [81, 36, 21, 90, 91]:
         body_part = "other"
-    elif event["subtype_id"] == 82:  # or event['head_or_body']:
+    elif event["subtype_id"] == 82:
         body_part = "head"
+    elif event["type_id"] == 10 and event['head/body']:
+       body_part = "head/other" 
     else:  # all other cases
         body_part = "foot"
     return bodyparts.index(body_part)
