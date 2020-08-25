@@ -1,25 +1,15 @@
-import os
-import numpy as np  # type: ignore
-import pandas as pd  # type: ignore
 import json
-import requests
-from typing import Tuple, List, Dict
-import socceraction.spadl.config as spadlconfig
+import os
+from typing import Dict, List, Tuple
 
+import pandas as pd  # type: ignore
+import socceraction.spadl.config as spadlconfig
+from socceraction.spadl.base import EventDataLoader
 
 _free_open_data: str = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
 
 
-def _remoteloadjson(path: str) -> List[Dict]:
-    return requests.get(path).json()
-
-
-def _localloadjson(path: str) -> List[Dict]:
-    with open(path, "rt", encoding="utf-8") as fh:
-        return json.load(fh)
-
-
-class StatsBombLoader:
+class StatsBombLoader(EventDataLoader):
     """
     Load Statsbomb data either from a remote location
     (e.g., "https://raw.githubusercontent.com/statsbomb/open-data/master/data/")
@@ -36,14 +26,7 @@ class StatsBombLoader:
         :param root: root-path of the data
         :param getter: "remote" or "local"
         """
-        self.root = root
-
-        if getter == "remote":
-            self.get = _remoteloadjson
-        elif getter == "local":
-            self.get = _localloadjson
-        else:
-            raise Exception("invalid getter specified")
+        super().__init__(root, getter)
 
     def competitions(self) -> pd.DataFrame:
         return pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))

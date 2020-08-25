@@ -1,8 +1,131 @@
-import pandas as pd # type: ignore
-import numpy as np # type: ignore
-import tqdm # type: ignore
 import json
+import glob
 import os
+from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import urlopen, urlretrieve
+from zipfile import ZipFile, is_zipfile
+from typing import Dict, List, Tuple
+
+import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
+import requests
+import socceraction.spadl.config as spadlcfg
+from socceraction.spadl.base import EventDataLoader
+import tqdm  # type: ignore
+
+
+class PublicWyscoutLoader(EventDataLoader):
+    """
+    Load the public Wyscout dataset [1]_.
+
+    .. [1] Pappalardo, L., Cintia, P., Rossi, A. et al. A public data set of
+    spatio-temporal match events in soccer competitions. Sci Data 6, 236
+    (2019). https://doi.org/10.1038/s41597-019-0247-7
+    """
+
+    def __init__(self, root: str = None, download: bool = False):
+        """
+        Initalize the WyscoutLoader
+
+        :param root: path where a local copy of the dataset is stored or where
+            the downloaded dataset should be stored.
+        :param download: whether to force a redownload of the data.
+        """
+        if root is None:
+            root = os.path.join(os.getcwd(), "wyscout_data") 
+            os.makedirs(root, exist_ok=True)
+        super().__init__(root, "local")
+
+        if download or len(os.listdir(self.root)) == 0:
+            self._download_repo()
+
+        self._index = pd.DataFrame([
+                {'competition_id': 524, 'season_id': 181248, 'season_name': '2017/2018', 'db_matches': 'matches_Italy.json', 'db_events': 'events_Italy.json'},
+                {'competition_id': 364, 'season_id': 181150, 'season_name': '2017/2018', 'db_matches': 'matches_England.json', 'db_events': 'events_England.json'},
+                {'competition_id': 795, 'season_id': 181144, 'season_name': '2017/2018', 'db_matches': 'matches_Spain.json', 'db_events': 'events_Spain.json'},
+                {'competition_id': 412, 'season_id': 181189, 'season_name': '2017/2018', 'db_matches': 'matches_France.json', 'db_events': 'events_France.json'},
+                {'competition_id': 426, 'season_id': 181137, 'season_name': '2017/2018', 'db_matches': 'matches_Germany.json', 'db_events': 'events_Germany.json'},
+                {'competition_id': 102, 'season_id': 9291, 'season_name': '2016', 'db_matches': 'matches_European_Championship.json', 'db_events': 'events_European_Championship.json'},
+                {'competition_id': 28, 'season_id': 10078, 'season_name': '2018', 'db_matches': 'matches_World_Cup.json', 'db_events': 'events_World_Cup.json'},
+        ]).set_index(['competition_id', 'season_id'])
+        self._match_index = self._create_match_index().set_index('match_id')
+
+    def _download_repo(self):
+        dataset_urls = dict(
+            competitions = "https://ndownloader.figshare.com/files/15073685",
+            teams = "https://ndownloader.figshare.com/files/15073697",
+            players = "https://ndownloader.figshare.com/files/15073721",
+            matches = "https://ndownloader.figshare.com/files/14464622",
+            events = "https://ndownloader.figshare.com/files/14464685"
+        )
+        # download and unzip Wyscout open data
+        for url in tqdm.tqdm(dataset_urls.values(), desc="Downloading data"):
+            url_obj = urlopen(url).geturl()
+            path = Path(urlparse(url_obj).path)
+            file_name = os.path.join(self.root, path.name)
+            file_local, _ = urlretrieve(url_obj, file_name)
+            if is_zipfile(file_local):
+                with ZipFile(file_local) as zip_file:
+                    zip_file.extractall(self.root)
+
+    def _create_match_index(self):
+        df_matches = pd.concat([pd.DataFrame(self.get(path)) for path in glob.iglob(f'{self.root}/matches_*.json')])
+        df_matches.rename(columns={'wyId': 'match_id', 'competitionId': 'competition_id', 'seasonId': 'season_id'}, inplace=True)
+        return pd.merge(df_matches[['match_id', 'competition_id', 'season_id']], self._index, on=['competition_id', 'season_id'], how='left')
+
+    def competitions(self) -> pd.DataFrame:
+        df_competitions = pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))
+        df_competitions.rename(columns={'wyId': 'competition_id', 'name': 'competition_name'}, inplace=True)
+        df_competitions['country_name'] = df_competitions.apply(lambda x: x.area['name'] if x.area['name'] != "" else "International", axis=1)
+        df_competitions['competition_gender'] = 'male'
+        df_competitions = pd.merge(df_competitions, self._index.reset_index()[['competition_id', 'season_id', 'season_name']], on='competition_id', how='left')
+        return df_competitions.reset_index()[['competition_id', 'season_id', 'country_name', 'competition_name', 'competition_gender', 'season_name']]
+
+    def matches(self, competition_id: int, season_id: int) -> pd.DataFrame:
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_matches'])
+        df_matches = pd.DataFrame(self.get(path))
+        return convert_games(df_matches)
+
+    def _lineups(self, match_id: int) -> List[Dict]:
+        competition_id, season_id = self._match_index.loc[match_id, ['competition_id', 'season_id']]
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_matches'])
+        df_matches = pd.DataFrame(self.get(path)).set_index('wyId')
+        return list(df_matches.at[match_id, 'teamsData'].values())
+
+    def teams(self, match_id: int) -> pd.DataFrame:
+        df_teams = pd.DataFrame(self.get(os.path.join(self.root, "teams.json"))).set_index('wyId')
+        df_teams_match_id = pd.DataFrame(self._lineups(match_id))["teamId"]
+        df_teams_match = df_teams.loc[df_teams_match_id].reset_index()
+        return convert_teams(df_teams_match)
+
+    def players(self, match_id: int) -> pd.DataFrame:
+        df_players = pd.DataFrame(self.get(os.path.join(self.root, "players.json"))).set_index('wyId')
+        df_players_match = []
+        for team in self._lineups(match_id):
+            playerlist = team['formation']['lineup']
+            for p in team['formation']['substitutions']:
+                playerlist.append(next(item for item in team['formation']['bench'] if item["playerId"] == p['playerIn']))
+            df = pd.DataFrame(playerlist)
+            df['side'] = team['side']
+            df['team_id'] = team['teamId']
+            df_players_match.append(df)
+        df_players_match = (
+                pd.concat(df_players_match)
+                .rename(columns={'playerId': 'wyId'})
+                .set_index('wyId')
+                .join(df_players, how='left'))
+        df_players_match.reset_index(inplace=True)
+        for c in ["shortName", "lastName", "firstName"]:
+            df_players_match[c] = df_players_match[c].apply(lambda x: x.encode().decode("unicode-escape"))
+        return convert_players(df_players_match)
+
+    def events(self, match_id: int) -> pd.DataFrame:
+        competition_id, season_id = self._match_index.loc[match_id, ['competition_id', 'season_id']]
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_events'])
+        df_events = pd.DataFrame(self.get(path)).set_index('matchId')
+        return df_events.loc[match_id].reset_index()
+
 
 ###############################################
 # Convert wyscout json files to wyscout.h5
@@ -64,7 +187,6 @@ def get_events(root):
 # Enter at your own risk.
 ###################################
 
-import socceraction.spadl.config as spadlcfg
 
 spadl_length = spadlcfg.field_length
 spadl_width = spadlcfg.field_width
