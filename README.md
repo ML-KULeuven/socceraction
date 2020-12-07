@@ -45,7 +45,7 @@ Here is an example of five actions in the SPADL format leading up to Belgium's s
 
 
 Here is the same phase visualized using the `matplotsoccer` package
-```
+```python
 matplotsoccer.actions(
     location=actions[["start_x", "start_y", "end_x", "end_y"]],
     action_type=actions.type_name,
