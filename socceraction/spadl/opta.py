@@ -1,134 +1,799 @@
-import tqdm # type: ignore
-import json # type: ignore
-import pandas as pd # type: ignore
-import numpy as np # type: ignore
-import unidecode # type: ignore
+import glob
+import copy
+import json  # type: ignore
+import os
+import warnings
+from abc import ABC
+from collections import defaultdict
+from datetime import datetime
+from typing import Dict, List
+
+import pandas as pd  # type: ignore
+import pandera as pa
+import tqdm  # type: ignore
+import unidecode  # type: ignore
+from lxml import objectify
+from pandera.typing import Series
+
+from . import config as spadlconfig
+from .base import (CompetitionSchema, EventDataLoader, EventSchema, GameSchema,
+                   MissingDataError, PlayerSchema, TeamSchema, _add_dribbles,
+                   _fix_clearances, _fix_direction_of_play)
 
 
-#####################################
-# Convert opta json files to opta.h5
-#####################################
+__all__ = ['OptaLoader', 'convert_to_actions']
 
 
-def jsonfiles_to_h5(jsonfiles, h5file, append=True):
-
-    eventtypesdf = pd.DataFrame(eventtypes, columns=["type_id", "type_name"])
-    eventtypesdf.to_hdf(h5file, key="eventtypes")
-
-    seen_files = set()
-    if append:
-        try:
-            df = pd.read_hdf(h5file, key="files")
-            seen_files = set(df.file_url)
-        except KeyError:
-            pass
-    jsonfiles = set(jsonfiles) - seen_files
-
-    d : dict = {
-        key: []
-        for key in [
-            "games",
-            "teams",
-            "players",
-            "referees",
-            "teamgamestats",
-            "playergamestats",
-            "files",
-        ]
-    }
-    with pd.HDFStore(h5file) as optastore:
-        for jsonfile_url in tqdm.tqdm(jsonfiles):
-            try:
-                data = extract_data(jsonfile_url)
-
-                d["games"] += [data["game"]]
-                d["players"] += data["players"]
-                d["teams"] += data["teams"]
-                d["referees"] += [data["referee"]]
-                d["teamgamestats"] += data["teamgamestats"]
-                d["playergamestats"] += data["playergamestats"]
-
-                game_id = data["game"]["game_id"]
-                key = f"events/game_{game_id}"
-                eventsdf = pd.DataFrame(data["events"])
-                eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"])
-                optastore[key] = eventsdf
-                d["files"] += [{"file_url": jsonfile_url, "corrupt": False}]
-            except (ValueError, MissingDataError):
-                d["files"] += [{"file_url": jsonfile_url, "corrupt": True}]
-
-        deduplic = dict(
-            games=("game_id", "game_id"),
-            teams=(["team_id", "team_name", "team_short", "team_abbr"], "team_id"),
-            players=(
-                ["player_id", "firstname", "lastname", "fullname", "knownname"],
-                "player_id",
-            ),
-            referees=(["referee_firstname", "referee_lastname"], "referee_id"),
-            teamgamestats=(["game_id", "team_id"], ["game_id", "team_id"]),
-            playergamestats=(
-                ["game_id", "team_id", "player_id"],
-                ["game_id", "team_id", "player_id"],
-            ),
-            files=("file_url", "file_url"),
-        )
-
-        for k, v in d.items():
-            d[k] = pd.DataFrame(v)
-        d["games"]["game_date"] = pd.to_datetime(d["games"]["game_date"])
-
-        for k, df in d.items():
-            if append:
-                try:
-                    ori_df = optastore[k]
-                    df = pd.concat([ori_df, df])
-                except (FileNotFoundError, KeyError):
-                    pass
-            sortcols, idcols = deduplic[k]
-            df.sort_values(by=sortcols, ascending=False, inplace=True)
-            df.drop_duplicates(subset=idcols, inplace=True)
-            optastore[k] = df
-
-
-def extract_data(jsonfile):
-    with open(jsonfile, encoding="utf-8") as fh:
-        root = json.load(fh)
-
-    return {
-        "game": extract_game(root),
-        "players": extract_players(root),
-        "teams": extract_teams(root),
-        "referee": extract_referee(root),
-        "teamgamestats": extract_teamgamestats(root),
-        "playergamestats": extract_playergamestats(root),
-        "events": extract_events(root),
-    }
-
-
-class MissingDataError(Exception):
+class OptaCompetitionSchema(CompetitionSchema):
     pass
 
 
-def get_f24feed(root):
-    for node in root:
-        if "Games" in node["data"].keys():
-            return node
-    raise MissingDataError
+class OptaGameSchema(GameSchema):
+    venue_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[int] = pa.Field(nullable=True)
+    attendance: Series[int] = pa.Field(nullable=True)
+    duration: Series[int]
+    home_score: Series[int]
+    away_score: Series[int]
 
 
-def get_f9feed(root):
-    for node in root:
-        if "OptaFeed" in node["data"].keys():
-            return node
-    raise MissingDataError
+class OptaPlayerSchema(PlayerSchema):
+    firstname: Series[str]
+    lastname: Series[str]
+    nickname: Series[str] = pa.Field(nullable=True)
+    starting_position_id: Series[int]
+    starting_position_name: Series[str]
 
 
-def get_feeds(root):
-    f24 = get_f24feed(root)
-    f9 = get_f9feed(root)
-    assert f9 != f24, str(root)
+class OptaTeamSchema(TeamSchema):
+    pass
 
-    return f24, f9
+
+class OptaEventSchema(EventSchema):
+    timestamp: Series[str]
+    minute: Series[int]
+    second: Series[int]
+    outcome: Series[bool]
+    start_x: Series[float] = pa.Field(nullable=True)
+    start_y: Series[float] = pa.Field(nullable=True)
+    end_x: Series[float] = pa.Field(nullable=True)
+    end_y: Series[float] = pa.Field(nullable=True)
+    assist: Series[bool] = pa.Field(nullable=True)
+    keypass: Series[bool] = pa.Field(nullable=True)
+    qualifiers: Series[object]
+
+
+def _deepupdate(target, src):
+    """Deep update target dict with src
+    For each k,v in src: if k doesn't exist in target, it is deep copied from
+    src to target. Otherwise, if v is a list, target[k] is extended with
+    src[k]. If v is a set, target[k] is updated with v, If v is a dict,
+    recursively deep-update it.
+
+    Examples:
+    >>> t = {'name': 'Ferry', 'hobbies': ['programming', 'sci-fi']}
+    >>> deepupdate(t, {'hobbies': ['gaming']})
+    >>> print(t)
+    {'name': 'Ferry', 'hobbies': ['programming', 'sci-fi', 'gaming']}
+    """
+    for k, v in src.items():
+        if type(v) == list:
+            if not k in target:
+                target[k] = copy.deepcopy(v)
+            else:
+                target[k].extend(v)
+        elif type(v) == dict:
+            if not k in target:
+                target[k] = copy.deepcopy(v)
+            else:
+                _deepupdate(target[k], v)
+        elif type(v) == set:
+            if not k in target:
+                target[k] = v.copy()
+            else:
+                target[k].update(v.copy())
+        else:
+            target[k] = copy.copy(v)
+
+
+class OptaLoader(EventDataLoader):
+    """
+    Load Opta data from a local folder.
+
+    Parameters
+    ----------
+    root : str
+        Root-path of the data.
+    feeds : dict
+        Glob pattern for each feed that should be parsed. For example:
+
+            {
+                'f7': "f7-{competition_id}-{season_id}-{game_id}.xml",
+                'f24': "f24-{competition_id}-{season_id}-{game_id}.xml"
+            }
+    parser : str or dict
+        Either 'xml', 'json' or your custom parser for each feed.
+        The default xml parser supports F7 and F24 feeds; the default json
+        parser supports F1, F9 and F24 feeds. Custom parsers can be specified
+        as
+            {
+                'f7': F7Parser
+                'f24': F24Parser
+            }
+        where F7Parser and F24Parser are classes implementing :class:`OptaParser`.
+ 
+    """
+
+    def __init__(self, root: str, feeds: dict, parser):
+        self.root = root
+        if parser == "json":
+            self.parsers = self._get_parsers_for_feeds(_jsonparsers, feeds)
+        elif parser == "xml":
+            self.parsers = self._get_parsers_for_feeds(_xmlparsers, feeds)
+        else:
+            self.parsers = self._get_parsers_for_feeds(parser, feeds)
+        self.feeds = feeds
+
+    def _get_parsers_for_feeds(self, available_parsers, feeds):
+        """
+        Selects the appropriate parser for each feed and raises a warning if
+        there is no parser available for any of the provided feeds.
+        """
+        parsers = {}
+        for feed, _ in feeds.items():
+            if feed in available_parsers:
+                parsers[feed] = available_parsers[feed]
+            else:
+                warnings.warn("No parser available for {} feeds. This feed is ignored.".format(feed))
+        return parsers
+
+    def competitions(self) -> pd.DataFrame:
+        data = {}
+        for feed in self.feeds.keys():
+            parser = self.parsers[feed]
+            glob_pattern = self.feeds[feed].format(competition_id='*', season_id='*', game_id='*')
+            feed_files = glob.glob(os.path.join(self.root, glob_pattern))
+            for ffp in feed_files:
+                _deepupdate(data, parser.extract_competitions(ffp))
+        return pd.DataFrame(list(data.values()))
+
+    def games(self, competition_id: int, season_id: int) -> pd.DataFrame:
+        data = {}
+        for feed in self.feeds.keys():
+            parser = self.parsers[feed]
+            glob_pattern = self.feeds[feed].format(competition_id=competition_id, season_id=season_id, game_id='*')
+            feed_files = glob.glob(os.path.join(self.root, glob_pattern))
+            for ffp in feed_files:
+                _deepupdate(data, parser.extract_games(ffp))
+        return pd.DataFrame(list(data.values()))
+
+    def teams(self, game_id: int) -> pd.DataFrame:
+        data = {}
+        for feed in self.feeds.keys():
+            parser = self.parsers[feed]
+            glob_pattern = self.feeds[feed].format(competition_id='*', season_id='*', game_id=game_id)
+            feed_files = glob.glob(os.path.join(self.root, glob_pattern))
+            for ffp in feed_files:
+                _deepupdate(data, parser.extract_teams(ffp))
+        return pd.DataFrame(list(data.values()))
+
+    def players(self, game_id: int) -> pd.DataFrame:
+        data = {}
+        for feed in self.feeds.keys():
+            parser = self.parsers[feed]
+            glob_pattern = self.feeds[feed].format(competition_id='*', season_id='*', game_id=game_id)
+            feed_files = glob.glob(os.path.join(self.root, glob_pattern))
+            for ffp in feed_files:
+                _deepupdate(data, parser.extract_players(ffp))
+        df_players = pd.DataFrame(list(data.values()))
+        df_players["game_id"] = game_id
+        return df_players
+
+    def events(self, game_id: int) -> pd.DataFrame:
+        data = {}
+        for feed in self.feeds.keys():
+            parser = self.parsers[feed]
+            glob_pattern = self.feeds[feed].format(competition_id='*', season_id='*', game_id=game_id)
+            feed_files = glob.glob(os.path.join(self.root, glob_pattern))
+            for ffp in feed_files:
+                _deepupdate(data, parser.extract_events(ffp))
+        events = (
+                pd.DataFrame(list(data.values()))
+                .merge(_eventtypesdf, on="type_id", how="left")
+                .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
+                .reset_index(drop=True)
+                )
+        return events
+
+
+class OptaParser(ABC):
+
+    @staticmethod
+    def extract_competitions(root):
+        return {}
+
+    @staticmethod
+    def extract_games(root):
+        return {}
+
+    @staticmethod
+    def extract_teams(root):
+        return {}
+
+    @staticmethod
+    def extract_players(root):
+        return {}
+
+    @staticmethod
+    def extract_events(root):
+        return {}
+
+
+class OptaJSONParser(OptaParser):
+
+    @staticmethod
+    def get(path: str) -> List[Dict]:
+        with open(path, "rt", encoding="utf-8") as fh:
+            return json.load(fh)
+
+
+class OptaXMLParser(OptaParser):
+
+    @staticmethod
+    def get(path: str) -> List[Dict]:
+        with open(path, "rb") as fh:
+            return objectify.fromstring(fh.read())
+
+
+class _F1JSONParser(OptaJSONParser):
+
+    @staticmethod
+    def get_feed(path):
+        root = _F1JSONParser.get(path)
+        for node in root:
+            if "OptaFeed" in node["data"].keys():
+                return node
+        raise MissingDataError
+
+    @staticmethod
+    def get_doc(root):
+        f1 = _F1JSONParser.get_feed(root)
+        data = assertget(f1, "data")
+        optafeed = assertget(data, "OptaFeed")
+        optadocument = assertget(optafeed, "OptaDocument")
+        return optadocument
+
+    @staticmethod
+    def extract_competitions(root):
+        optadocument = _F1JSONParser.get_doc(root)
+        attr = assertget(optadocument, "@attributes")
+        competition_id = int(assertget(attr, "competition_id"))
+        competition = dict(
+                season_id=int(assertget(attr, "season_id")),
+                season_name=str(assertget(attr, "season_id")),
+                competition_id=competition_id,
+                competition_name=assertget(attr, "competition_name")
+                )
+        return {competition_id: competition}
+
+    @staticmethod
+    def extract_games(root):
+        optadocument = _F1JSONParser.get_doc(root)
+        attr = assertget(optadocument, "@attributes")
+        matchdata = assertget(optadocument, "MatchData")
+        matches = {}
+        for match in matchdata:
+            match_dict = dict(
+                competition_id=int(assertget(attr, "competition_id")),
+                season_id=int(assertget(attr, "season_id")))
+            matchattr = assertget(match, "@attributes")
+            match_dict["game_id"] = int(assertget(matchattr, "uID")[1:])
+            matchinfo = assertget(match, "MatchInfo")
+            matchinfoattr = assertget(matchinfo, "@attributes")
+            match_dict["game_day"] = int(assertget(matchinfoattr, "MatchDay"))
+            match_dict["venue_id"] = int(assertget(matchinfoattr, "Venue_id"))
+            match_dict["game_date"] = datetime.strptime(assertget(matchinfo, "Date"), '%Y-%m-%d %H:%M:%S')
+            teamdata = assertget(match, "TeamData")
+            for team in teamdata:
+                teamattr = assertget(team, "@attributes")
+                side = assertget(teamattr, "Side")
+                teamid = assertget(teamattr, "TeamRef")
+                if side == "Home":
+                    match_dict["home_team_id"] = int(teamid[1:])
+                else:
+                    match_dict["away_team_id"] = int(teamid[1:])
+            matches[match_dict["game_id"]] = match_dict
+        return matches
+
+
+
+class _F9JSONParser(OptaJSONParser):
+
+    @staticmethod
+    def get_feed(path):
+        root = _F9JSONParser.get(path)
+        for node in root:
+            if "OptaFeed" in node["data"].keys():
+                return node
+        raise MissingDataError
+
+    @staticmethod
+    def get_doc(root):
+        f9 = _F9JSONParser.get_feed(root)
+        data = assertget(f9, "data")
+        optafeed = assertget(data, "OptaFeed")
+        optadocument = assertget(optafeed, "OptaDocument")[0]
+        return optadocument
+
+    @staticmethod
+    def extract_games(root):
+        optadocument = _F9JSONParser.get_doc(root)
+        attr = assertget(optadocument, "@attributes")
+        venue = assertget(optadocument, "Venue")
+        matchdata = assertget(optadocument, "MatchData")
+        matchofficial = assertget(matchdata, "MatchOfficial")
+        matchinfo = assertget(matchdata, "MatchInfo")
+        stat = assertget(matchdata, "Stat")
+        assert stat["@attributes"]["Type"] == "match_time"
+        teamdata = assertget(matchdata, "TeamData")
+        scores = {}
+        for t in teamdata:
+            scores[t["@attributes"]["Side"]] = t["@attributes"]["Score"]
+
+        game_id = int(assertget(attr,"uID")[1:])
+        game_dict = {game_id: dict(
+            game_id=game_id,
+            venue_id=int(venue["@attributes"]["uID"].replace("v", "")),
+            referee_id=int(matchofficial["@attributes"]["uID"].replace("o", "")),
+            game_date=datetime.strptime(assertget(matchinfo, "Date"), '%Y%m%dT%H%M%S%z').replace(tzinfo=None),
+            attendance=int(matchinfo.get("Attendance", 0)),
+            duration=int(stat["@value"]),
+            home_score=int(scores["Home"]),
+            away_score=int(scores["Away"]),
+        )}
+        return game_dict
+
+
+    @staticmethod
+    def extract_teams(root):
+        optadocument = _F9JSONParser.get_doc(root)
+        root_teams = assertget(optadocument, "Team")
+
+        teams = {}
+        for team in root_teams:
+            if "id" in team.keys():
+                nameobj = team.get("nameObj")
+                team_id=int(team["id"])
+                team = dict(
+                        team_id=team_id,
+                        team_name=nameobj.get("name"),
+                        )
+                for f in ["team_name"]:
+                    team[f] = unidecode.unidecode(team[f]) if f in team else team[f]
+                teams[team_id] = team
+        return teams
+
+    @staticmethod
+    def extract_players(root):
+        optadocument = _F9JSONParser.get_doc(root)
+        root_teams = assertget(optadocument, "Team")
+        lineups =_F9JSONParser.extract_lineups(root)
+
+        players = {}
+        for team in root_teams:
+            team_id = int(team["@attributes"]["uID"].replace("t", ""))
+            for player in team["Player"]:
+                player_id = int(player["@attributes"]["uID"].replace("p", ""))
+
+                assert "nameObj" in player["PersonName"]
+                nameobj = player["PersonName"]["nameObj"]
+                if not nameobj.get("is_unknown"):
+                    player = dict(
+                            team_id=team_id,
+                            player_id=player_id,
+                            firstname=nameobj.get("first").strip() or None,
+                            lastname=nameobj.get("last").strip() or None,
+                            player_name=nameobj.get("full").strip() or None,
+                            nickname=nameobj.get("known")
+                            or nameobj.get("full").strip()
+                            or None,
+                            )
+                    if player_id in lineups[team_id]['players']:
+                        player = dict(
+                            **player,
+                            jersey_number=lineups[team_id]['players'][player_id]['jersey_number'],
+                            starting_position_name=lineups[team_id]['players'][player_id]['starting_position_name'],
+                            starting_position_id=lineups[team_id]['players'][player_id]['starting_position_id'],
+                            is_starter=lineups[team_id]['players'][player_id]['is_starter'],
+                            minutes_played=lineups[team_id]['players'][player_id]['minutes_played'],
+                            )
+                    for f in ["firstname", "lastname", "player_name", "nickname"]:
+                        if player[f]:
+                            player[f] = unidecode.unidecode(player[f])
+                    players[player_id] = player
+        return players
+
+    @staticmethod
+    def extract_referee(root):
+        optadocument = _F9JSONParser.get_doc(root)
+
+        try:
+            rootf9 = optadocument["MatchData"]["MatchOfficial"]
+        except KeyError:
+            raise MissingDataError
+
+        name = rootf9["OfficialName"]
+        nameobj = name["nameObj"]
+        referee = dict(
+            referee_id=int(rootf9["@attributes"]["uID"].replace("o", "")),
+            referee_firstname=name.get("First") or nameobj.get("first"),
+            referee_lastname=name.get("Last") or nameobj.get("last"),
+        )
+        for f in ["referee_firstname", "referee_lastname"]:
+            if referee[f]:
+                referee[f] = unidecode.unidecode(referee[f])
+        return referee
+
+    @staticmethod
+    def extract_teamgamestats(root):
+        optadocument = _F9JSONParser.get_doc(root)
+        attr = assertget(optadocument, "@attributes")
+        game_id = int(assertget(attr,"uID")[1:])
+
+        try:
+            rootf9 = optadocument["MatchData"]["TeamData"]
+        except KeyError:
+            raise MissingDataError
+        teams_gamestats = []
+        for team in rootf9:
+            attr = team["@attributes"]
+            statsdict = {
+                stat["@attributes"]["Type"]: stat["@value"] for stat in team["Stat"]
+            }
+
+            team_gamestats = dict(
+                game_id=game_id,
+                team_id=int(attr["TeamRef"].replace("t", "")),
+                side=attr["Side"],
+                score=attr["Score"],
+                shootout_score=attr["ShootOutScore"],
+                **statsdict,
+            )
+
+            teams_gamestats.append(team_gamestats)
+        return teams_gamestats
+
+    @staticmethod
+    def extract_lineups(root):
+        optadocument = _F9JSONParser.get_doc(root)
+        attr = assertget(optadocument, "@attributes")
+        game_id = int(assertget(attr,"uID")[1:])
+
+        try:
+            rootf9 = optadocument["MatchData"]["TeamData"]
+        except KeyError:
+            raise MissingDataError
+        matchstats = optadocument["MatchData"]["Stat"]
+        matchstats = [matchstats] if isinstance(matchstats, dict) else matchstats
+        matchstatsdict = {
+                stat["@attributes"]["Type"]: stat["@value"] for stat in matchstats
+                }
+
+        lineups = {}
+        for team in rootf9:
+            # lineup attributes
+            team_id = int(team["@attributes"]["TeamRef"].replace("t", ""))
+            lineups[team_id] = dict(
+                    players=dict())
+            #substitutes
+            subst = [s["@attributes"] for s in team["Substitution"]]
+            for player in team["PlayerLineUp"]["MatchPlayer"]:
+                attr = player["@attributes"]
+                player_id=int(attr["PlayerRef"].replace("p", ""))
+                playerstatsdict = {
+                    stat["@attributes"]["Type"]: stat["@value"] for stat in player["Stat"]
+                }
+                sub_on = next((item["Time"] for item in subst if item["SubOn"] == f"p{player_id}"), 0)
+                sub_off = next((item["Time"] for item in subst if item["SubOff"] == f"p{player_id}"), matchstatsdict["match_time"])
+                minutes_played = sub_off - sub_on
+                lineups[team_id]["players"][player_id] = dict(
+                    jersey_number=attr["ShirtNumber"],
+                    starting_position_name=attr["Position"],
+                    starting_position_id=attr["position_id"],
+                    is_starter=attr["Status"] == 'Start',
+                    minutes_played=minutes_played,
+                    **playerstatsdict,
+                )
+        return lineups
+
+
+class _F24JSONParser(OptaJSONParser):
+
+    @staticmethod
+    def get_feed(path):
+        root = _F24JSONParser.get(path)
+        for node in root:
+            if "Games" in node["data"].keys():
+                return node
+        raise MissingDataError
+
+    @staticmethod
+    def extract_games(root):
+        f24 = _F24JSONParser.get_feed(root)
+
+        data = assertget(f24, "data")
+        games = assertget(data, "Games")
+        game = assertget(games, "Game")
+        attr = assertget(game, "@attributes")
+
+        game_id = int(assertget(attr, "id"))
+        game_dict = {game_id: dict(
+            competition_id=int(assertget(attr, "competition_id")),
+            game_id=game_id,
+            season_id=int(assertget(attr, "season_id")),
+            game_day=int(assertget(attr, "matchday")),
+            home_team_id=int(assertget(attr, "home_team_id")),
+            away_team_id=int(assertget(attr, "away_team_id")),
+        )}
+        return game_dict
+
+    @staticmethod
+    def extract_events(root):
+        f24 = _F24JSONParser.get_feed(root)
+
+        data = assertget(f24, "data")
+        games = assertget(data, "Games")
+        game = assertget(games, "Game")
+        game_attr = assertget(game, "@attributes")
+        game_id = int(assertget(game_attr, "id"))
+
+        events = {}
+        for element in assertget(game, "Event"):
+            attr = element["@attributes"]
+            timestamp = attr["TimeStamp"].get("locale") if attr.get("TimeStamp") else None
+            qualifiers = {
+                int(q["@attributes"]["qualifier_id"]): q["@attributes"]["value"]
+                for q in element.get("Q", [])
+            }
+            start_x = float(assertget(attr, "x"))
+            start_y = float(assertget(attr, "y"))
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
+            if end_x is None:
+                end_x = start_x
+            if end_y is None:
+                end_y = start_y
+
+            event_id = int(assertget(attr, "event_id"))
+            event = dict(
+                game_id=game_id,
+                event_id=event_id,
+                type_id=int(assertget(attr, "type_id")),
+                period_id=int(assertget(attr, "period_id")),
+                minute=int(assertget(attr, "min")),
+                second=int(assertget(attr, "sec")),
+                timestamp=timestamp,
+                player_id=int(assertget(attr, "player_id")),
+                team_id=int(assertget(attr, "team_id")),
+                outcome=bool(int(attr.get("outcome", 1))),
+                start_x=start_x,
+                start_y=start_y,
+                end_x=end_x,
+                end_y=end_y,
+                assist=bool(int(attr.get("assist", 0))),
+                keypass=bool(int(attr.get("keypass", 0))),
+                qualifiers=qualifiers,
+            )
+            events[event_id] = event
+        return events
+
+
+class _F7XMLParser(OptaXMLParser):
+
+    @staticmethod
+    def get_doc(path):
+        root = _F7XMLParser.get(path)
+        optadocument = root.find("SoccerDocument")
+        return optadocument
+
+    @staticmethod
+    def extract_competitions(root):
+        optadocument = _F7XMLParser.get_doc(root)
+        competition = optadocument.Competition
+
+        stats = {}
+        for stat in competition.find('Stat'):
+            stats[stat.attrib["Type"]] = stat.text
+        competition_id = int(competition.attrib["uID"][1:])
+        competition_dict = dict(
+                competition_id=competition_id,
+                season_id=int(assertget(stats, "season_id")),
+                season_name=assertget(stats, "season_name"),
+                competition_name=competition.Name.text)
+        return {competition_id: competition_dict}
+
+    @staticmethod
+    def extract_games(root):
+        optadocument = _F7XMLParser.get_doc(root)
+        match_info = optadocument.MatchData.MatchInfo
+        game_id = int(optadocument.attrib['uID'][1:])
+        stats = {}
+        for stat in optadocument.MatchData.find('Stat'):
+            stats[stat.attrib["Type"]] = stat.text
+
+        game_dict = dict(
+            game_id=game_id,
+            venue_id=int(optadocument.Venue.attrib['uID'][1:]),
+            referee_id=int(optadocument.MatchData.MatchOfficial.attrib['uID'][1:]),
+            game_date=datetime.strptime(match_info.Date.text, '%Y%m%dT%H%M%S%z').replace(tzinfo=None),
+            attendance=int(match_info.Attendance),
+            duration=int(stats["match_time"]),
+        )
+        return {game_id: game_dict}
+
+    @staticmethod
+    def extract_teams(root):
+        optadocument = _F7XMLParser.get_doc(root)
+        lineups = _F7XMLParser.extract_lineups(root)
+        team_elms = list(optadocument.iterchildren("Team"))
+        teams = {}
+        for team_elm in team_elms:
+            team_id = int(assertget(team_elm.attrib, "uID")[1:])
+            team = dict(
+                team_id=team_id,
+                team_name=team_elm.Name.text,
+            )
+            teams[team_id] = team
+        return teams
+
+    @staticmethod
+    def extract_lineups(root):
+        optadocument = _F7XMLParser.get_doc(root)
+
+        stats = {}
+        for stat in optadocument.MatchData.find('Stat'):
+            stats[stat.attrib["Type"]] = stat.text
+
+        lineup_elms = optadocument.MatchData.iterchildren("TeamData")
+        lineups = {}
+        for team_elm in lineup_elms:
+            # lineup attributes
+            team_id = int(team_elm.attrib["TeamRef"][1:])
+            lineups[team_id] = dict(
+                formation=team_elm.attrib["Formation"],
+                score=int(team_elm.attrib["Score"]),
+                side=team_elm.attrib["Side"],
+                players=dict())
+            #substitutes
+            subst_elms = team_elm.iterchildren("Substitution")
+            subst = [subst_elm.attrib for subst_elm in subst_elms]
+            # players
+            player_elms = team_elm.PlayerLineUp.iterchildren("MatchPlayer")
+            for player_elm in player_elms:
+                player_id = int(player_elm.attrib["PlayerRef"][1:])
+                status = player_elm.attrib["Status"]
+                sub_on = int(next((item["Time"] for item in subst if item["SubOn"] == f"p{player_id}"), 0))
+                sub_off = int(next((item["Time"] for item in subst if item["SubOff"] == f"p{player_id}"), stats["match_time"]))
+                minutes_played = sub_off - sub_on
+                lineups[team_id]["players"][player_id] = dict(
+                    starting_position_id=int(player_elm.attrib["Formation_Place"]),
+                    starting_position_name=player_elm.attrib["Position"],
+                    jersey_number=int(player_elm.attrib["ShirtNumber"]),
+                    is_starter=player_elm.attrib["Formation_Place"] != 0,
+                    minutes_played=minutes_played)
+        return lineups
+
+    @staticmethod
+    def extract_players(root):
+        optadocument = _F7XMLParser.get_doc(root)
+        lineups = _F7XMLParser.extract_lineups(root)
+        team_elms = list(optadocument.iterchildren("Team"))
+        players = {}
+        for team_elm in team_elms:
+            team_id = int(team_elm.attrib['uID'][1:])
+            for player_elm in team_elm.iterchildren("Player"):
+                player_id = int(player_elm.attrib["uID"][1:])
+                firstname = str(player_elm.find("PersonName").find("First"))
+                lastname = str(player_elm.find("PersonName").find("Last"))
+                nickname = str(player_elm.find("PersonName").find("Known"))
+                player = dict(
+                        team_id=team_id,
+                        player_id=player_id,
+                        player_name=" ".join([firstname, lastname]),
+                        firstname=firstname,
+                        lastname=lastname,
+                        nickname=nickname,
+                        **lineups[team_id]["players"][player_id]
+                    )
+                players[player_id] = player
+
+        return players
+
+
+class _F24XMLParser(OptaXMLParser):
+
+    @staticmethod
+    def get_doc(path):
+        root = _F24XMLParser.get(path)
+        return root
+
+    @staticmethod
+    def extract_games(root):
+        optadocument = _F24XMLParser.get_doc(root)
+        game_elem = optadocument.find("Game")
+        attr = game_elem.attrib
+        game_id = int(assertget(attr, "id"))
+        game_dict = dict(
+            game_id=game_id,
+            competition_id=int(assertget(attr, "competition_id")),
+            season_id=int(assertget(attr, "season_id")),
+            game_day=int(assertget(attr, "matchday")),
+            game_date=datetime.strptime(assertget(attr, "game_date"), '%Y-%m-%dT%H:%M:%S'),
+            home_team_id=int(assertget(attr, "home_team_id")),
+            home_score=int(assertget(attr, "home_score")),
+            away_team_id=int(assertget(attr, "away_team_id")),
+            away_score=int(assertget(attr, "away_score")),
+        )
+        return {game_id: game_dict}
+
+    @staticmethod
+    def extract_events(root):
+        optadocument = _F24XMLParser.get_doc(root)
+        game_elm = optadocument.find("Game")
+        attr = game_elm.attrib
+        game_id = int(assertget(attr, "id"))
+        events = {}
+        for event_elm in game_elm.iterchildren("Event"):
+            attr = dict(event_elm.attrib)
+            event_id = int(attr["id"])
+
+            qualifiers = {
+                    int(qualifier_elm.attrib["qualifier_id"]): qualifier_elm.attrib.get("value")
+                    for qualifier_elm in event_elm.iterchildren("Q")
+                    }
+            start_x = float(assertget(attr, "x"))
+            start_y = float(assertget(attr, "y"))
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
+            if end_x is None:
+                end_x = start_x
+            if end_y is None:
+                end_y = start_y
+
+            event = dict(
+                game_id=game_id,
+                event_id=event_id,
+                type_id=int(assertget(attr, "type_id")),
+                period_id=int(assertget(attr, "period_id")),
+                minute=int(assertget(attr, "min")),
+                second=int(assertget(attr, "sec")),
+                timestamp=assertget(attr, "timestamp"),
+                player_id=int(attr.get("player_id", 0)),
+                team_id=int(assertget(attr, "team_id")),
+                outcome=bool(int(attr.get("outcome", 1))),
+                start_x=start_x,
+                start_y=start_y,
+                end_x=end_x,
+                end_y=end_y,
+                assist=bool(int(attr.get("assist", 0))),
+                keypass=bool(int(attr.get("keypass", 0))),
+                qualifiers=qualifiers,
+            )
+            events[event_id] = event
+        return events
+
+
+_jsonparsers = {
+        "f1": _F1JSONParser,
+        "f9": _F9JSONParser,
+        "f24": _F24JSONParser
+        }
+
+_xmlparsers = {
+        "f7": _F7XMLParser,
+        "f24": _F24XMLParser
+        }
+
 
 
 def assertget(dictionary, key):
@@ -137,214 +802,7 @@ def assertget(dictionary, key):
     return value
 
 
-def extract_game(root):
-    f24 = get_f24feed(root)
-
-    data = assertget(f24, "data")
-    games = assertget(data, "Games")
-    game = assertget(games, "Game")
-    attr = assertget(game, "@attributes")
-
-    f9 = get_f9feed(root)
-
-    data = assertget(f9, "data")
-    optafeed = assertget(data, "OptaFeed")
-    optadocument = assertget(optafeed, "OptaDocument")[0]
-    venue = assertget(optadocument, "Venue")
-    matchdata = assertget(optadocument, "MatchData")
-    matchofficial = assertget(matchdata, "MatchOfficial")
-    matchinfo = assertget(matchdata, "MatchInfo")
-    stat = assertget(matchdata, "Stat")
-    assert stat["@attributes"]["Type"] == "match_time"
-
-    game_dict = dict(
-        competition_id=int(assertget(attr, "competition_id")),
-        game_id=int(assertget(attr, "id")),
-        season_id=int(assertget(attr, "season_id")),
-        matchday=int(assertget(attr, "matchday")),
-        home_team_id=int(assertget(attr, "home_team_id")),
-        away_team_id=int(assertget(attr, "away_team_id")),
-        venue_id=int(venue["@attributes"]["uID"].replace("v", "")),
-        referee_id=int(matchofficial["@attributes"]["uID"].replace("o", "")),
-        game_date=pd.to_datetime(assertget(matchinfo, "Date")),
-        attendance=int(matchinfo.get("Attendance", 0)),
-        duration=int(stat["@value"]),
-    )
-    return game_dict
-
-
-def extract_players(root):
-    f9 = get_f9feed(root)
-    teams = f9["data"]["OptaFeed"]["OptaDocument"][0]["Team"]
-
-    players = []
-    for team in teams:
-        for player in team["Player"]:
-            player_id = int(player["@attributes"]["uID"].replace("p", ""))
-
-            assert "nameObj" in player["PersonName"]
-            nameobj = player["PersonName"]["nameObj"]
-            if not nameobj.get("is_unknown"):
-                player = dict(
-                    player_id=player_id,
-                    firstname=nameobj.get("first").strip() or None,
-                    lastname=nameobj.get("last").strip() or None,
-                    fullname=nameobj.get("full").strip() or None,
-                    knownname=nameobj.get("known")
-                    or nameobj.get("full").strip()
-                    or None,
-                )
-                for f in ["firstname", "lastname", "fullname", "knownname"]:
-                    if player[f]:
-                        player[f] = unidecode.unidecode(player[f])
-                players.append(player)
-    return players
-
-
-def extract_teams(root):
-    f9 = get_f9feed(root)
-    rootf9 = f9["data"]["OptaFeed"]["OptaDocument"][0]["Team"]
-
-    teams = []
-    for team in rootf9:
-        if "id" in team.keys():
-            nameobj = team.get("nameObj")
-            team = dict(
-                team_id=int(team["id"]),
-                team_name=nameobj.get("name"),
-                team_short=nameobj.get("short"),
-                team_abbr=nameobj.get("abbr"),
-            )
-            for f in ["team_name", "team_short", "team_abbr"]:
-                if team[f]:
-                    team[f] = unidecode.unidecode(team[f])
-
-            teams.append(team)
-    return teams
-
-
-def extract_referee(root):
-    f9 = get_f9feed(root)
-
-    rootf9 = f9["data"]["OptaFeed"]["OptaDocument"][0]["MatchData"]["MatchOfficial"]
-    name = rootf9["OfficialName"]
-    nameobj = name["nameObj"]
-    referee = dict(
-        referee_id=int(rootf9["@attributes"]["uID"].replace("o", "")),
-        referee_firstname=name.get("First") or nameobj.get("first"),
-        referee_lastname=name.get("Last") or nameobj.get("last"),
-    )
-    for f in ["referee_firstname", "referee_lastname"]:
-        if referee[f]:
-            referee[f] = unidecode.unidecode(referee[f])
-    return referee
-
-
-def extract_teamgamestats(root):
-    game_id = extract_game(root)["game_id"]
-
-    f9 = get_f9feed(root)
-
-    rootf9 = f9["data"]["OptaFeed"]["OptaDocument"][0]["MatchData"]["TeamData"]
-    teams_gamestats = []
-    for team in rootf9:
-        attr = team["@attributes"]
-        statsdict = {
-            stat["@attributes"]["Type"]: stat["@value"] for stat in team["Stat"]
-        }
-
-        team_gamestats = dict(
-            game_id=game_id,
-            team_id=int(attr["TeamRef"].replace("t", "")),
-            side=attr["Side"],
-            score=attr["Score"],
-            shootout_score=attr["ShootOutScore"],
-            **statsdict,
-        )
-
-        teams_gamestats.append(team_gamestats)
-    return teams_gamestats
-
-
-def extract_playergamestats(root):
-    f9 = get_f9feed(root)
-    rootf9 = f9["data"]["OptaFeed"]["OptaDocument"][0]["MatchData"]["TeamData"]
-    game_id = extract_game(root)["game_id"]
-
-    players_gamestats = []
-    for team in rootf9:
-        team_id = int(team["@attributes"]["TeamRef"].replace("t", ""))
-        for player in team["PlayerLineUp"]["MatchPlayer"]:
-            attr = player["@attributes"]
-            statsdict = {
-                stat["@attributes"]["Type"]: stat["@value"] for stat in player["Stat"]
-            }
-
-            p = dict(
-                game_id=game_id,
-                team_id=team_id,
-                player_id=int(attr["PlayerRef"].replace("p", "")),
-                shirtnumber=attr["ShirtNumber"],
-                player_type=attr["Position"],
-                status=attr["Status"],
-                **statsdict,
-            )
-
-            players_gamestats.append(p)
-    return players_gamestats
-
-
-def extract_events(root):
-    f24 = get_f24feed(root)
-
-    game_id = extract_game(root)["game_id"]
-
-    data = assertget(f24, "data")
-    games = assertget(data, "Games")
-    game = assertget(games, "Game")
-
-    events = []
-    for element in assertget(game, "Event"):
-        attr = element["@attributes"]
-        timestamp = attr["TimeStamp"].get("locale") if attr.get("TimeStamp") else None
-        qualifiers = {}
-        qualifiers = {
-            int(q["@attributes"]["qualifier_id"]): q["@attributes"]["value"]
-            for q in element.get("Q", [])
-        }
-        start_x = float(assertget(attr, "x"))
-        start_y = float(assertget(attr, "y"))
-        end_x = get_end_x(qualifiers)
-        end_y = get_end_y(qualifiers)
-        if end_x is None:
-            end_x = start_x
-        if end_y is None:
-            end_y = start_y
-
-        event = dict(
-            game_id=game_id,
-            event_id=int(assertget(attr, "event_id")),
-            type_id=int(assertget(attr, "type_id")),
-            period_id=int(assertget(attr, "period_id")),
-            minute=int(assertget(attr, "min")),
-            second=int(assertget(attr, "sec")),
-            timestamp=timestamp,
-            player_id=int(assertget(attr, "player_id")),
-            team_id=int(assertget(attr, "team_id")),
-            outcome=bool(int(attr.get("outcome", 1))),
-            start_x=start_x,
-            start_y=start_y,
-            end_x=end_x,
-            end_y=end_y,
-            assist=bool(int(attr.get("assist", 0))),
-            keypass=bool(int(attr.get("keypass", 0))),
-            qualifiers=qualifiers,
-        )
-        events.append(event)
-    return events
-
-
-def get_end_x(qualifiers):
+def _get_end_x(qualifiers):
     try:
         # pass
         if 140 in qualifiers:
@@ -361,7 +819,7 @@ def get_end_x(qualifiers):
         return None
 
 
-def get_end_y(qualifiers):
+def _get_end_y(qualifiers):
     try:
         # pass
         if 141 in qualifiers:
@@ -378,7 +836,7 @@ def get_end_y(qualifiers):
         return None
 
 
-eventtypes = [
+_eventtypesdf = pd.DataFrame([
     (1, "pass"),
     (2, "offside pass"),
     (3, "take on"),
@@ -456,141 +914,73 @@ eventtypes = [
     (75, "delayed start"),
     (76, "early end"),
     (77, "player off pitch"),
-]
+], columns=["type_id", "type_name"])
 
 
-###############################
-# Convert opta.h5 to spadl.h5
-##############################
+def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+    """
+    Convert Opta events to SPADL actions.
 
-import socceraction.spadl.config as spadlconfig
+    Parameters
+    ----------
+    events : pd.DataFrame
+        DataFrame containing Opta events from a single game.
+    home_team_id : int
+        ID of the home team in the corresponding game.
 
-spadl_length = spadlconfig.field_length
-spadl_width = spadlconfig.field_width
+    Returns
+    -------
+    actions : pd.DataFrame
+        DataFrame with corresponding SPADL actions.
 
-bodyparts = spadlconfig.bodyparts
-results = spadlconfig.results
-actiontypes = spadlconfig.actiontypes
+    """
+    actions = pd.DataFrame()
 
+    actions["game_id"] = events.game_id
+    actions["period_id"] = events.period_id
 
-def convert_to_spadl(optah5, spadlh5):
+    actions["time_seconds"] = 60 * events.minute + events.second
+    actions["timestamp"] = events.timestamp
+    actions["team_id"] = events.team_id
+    actions["player_id"] = events.player_id
 
-    with pd.HDFStore(optah5) as optastore, pd.HDFStore(spadlh5) as spadlstore:
-        games = optastore["games"]
-        spadlstore["games"] = games
-
-        players = optastore["players"]
-        players = players.rename(
-            index=str,
-            columns={
-                "firstname": "first_name",
-                "lastname": "last_name",
-                "knownname": "soccer_name",
-            },
-        )
-        # players["birthday"] = pd.NaT  # unavailabe
-        # players["nation_id"] = np.nan  # unavailable
-        spadlstore["players"] = players
-
-        teams = optastore["teams"]
-        spadlstore["teams"] = teams
-
-        teamgames = optastore["teamgamestats"]
-        teamgames = teamgames.rename(index=str, columns={"formation_used": "formation"})
-        spadlstore["teamgames"] = teamgames
-
-        playergames = optastore["playergamestats"]
-        playergames = playergames.rename(
-            index=str,
-            columns={
-                "mins_played": "minutes_played",
-                "goal_assists": "assists",
-                "total_att_assist": "keypasses",
-                "second_goal_assist": "pre_assists",
-            },
-        )
-        spadlstore["playergames"] = playergames
-
-        spadlstore["actiontypes"] = pd.DataFrame(
-            list(enumerate(actiontypes)), columns=["type_id", "type_name"]
-        )
-
-        spadlstore["bodyparts"] = pd.DataFrame(
-            list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
-        )
-
-        spadlstore["results"] = pd.DataFrame(
-            list(enumerate(results)), columns=["result_id", "result_name"]
-        )
-
-        eventtypes = optastore["eventtypes"]
-        for game in tqdm.tqdm(list(games.itertuples())):
-
-            events = optastore[f"events/game_{game.game_id}"]
-            events = (
-                events.merge(eventtypes, on="type_id", how="left")
-                .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
-                .reset_index(drop=True)
-            )
-            actions = convert_to_actions(events, home_team_id=game.home_team_id)
-            spadlstore[f"actions/game_{game.game_id}"] = actions
-
-
-def convert_to_actions(events, home_team_id):
-    actions = events
-    actions["time_seconds"] = 60 * actions.minute + actions.second
     for col in ["start_x", "end_x"]:
-        actions[col] = actions[col] / 100 * spadl_length
+        actions[col] = events[col] / 100 * spadlconfig.field_length
     for col in ["start_y", "end_y"]:
-        actions[col] = actions[col] / 100 * spadl_width
-    actions["bodypart_id"] = actions.qualifiers.apply(get_bodypart_id)
-    actions["type_id"] = actions[["type_name", "outcome", "qualifiers"]].apply(
-        get_type_id, axis=1
-    )
-    actions["result_id"] = actions[["type_name", "outcome", "qualifiers"]].apply(
-        get_result_id, axis=1
-    )
+        actions[col] = events[col] / 100 * spadlconfig.field_width
+
+    actions["type_id"] = events[["type_name", "outcome", "qualifiers"]].apply(_get_type_id, axis=1)
+    actions["result_id"] = events[["type_name", "outcome", "qualifiers"]].apply(_get_result_id, axis=1)
+    actions["bodypart_id"] = events.qualifiers.apply(_get_bodypart_id)
 
     actions = (
-        actions[actions.type_id != actiontypes.index("non_action")]
+        actions[actions.type_id != spadlconfig.actiontypes.index("non_action")]
         .sort_values(["game_id", "period_id", "time_seconds", "timestamp"])
         .reset_index(drop=True)
     )
-    actions = fix_owngoal_coordinates(actions)
-    actions = fix_direction_of_play(actions, home_team_id)
-    actions = fix_clearances(actions)
+    actions = _fix_owngoal_coordinates(actions)
+    actions = _fix_direction_of_play(actions, home_team_id)
+    actions = _fix_clearances(actions)
     actions["action_id"] = range(len(actions))
-    actions = add_dribbles(actions)
-    return actions[
-        [
-            "game_id",
-            "period_id",
-            "time_seconds",
-            "timestamp",
-            "team_id",
-            "player_id",
-            "start_x",
-            "start_y",
-            "end_x",
-            "end_y",
-            "result_id",
-            "bodypart_id",
-            "type_id",
-        ]
-    ]
+    actions = _add_dribbles(actions)
+
+    for col in actions.columns:
+        if "_id" in col:
+            actions[col] = actions[col].astype(int)
+    return actions
 
 
-def get_bodypart_id(qualifiers):
+def _get_bodypart_id(qualifiers):
     if 15 in qualifiers:
         b = "head"
     elif 21 in qualifiers:
         b = "other"
     else:
         b = "foot"
-    return bodyparts.index(b)
+    return spadlconfig.bodyparts.index(b)
 
 
-def get_result_id(args):
+def _get_result_id(args):
     e, outcome, q = args
     if e == "offside pass":
         r = "offside"  # offside
@@ -609,10 +999,10 @@ def get_result_id(args):
         r = "success"
     else:
         r = "fail"
-    return results.index(r)
+    return spadlconfig.results.index(r)
 
 
-def get_type_id(args):
+def _get_type_id(args):
     eventname, outcome, q = args
     if eventname == "pass" or eventname == "offside pass":
         cross = 2 in q
@@ -662,84 +1052,17 @@ def get_type_id(args):
         a = "bad_touch"
     else:
         a = "non_action"
-    return actiontypes.index(a)
+    return spadlconfig.actiontypes.index(a)
 
 
-def fix_owngoal_coordinates(actions):
-    owngoals_idx = (actions.result_id == results.index("owngoal")) & (
-        actions.type_id == actiontypes.index("shot")
+def _fix_owngoal_coordinates(actions):
+    owngoals_idx = (actions.result_id == spadlconfig.results.index("owngoal")) & (
+        actions.type_id == spadlconfig.actiontypes.index("shot")
     )
     actions.loc[owngoals_idx, "end_x"] = (
-        spadl_length - actions[owngoals_idx].end_x.values
+        spadlconfig.field_length - actions[owngoals_idx].end_x.values
     )
     actions.loc[owngoals_idx, "end_y"] = (
-        spadl_width - actions[owngoals_idx].end_y.values
+        spadlconfig.field_width - actions[owngoals_idx].end_y.values
     )
-    return actions
-
-
-min_dribble_length = 3
-max_dribble_length = 60
-max_dribble_duration = 10
-
-
-def add_dribbles(actions):
-    next_actions = actions.shift(-1)
-
-    same_team = actions.team_id == next_actions.team_id
-    # not_clearance = actions.type_id != actiontypes.index("clearance")
-
-    dx = actions.end_x - next_actions.start_x
-    dy = actions.end_y - next_actions.start_y
-    far_enough = dx ** 2 + dy ** 2 >= min_dribble_length ** 2
-    not_too_far = dx ** 2 + dy ** 2 <= max_dribble_length ** 2
-
-    dt = next_actions.time_seconds - actions.time_seconds
-    same_phase = dt < max_dribble_duration
-    same_period = actions.period_id == next_actions.period_id
-
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
-
-    dribbles = pd.DataFrame()
-    prev = actions[dribble_idx]
-    nex = next_actions[dribble_idx]
-    dribbles["game_id"] = nex.game_id
-    dribbles["period_id"] = nex.period_id
-    dribbles["action_id"] = prev.action_id + 0.1
-    dribbles["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
-    dribbles["timestamp"] = nex.timestamp
-    dribbles["team_id"] = nex.team_id
-    dribbles["player_id"] = nex.player_id
-    dribbles["start_x"] = prev.end_x
-    dribbles["start_y"] = prev.end_y
-    dribbles["end_x"] = nex.start_x
-    dribbles["end_y"] = nex.start_y
-    dribbles["bodypart_id"] = bodyparts.index("foot")
-    dribbles["type_id"] = actiontypes.index("dribble")
-    dribbles["result_id"] = results.index("success")
-
-    actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
-    actions["action_id"] = range(len(actions))
-    return actions
-
-
-def fix_clearances(actions):
-    next_actions = actions.shift(-1)
-    next_actions[-1:] = actions[-1:]
-    clearance_idx = actions.type_id == actiontypes.index("clearance")
-    actions.loc[clearance_idx, "end_x"] = next_actions[clearance_idx].start_x.values
-    actions.loc[clearance_idx, "end_y"] = next_actions[clearance_idx].start_y.values
-    return actions
-
-
-def fix_direction_of_play(actions, home_team_id):
-    away_idx = (actions.team_id != home_team_id).values
-    for col in ["start_x", "end_x"]:
-        actions.loc[away_idx, col] = spadl_length - actions[away_idx][col].values
-    for col in ["start_y", "end_y"]:
-        actions.loc[away_idx, col] = spadl_width - actions[away_idx][col].values
-
     return actions

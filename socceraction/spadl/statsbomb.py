@@ -3,10 +3,64 @@ import os
 from typing import Dict, List, Tuple
 
 import pandas as pd  # type: ignore
-import socceraction.spadl.config as spadlconfig
-from socceraction.spadl.base import EventDataLoader
+import pandera as pa
+from pandera.typing import DateTime, Series
 
-_free_open_data: str = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
+from . import config as spadlconfig
+from .base import (CompetitionSchema, EventDataLoader, EventSchema, GameSchema,
+                   PlayerSchema, TeamSchema, _add_dribbles, _fix_clearances,
+                   _fix_direction_of_play)
+
+
+__all__ = ['StatsBombLoader', 'convert_to_actions']
+
+
+class StatsBombCompetitionSchema(CompetitionSchema):
+    country_name: Series[str]
+    competition_gender: Series[str]
+
+
+class StatsBombGameSchema(GameSchema):
+    competition_stage: Series[str]
+    home_score: Series[int]
+    away_score: Series[int]
+    venue: Series[str] = pa.Field(nullable=True)
+    referee_id: Series[int] = pa.Field(nullable=True)
+
+
+class StatsBombPlayerSchema(PlayerSchema):
+    nickname: Series[str] = pa.Field(nullable=True)
+    starting_position_id: Series[int]
+    starting_position_name: Series[str]
+
+
+class StatsBombTeamSchema(TeamSchema):
+    pass
+
+
+class StatsBombEventSchema(EventSchema):
+    event_id: Series[object]
+    index: Series[int]
+    timestamp: Series[str]
+    minute: Series[int]
+    second: Series[int]
+    possession: Series[int]
+    possession_team_id: Series[int]
+    possession_team_name: Series[str]
+    play_pattern_id: Series[int]
+    play_pattern_name: Series[str]
+    team_name: Series[str]
+    duration: Series[float] = pa.Field(nullable=True)
+    extra: Series[object]
+    related_events: Series[object]
+    player_name: Series[str] = pa.Field(nullable=True)
+    position_id: Series[int] = pa.Field(nullable=True)
+    position_name: Series[str] = pa.Field(nullable=True)
+    location: Series[object] = pa.Field(nullable=True)
+    under_pressure: Series[bool] = pa.Field(nullable=True)
+    counterpress: Series[bool] = pa.Field(nullable=True)
+
+
 
 
 class StatsBombLoader(EventDataLoader):
@@ -19,6 +73,8 @@ class StatsBombLoader(EventDataLoader):
     https://github.com/statsbomb/statsbombpy
     """
 
+    _free_open_data: str = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
+
     def __init__(self, root: str = _free_open_data, getter: str = "remote"):
         """
         Initalize the StatsBombLoader
@@ -29,32 +85,91 @@ class StatsBombLoader(EventDataLoader):
         super().__init__(root, getter)
 
     def competitions(self) -> pd.DataFrame:
-        return pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))
+        competionsdf = pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))
+        return competionsdf[[
+            "season_id",
+            "competition_id",
+            "competition_name",
+            "country_name",
+            "competition_gender",
+            "season_name"]]
 
-    def matches(self, competition_id: int, season_id: int) -> pd.DataFrame:
+    def games(self, competition_id: int, season_id: int) -> pd.DataFrame:
         path = os.path.join(self.root, f"matches/{competition_id}/{season_id}.json")
-        return pd.DataFrame(_flatten(m) for m in self.get(path))
+        gamesdf = pd.DataFrame(_flatten(m) for m in self.get(path))
+        gamesdf["match_date"] = pd.to_datetime(gamesdf[['match_date', 'kick_off']].agg(' '.join, axis=1))
+        gamesdf.rename(columns={
+            "match_id": "game_id",
+            "match_date": "game_date",
+            "match_week": "game_day",
+            "stadium_name": "venue",
+            "competition_stage_name": "competition_stage"
+            }, inplace=True)
+        return gamesdf[[
+            "game_id",
+            "season_id",
+            "competition_id",
+            "competition_stage",
+            "game_day",
+            "game_date",
+            "home_team_id",
+            "away_team_id",
+            "home_score",
+            "away_score",
+            "venue",
+            "referee_id"]]
 
-    def _lineups(self, match_id: int) -> List[Dict]:
-        path = os.path.join(self.root, f"lineups/{match_id}.json")
+    def _lineups(self, game_id: int) -> List[Dict]:
+        path = os.path.join(self.root, f"lineups/{game_id}.json")
         return self.get(path)
 
-    def teams(self, match_id: int) -> pd.DataFrame:
-        return pd.DataFrame(self._lineups(match_id))[["team_id", "team_name"]]
+    def teams(self, game_id: int) -> pd.DataFrame:
+        return pd.DataFrame(self._lineups(game_id))[["team_id", "team_name"]]
 
-    def players(self, match_id: int) -> pd.DataFrame:
-        return pd.DataFrame(
+    def players(self, game_id: int) -> pd.DataFrame:
+        playersdf = pd.DataFrame(
             _flatten_id(p)
-            for lineup in self._lineups(match_id)
+            for lineup in self._lineups(game_id)
             for p in lineup["lineup"]
         )
+        playergamesdf = extract_player_games(self.events(game_id))
+        playersdf = pd.merge(playersdf, playergamesdf[['player_id', 'team_id',
+            'position_id', 'position_name', 'minutes_played']],
+            on='player_id')
+        playersdf["game_id"] = game_id
+        playersdf['position_name'] = playersdf['position_name'].replace(0, 'Substitute')
+        playersdf['is_starter'] = playersdf['position_id'] != 0
+        playersdf.rename(columns={ 
+            "player_nickname": "nickname",
+            "country_name": "country",
+            "position_id": "starting_position_id",
+            "position_name": "starting_position_name",
+            }, inplace=True)
+        return playersdf[[
+            "game_id",
+            "team_id",
+            "player_id",
+            "player_name",
+            "nickname",
+            "jersey_number",
+            "is_starter",
+            "starting_position_id",
+            "starting_position_name",
+            "minutes_played"]]
 
-    def events(self, match_id: int):
+    def events(self, game_id: int):
         eventsdf = pd.DataFrame(
             _flatten_id(e)
-            for e in self.get(os.path.join(self.root, f"events/{match_id}.json"))
+            for e in self.get(os.path.join(self.root, f"events/{game_id}.json"))
         )
-        eventsdf["match_id"] = match_id
+        eventsdf["game_id"] = game_id
+        eventsdf['related_events'] = eventsdf['related_events'].apply(lambda d: d if isinstance(d, list) else [])
+        eventsdf["under_pressure"] = eventsdf["under_pressure"].fillna(False).astype(bool)
+        eventsdf["counterpress"] = eventsdf["counterpress"].fillna(False).astype(bool)
+        eventsdf.rename(columns={
+            "id": "event_id",
+            "period": "period_id",
+            }, inplace=True)
         return eventsdf
 
 
@@ -63,7 +178,7 @@ def _flatten_id(d: dict) -> dict:
     extra = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            if len(v) == 2 and "id" in v and "name" in v:
+            if "id" in v and "name" in v:
                 newd[k + "_id"] = v["id"]
                 newd[k + "_name"] = v["name"]
             else:
@@ -78,7 +193,12 @@ def _flatten(d: dict) -> dict:
     newd: dict = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            newd = {**newd, **_flatten(v)}
+            if "id" in v and "name" in v:
+                newd[k + "_id"] = v["id"]
+                newd[k + "_name"] = v["name"]
+                newd[k + "_extra"] = {l:w for (l,w) in v.items() if l != 'id' and l != 'name'}
+            else:
+                newd = {**newd, **_flatten(v)}
         else:
             newd[k] = v
     return newd
@@ -86,11 +206,21 @@ def _flatten(d: dict) -> dict:
 
 def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     """
-    Extract player games [player_id,game_id,minutes_played] from statsbomb match events
+    Extract player games [player_id, game_id, minutes_played] from statsbomb match events.
+
+    Parameters
+    ----------
+    events : pd.DataFrame
+        DataFrame containing StatsBomb events of a single game.
+
+    Returns
+    -------
+    player_games : pd.DataFrame
+        A DataFrame with the number of minutes played by each player during the game.
     """
     game_minutes = max(events[events.type_name == "Half End"].minute)
 
-    game_id = events.match_id.mode().values[0]
+    game_id = events.game_id.mode().values[0]
     players = {}
     for startxi in events[events.type_name == "Starting XI"].itertuples():
         team_id, team_name = startxi.team_id, startxi.team_name
@@ -128,22 +258,35 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
 
 def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     """
-    Convert StatsBomb events to SPADL actions
+    Convert StatsBomb events to SPADL actions.
+
+    Parameters
+    ----------
+    events : pd.DataFrame
+        DataFrame containing StatsBomb events from a single game.
+    home_team_id : int
+        ID of the home team in the corresponding game.
+
+    Returns
+    -------
+    actions : pd.DataFrame
+        DataFrame with corresponding SPADL actions.
+
     """
     actions = pd.DataFrame()
 
     events["extra"] = events["extra"].fillna({})
     events = events.fillna(0)
 
-    actions["game_id"] = events.match_id
-    actions["period_id"] = events.period
+    actions["game_id"] = events.game_id
+    actions["period_id"] = events.period_id
 
     actions["time_seconds"] = (
         60 * events.minute + events.second
-        - ((events.period > 1) * 45 * 60)
-        - ((events.period > 2) * 45 * 60)
-        - ((events.period > 3) * 15 * 60)
-        - ((events.period > 4) * 15 * 60))
+        - ((events.period_id > 1) * 45 * 60)
+        - ((events.period_id > 2) * 45 * 60)
+        - ((events.period_id > 3) * 15 * 60)
+        - ((events.period_id > 4) * 15 * 60))
     actions["timestamp"] = events.timestamp
     actions["team_id"] = events.team_id
     actions["player_id"] = events.player_id
@@ -358,75 +501,3 @@ def _get_bodypart_id(q: Tuple[str, dict]) -> int:
         b = "other"
 
     return spadlconfig.bodyparts.index(b)
-
-
-def _fix_clearances(actions: pd.DataFrame) -> pd.DataFrame:
-    next_actions = actions.shift(-1)
-    next_actions[-1:] = actions[-1:]
-    clearance_idx = actions.type_id == spadlconfig.actiontypes.index("clearance")
-    actions.loc[clearance_idx, "end_x"] = next_actions[clearance_idx].start_x.values
-    actions.loc[clearance_idx, "end_y"] = next_actions[clearance_idx].start_y.values
-
-    return actions
-
-
-def _fix_direction_of_play(actions: pd.DataFrame, home_team_id: int) -> int:
-    away_idx = (actions.team_id != home_team_id).values
-    for col in ["start_x", "end_x"]:
-        actions.loc[away_idx, col] = (
-            spadlconfig.field_length - actions[away_idx][col].values
-        )
-    for col in ["start_y", "end_y"]:
-        actions.loc[away_idx, col] = (
-            spadlconfig.field_width - actions[away_idx][col].values
-        )
-
-    return actions
-
-
-min_dribble_length: float = 3.0
-max_dribble_length: float = 60.0
-max_dribble_duration: float = 10.0
-
-
-def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
-    next_actions = actions.shift(-1)
-
-    same_team = actions.team_id == next_actions.team_id
-    # not_clearance = actions.type_id != actiontypes.index("clearance")
-
-    dx = actions.end_x - next_actions.start_x
-    dy = actions.end_y - next_actions.start_y
-    far_enough = dx ** 2 + dy ** 2 >= min_dribble_length ** 2
-    not_too_far = dx ** 2 + dy ** 2 <= max_dribble_length ** 2
-
-    dt = next_actions.time_seconds - actions.time_seconds
-    same_phase = dt < max_dribble_duration
-    same_period = actions.period_id == next_actions.period_id
-
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
-
-    dribbles = pd.DataFrame()
-    prev = actions[dribble_idx]
-    nex = next_actions[dribble_idx]
-    dribbles["game_id"] = nex.game_id
-    dribbles["period_id"] = nex.period_id
-    dribbles["action_id"] = prev.action_id + 0.1
-    dribbles["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
-    dribbles["timestamp"] = nex.timestamp
-    dribbles["team_id"] = nex.team_id
-    dribbles["player_id"] = nex.player_id
-    dribbles["start_x"] = prev.end_x
-    dribbles["start_y"] = prev.end_y
-    dribbles["end_x"] = nex.start_x
-    dribbles["end_y"] = nex.start_y
-    dribbles["bodypart_id"] = spadlconfig.bodyparts.index("foot")
-    dribbles["type_id"] = spadlconfig.actiontypes.index("dribble")
-    dribbles["result_id"] = spadlconfig.results.index("success")
-
-    actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
-    actions["action_id"] = range(len(actions))
-    return actions

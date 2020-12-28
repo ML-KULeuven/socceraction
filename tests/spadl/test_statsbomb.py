@@ -4,6 +4,12 @@ import pandas as pd
 import pytest
 from socceraction.spadl import config as spadl
 from socceraction.spadl import statsbomb as sb
+from socceraction.spadl.base import SPADLSchema
+from socceraction.spadl.statsbomb import (StatsBombCompetitionSchema,
+                                          StatsBombEventSchema,
+                                          StatsBombGameSchema,
+                                          StatsBombPlayerSchema,
+                                          StatsBombTeamSchema)
 
 
 class TestStatsBombLoader:
@@ -14,30 +20,32 @@ class TestStatsBombLoader:
 
     def test_default_remote(self):
         SBL = sb.StatsBombLoader()
-        assert SBL.root == sb._free_open_data
-
-        df_competitions = SBL.competitions()
-        assert len(df_competitions) > 0
+        assert SBL.root == sb.StatsBombLoader._free_open_data
 
     def test_competitions(self):
         df_competitions = self.SBL.competitions()
         assert len(df_competitions) > 0
+        StatsBombCompetitionSchema.validate(df_competitions)
 
-    def test_matches(self):
-        df_matches = self.SBL.matches(43, 3) # World Cup, 2018
-        assert len(df_matches) == 64
+    def test_games(self):
+        df_games = self.SBL.games(43, 3) # World Cup, 2018
+        assert len(df_games) == 64
+        StatsBombGameSchema.validate(df_games)
 
     def test_teams(self):
         df_teams = self.SBL.teams(7584)
         assert len(df_teams) == 2
+        StatsBombTeamSchema.validate(df_teams)
 
     def test_players(self):
         df_players = self.SBL.players(7584)
         assert len(df_players) == 26
+        StatsBombPlayerSchema.validate(df_players)
 
     def test_events(self):
         df_events = self.SBL.events(7584)
         assert len(df_events) > 0
+        StatsBombEventSchema.validate(df_events)
 
 
 class TestSpadlConvertor():
@@ -57,26 +65,7 @@ class TestSpadlConvertor():
     def test_convert_to_actions(self):
         df_actions = sb.convert_to_actions(self.events, 782)
         assert len(df_actions) > 0
-        assert set(df_actions.columns) == {
-                "game_id",
-                "period_id",
-                "time_seconds",
-                "timestamp",
-                "team_id",
-                "player_id",
-                "start_x",
-                "start_y",
-                "start_x",
-                "start_y",
-                "end_x",
-                "end_y",
-                "end_x",
-                "end_y",
-                "type_id",
-                "result_id",
-                "bodypart_id",
-                "action_id"
-                }
+        SPADLSchema.validate(df_actions)
         assert (df_actions.game_id == 7584).all()
         assert ((df_actions.team_id == 782) | (df_actions.team_id == 778)).all()
 
@@ -84,7 +73,7 @@ class TestSpadlConvertor():
         event = pd.DataFrame([{
             'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
-            'period': 1,
+            'period_id': 1,
             'timestamp': '00:00:00.920',
             'minute': 0,
             'second': 0,
@@ -112,7 +101,7 @@ class TestSpadlConvertor():
             'location': [61.0, 40.0],
             'under_pressure': None,
             'counterpress': None,
-            'match_id': 7584
+            'game_id': 7584
             }])
         action = sb.convert_to_actions(event, 782).iloc[0]
         assert action['start_x'] == ((61.0 - 1) / 119) * spadl.field_length
@@ -124,7 +113,7 @@ class TestSpadlConvertor():
         event = pd.DataFrame([{
             'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
-            'period': 1,
+            'period_id': 1,
             'timestamp': '00:00:00.920',
             'minute': 0,
             'second': 0,
@@ -153,7 +142,7 @@ class TestSpadlConvertor():
             'location': [61.0, 40.0],
             'under_pressure': None,
             'counterpress': None,
-            'match_id': 7584
+            'game_id': 7584
             }])
         action = sb.convert_to_actions(event, 782).iloc[0]
         assert action['end_x'] == ((49.0 - 1) / 119) * spadl.field_length
@@ -174,7 +163,7 @@ class TestSpadlConvertor():
         event = pd.DataFrame([{
             'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
-            'period': period,
+            'period_id': period,
             'timestamp': timestamp,
             'minute': minute,
             'second': second,
@@ -203,7 +192,7 @@ class TestSpadlConvertor():
             'location': [61.0, 40.0],
             'under_pressure': None,
             'counterpress': None,
-            'match_id': 7584
+            'game_id': 7584
             }])
         action = sb.convert_to_actions(event, 782).iloc[0]
         assert action['period_id'] == period
@@ -214,7 +203,7 @@ class TestSpadlConvertor():
         pass_event = pd.DataFrame([{
             'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
-            'period': 1,
+            'period_id': 1,
             'timestamp': '00:00:00.920',
             'minute': 0,
             'second': 0,
@@ -243,7 +232,7 @@ class TestSpadlConvertor():
             'location': [61.0, 40.0],
             'under_pressure': None,
             'counterpress': None,
-            'match_id': 7584
+            'game_id': 7584
             }])
         pass_action = sb.convert_to_actions(pass_event, 782).iloc[0]
         assert pass_action['team_id'] == 782

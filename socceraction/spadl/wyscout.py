@@ -1,23 +1,66 @@
-import json
 import glob
 import os
+import re
+import warnings
 from pathlib import Path
+from typing import Dict, List, Tuple
 from urllib.parse import urlparse
 from urllib.request import urlopen, urlretrieve
 from zipfile import ZipFile, is_zipfile
-from typing import Dict, List, Tuple
 
-import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
-import requests
-import socceraction.spadl.config as spadlcfg
-from socceraction.spadl.base import EventDataLoader
+import pandera as pa
 import tqdm  # type: ignore
+from pandera.typing import DateTime, Series
+
+from . import config as spadlconfig
+from .base import (CompetitionSchema, EventDataLoader, EventSchema, GameSchema,
+                   MissingDataError, PlayerSchema, TeamSchema, _add_dribbles,
+                   _fix_clearances, _fix_direction_of_play, min_dribble_length)
+
+
+__all__ = ['PublicWyscoutLoader', 'WyscoutLoader', 'convert_to_actions']
+
+class WyscoutCompetitionSchema(CompetitionSchema):
+    country_name: Series[str]
+    competition_gender: Series[str]
+
+
+class WyscoutGameSchema(GameSchema):
+    pass
+
+
+class WyscoutPlayerSchema(PlayerSchema):
+    firstname: Series[str]
+    lastname: Series[str]
+    nickname: Series[str] = pa.Field(nullable=True)
+    birth_date: Series[DateTime] = pa.Field(nullable=True)
+
+
+class WyscoutTeamSchema(TeamSchema):
+    team_name_short: Series[str]
+
+
+class WyscoutEventSchema(EventSchema):
+    milliseconds: Series[float]
+    subtype_id: Series[int]
+    subtype_name: Series[str]
+    positions: Series[object]
+    tags: Series[object]
 
 
 class PublicWyscoutLoader(EventDataLoader):
     """
     Load the public Wyscout dataset [1]_.
+
+    Parameters
+    ----------
+    root : str
+        Path where a local copy of the dataset is stored or where the
+        downloaded dataset should be stored.
+    download : bool
+        Whether to force a redownload of the data.
+
 
     .. [1] Pappalardo, L., Cintia, P., Rossi, A. et al. A public data set of
     spatio-temporal match events in soccer competitions. Sci Data 6, 236
@@ -25,15 +68,8 @@ class PublicWyscoutLoader(EventDataLoader):
     """
 
     def __init__(self, root: str = None, download: bool = False):
-        """
-        Initalize the WyscoutLoader
-
-        :param root: path where a local copy of the dataset is stored or where
-            the downloaded dataset should be stored.
-        :param download: whether to force a redownload of the data.
-        """
         if root is None:
-            root = os.path.join(os.getcwd(), "wyscout_data") 
+            root = os.path.join(os.getcwd(), "wyscout_data")
             os.makedirs(root, exist_ok=True)
         super().__init__(root, "local")
 
@@ -82,27 +118,28 @@ class PublicWyscoutLoader(EventDataLoader):
         df_competitions = pd.merge(df_competitions, self._index.reset_index()[['competition_id', 'season_id', 'season_name']], on='competition_id', how='left')
         return df_competitions.reset_index()[['competition_id', 'season_id', 'country_name', 'competition_name', 'competition_gender', 'season_name']]
 
-    def matches(self, competition_id: int, season_id: int) -> pd.DataFrame:
+    def games(self, competition_id: int, season_id: int) -> pd.DataFrame:
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_matches'])
         df_matches = pd.DataFrame(self.get(path))
         return convert_games(df_matches)
 
-    def _lineups(self, match_id: int) -> List[Dict]:
-        competition_id, season_id = self._match_index.loc[match_id, ['competition_id', 'season_id']]
+    def _lineups(self, game_id: int) -> List[Dict]:
+        competition_id, season_id = self._match_index.loc[game_id, ['competition_id', 'season_id']]
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_matches'])
         df_matches = pd.DataFrame(self.get(path)).set_index('wyId')
-        return list(df_matches.at[match_id, 'teamsData'].values())
+        return list(df_matches.at[game_id, 'teamsData'].values())
 
-    def teams(self, match_id: int) -> pd.DataFrame:
+    def teams(self, game_id: int) -> pd.DataFrame:
         df_teams = pd.DataFrame(self.get(os.path.join(self.root, "teams.json"))).set_index('wyId')
-        df_teams_match_id = pd.DataFrame(self._lineups(match_id))["teamId"]
+        df_teams_match_id = pd.DataFrame(self._lineups(game_id))["teamId"]
         df_teams_match = df_teams.loc[df_teams_match_id].reset_index()
         return convert_teams(df_teams_match)
 
-    def players(self, match_id: int) -> pd.DataFrame:
+    def players(self, game_id: int) -> pd.DataFrame:
         df_players = pd.DataFrame(self.get(os.path.join(self.root, "players.json"))).set_index('wyId')
+        lineups = self._lineups(game_id)
         df_players_match = []
-        for team in self._lineups(match_id):
+        for team in lineups:
             playerlist = team['formation']['lineup']
             for p in team['formation']['substitutions']:
                 playerlist.append(next(item for item in team['formation']['bench'] if item["playerId"] == p['playerIn']))
@@ -118,69 +155,137 @@ class PublicWyscoutLoader(EventDataLoader):
         df_players_match.reset_index(inplace=True)
         for c in ["shortName", "lastName", "firstName"]:
             df_players_match[c] = df_players_match[c].apply(lambda x: x.encode().decode("unicode-escape"))
-        return convert_players(df_players_match)
+        df_players_match = convert_players(df_players_match)
 
-    def events(self, match_id: int) -> pd.DataFrame:
-        competition_id, season_id = self._match_index.loc[match_id, ['competition_id', 'season_id']]
+        # get minutes played
+        competition_id, season_id = self._match_index.loc[game_id, ['competition_id', 'season_id']]
+        path_events = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_events'])
+        mp = get_minutes_played(lineups, self.get(path_events))
+        df_players_match = pd.merge(df_players_match, mp, on="player_id", how="right")
+        df_players_match["minutes_played"] = df_players_match.minutes_played.fillna(0)
+        df_players_match["game_id"] = game_id
+        return df_players_match
+
+    def events(self, game_id: int) -> pd.DataFrame:
+        competition_id, season_id = self._match_index.loc[game_id, ['competition_id', 'season_id']]
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_events'])
         df_events = pd.DataFrame(self.get(path)).set_index('matchId')
-        return df_events.loc[match_id].reset_index()
+        return convert_events(df_events.loc[game_id].reset_index())
 
 
-###############################################
-# Convert wyscout json files to wyscout.h5
-###############################################
 
+class WyscoutLoader(EventDataLoader):
+    """
+    Load event data either from a remote location or from a local folder.
+    """
 
-def jsonfiles_to_h5(jsonfiles, h5file):
+    _wyscout_api : str = "https://apirest.wyscout.com/v2/"
 
-    matches = []
-    players : list = []
-    teams: list = []
+    def __init__(self, root : str = _wyscout_api, getter : str = "remote", feeds : dict = None):
+        super().__init__(root, getter)
+        if feeds is None and getter == "remote":
+            self.feeds = {
+                    "competitions": "competitions",
+                    "seasons": "competitions/{season_id}/seasons",
+                    "games": "seasons/{season_id}/matches",
+                    "events": "matches/{game_id}/events"
+                    }
+        elif feeds is None and getter == "local":
+            self.feeds = {
+                    "competitions": "competitions.json",
+                    "seasons": "seasons_{competition_id}.json",
+                    "games": "matches_{season_id}.json",
+                    "events": "matches/events_{game_id}.json"
+                    }
+        else:
+            self.feeds = feeds
 
-    with pd.HDFStore(h5file) as store:
-        for jsonfile in jsonfiles:
-            with open(jsonfile, "r", encoding="utf-8") as fh:
-                root = json.load(fh)
-            matches.append(get_match(root))
-            teams += get_teams(root)
-            players += get_players(root)
+    def _get_file_or_url(self, feed, competition_id, season_id, game_id, multiple=False):
+        glob_pattern = self.feeds[feed].format(competition_id=competition_id, season_id=season_id, game_id=game_id)
+        if "*" in glob_pattern:
+            files = glob.glob(os.path.join(self.root, glob_pattern))
+            if len(files) == 0:
+                raise MissingDataError
+            elif len(files) == 1 and not multiple:
+                return files[0]
+            else:
+                return files
+        else:
+            return glob_pattern
 
-            events = get_events(root)
-            store[f"events/match_{get_match_id(root)}"] = pd.DataFrame(events)
+    def competitions(self) -> pd.DataFrame:
+        # Get all competitions
+        if "competitions" in self.feeds:
+            competitions_url = self._get_file_or_url("competitions", '*', '*', '*')
+            competitions = self.get(os.path.join(self.root, competitions_url))["competitions"]
+            seasons_urls = [self._get_file_or_url("seasons", c["wyId"], '*', '*') for c in competitions]
+        else:
+            seasons_urls = self._get_file_or_url("seasons", '*', '*', '*', True)
+        # Get seasons in each competition
+        competitions = []
+        seasons = []
+        for seasons_url in seasons_urls:
+            try:
+                root = self.get(os.path.join(self.root, seasons_url))
+                competitions.append(root["competition"])
+                seasons.extend([s['season'] for s in root["seasons"]])
+            except FileNotFoundError:
+                warnings.warn("File not found: {}".format(seasons_url))
+        df_competitions = convert_competitions(pd.DataFrame(competitions))
+        df_seasons = convert_seasons(pd.DataFrame(seasons))
+        # Merge into a single dataframe
+        return pd.merge(df_competitions, df_seasons, on="competition_id")
 
-        store["matches"] = pd.DataFrame(matches).drop_duplicates("wyId")
-        store["teams"] = pd.DataFrame(teams).drop_duplicates("wyId")
-        store["players"] = pd.DataFrame(players).drop_duplicates("wyId")
+    def games(self, competition_id: int, season_id: int) -> pd.DataFrame:
+        # Get all games
+        if "games" in self.feeds:
+            games_url = self._get_file_or_url("games", competition_id, season_id, '*')
+            games = self.get(os.path.join(self.root, games_url))["matches"]
+            gamedetails_urls = [self._get_file_or_url("events", competition_id, season_id, g["matchId"]) for g in games]
+        else:
+            gamedetails_urls = self._get_file_or_url("events", competition_id, season_id, '*', True)
+        games = []
+        for gamedetails_url in gamedetails_urls:
+            try:
+                root = self.get(os.path.join(self.root, gamedetails_url))["match"]
+                games.append(root)
+            except FileNotFoundError:
+                warnings.warn("File not found: {}".format(gamedetails_url))
+        df_games = convert_games(pd.DataFrame(games))
+        return df_games
 
+    def teams(self, game_id: int) -> pd.DataFrame:
+        events_url = self._get_file_or_url("events", '*', '*', game_id, False)
+        root = self.get(os.path.join(self.root, events_url))["teams"]
+        teams = [t["team"] for t in root.values() if t.get("team")]
+        df_teams = convert_teams(pd.DataFrame(teams))
+        return df_teams
 
-def get_match(root):
-    return root["match"]
+    def players(self, game_id: int) -> pd.DataFrame:
+        events_url = self._get_file_or_url("events", '*', '*', game_id, False)
+        root = self.get(os.path.join(self.root, events_url))
+        players = [
+            player["player"]
+            for team in root["players"].values()
+            for player in team
+            if player.get("player")
+        ]
+        df_players = convert_players(pd.DataFrame(players).drop_duplicates("wyId"))
+        df_players = pd.merge(df_players, get_minutes_played(root["match"]["teamsData"], root["events"]), on="player_id", how="right")
+        df_players["minutes_played"] = df_players.minutes_played.fillna(0)
+        df_players["game_id"] = game_id
+        pd.set_option('display.max_columns', None)
+        return df_players
 
-
-def get_match_id(root):
-    return root["match"]["wyId"]
-
-
-def get_teams(root):
-    return [t["team"] for t in root["teams"].values() if t.get("team")]
-
-
-def get_players(root):
-    return [
-        player["player"]
-        for team in root["players"].values()
-        for player in team
-        if player.get("player")
-    ]
-
-
-def get_events(root):
-    return root["events"]
+    def events(self, game_id: int) -> pd.DataFrame:
+        events_url = self._get_file_or_url("events", '*', '*', game_id, False)
+        root = self.get(os.path.join(self.root, events_url))["events"]
+        df_events = convert_events(pd.DataFrame(root))
+        pd.set_option('display.max_columns', None)
+        return df_events
 
 
 ###################################
-# Convert wyscout.h5 to spadl.h5
 # WARNING: HERE BE DRAGONS
 # This code for converting wyscout data was organically grown over a long period of time.
 # It works for now, but needs to be cleaned up in the future.
@@ -188,75 +293,39 @@ def get_events(root):
 ###################################
 
 
-spadl_length = spadlcfg.field_length
-spadl_width = spadlcfg.field_width
+def convert_competitions(competitions):
+    competitionsmapping = {
+            "wyId": "competition_id",
+            "name": "competition_name",
+            "gender": "competition_gender"
+            }
+    cols = ["competition_id", "competition_name", "country_name", "competition_gender"]
+    competitions['country_name'] = competitions.apply(lambda x: x.area['name'] if x.area['name'] != "" else "International", axis=1)
+    competitions = competitions.rename(columns=competitionsmapping)[cols]
+    return competitions
 
-bodyparts = spadlcfg.bodyparts
-results = spadlcfg.results
-actiontypes = spadlcfg.actiontypes
-
-min_dribble_length = 3
-max_dribble_length = 60
-max_dribble_duration = 10
-
-
-def convert_to_spadl(wyscouth5, spadlh5):
-
-    with pd.HDFStore(wyscouth5) as wyscoutstore, pd.HDFStore(spadlh5) as spadlstore:
-
-        print("...Inserting actiontypes")
-        spadlstore["actiontypes"] = pd.DataFrame(
-            list(enumerate(actiontypes)), columns=["type_id", "type_name"]
-        )
-
-        print("...Inserting bodyparts")
-        spadlstore["bodyparts"] = pd.DataFrame(
-            list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
-        )
-
-        print("...Inserting results")
-        spadlstore["results"] = pd.DataFrame(
-            list(enumerate(results)), columns=["result_id", "result_name"]
-        )
-
-        print("...Converting games")
-        matches = wyscoutstore["matches"]
-        games = convert_games(matches)
-        spadlstore["games"] = games
-
-        print("...Converting players")
-        spadlstore["players"] = convert_players(wyscoutstore["players"])
-
-        print("...Converting teams")
-        spadlstore["teams"] = convert_teams(wyscoutstore["teams"])
-
-        print("...Generating player_games")
-        player_games = []
-        for match in tqdm.tqdm(list(matches.itertuples()), unit="game"):
-            events = wyscoutstore[f"events/match_{match.wyId}"]
-            pg = get_player_games(match, events)
-            player_games.append(pg)
-        player_games = pd.concat(player_games)
-        spadlstore["player_games"] = player_games
-
-        print("...Converting events to actions")
-        for game in tqdm.tqdm(list(games.itertuples()), unit="game"):
-            events = wyscoutstore[f"events/match_{game.game_id}"]
-            actions = convert_actions(events, game.home_team_id)
-            spadlstore[f"actions/game_{game.game_id}"] = actions
-
-
-gamesmapping = {
-    "wyId": "game_id",
-    "dateutc": "game_date",
-    "competitionId": "competition_id",
-    "seasonId": "season_id",
-}
+def convert_seasons(seasons):
+    seasonsmapping = {
+        "wyId": "season_id",
+        "name": "season_name",
+        "competitionId": "competition_id"
+            }
+    cols = ["season_id", "season_name", "competition_id"]
+    seasons = seasons.rename(columns=seasonsmapping)[cols]
+    return seasons
 
 
 def convert_games(matches):
-    cols = ["game_id", "competition_id", "season_id", "game_date"]
+    gamesmapping = {
+            "wyId": "game_id",
+            "dateutc": "game_date",
+            "competitionId": "competition_id",
+            "seasonId": "season_id",
+            "gameweek": "game_day",
+            }
+    cols = ["game_id", "competition_id", "season_id", "game_date", "game_day"]
     games = matches.rename(columns=gamesmapping)[cols]
+    games["game_date"] = pd.to_datetime(games["game_date"])
     games["home_team_id"] = matches.teamsData.apply(lambda x: get_team_id(x, "home"))
     games["away_team_id"] = matches.teamsData.apply(lambda x: get_team_id(x, "away"))
     return games
@@ -268,45 +337,80 @@ def get_team_id(teamsData, side):
             return int(team_id)
 
 
-playermapping = {
-    "wyId": "player_id",
-    "shortName": "short_name",
-    "firstName": "first_name",
-    "lastName": "last_name",
-    "birthDate": "birth_date",
-}
-
-
 def convert_players(players):
-    cols = ["player_id", "short_name", "first_name", "last_name", "birth_date"]
-    return players.rename(columns=playermapping)[cols]
-
-
-teammapping = {
-    "wyId": "team_id",
-    "name": "short_team_name",
-    "officialName": "team_name",
-}
+    playermapping = {
+        "wyId": "player_id",
+        "shortName": "nickname",
+        "firstName": "firstname",
+        "lastName": "lastname",
+        "birthDate": "birth_date",
+    }
+    cols = ["player_id", "nickname", "firstname", "lastname", "birth_date"]
+    df_players = players.rename(columns=playermapping)[cols]
+    df_players["player_name"] = df_players[["firstname", "lastname"]].agg(" ".join, axis=1)
+    df_players["birth_date"] = pd.to_datetime(df_players["birth_date"])
+    return df_players
 
 
 def convert_teams(teams):
-    cols = ["team_id", "short_team_name", "team_name"]
+    teammapping = {
+        "wyId": "team_id",
+        "name": "team_name_short",
+        "officialName": "team_name",
+    }
+    cols = ["team_id", "team_name_short", "team_name"]
     return teams.rename(columns=teammapping)[cols]
 
 
-def get_player_games(match, events):
-    game_id = match.wyId
-    teamsData = match.teamsData
-    duration = 45 + events[events.matchPeriod == "2H"].eventSec.max() / 60
+def convert_events(events):
+    eventmapping = {
+        "id": "event_id",
+        "match_id": "game_id",
+        "event_name": "type_name",
+        "sub_event_name": "subtype_name"
+    }
+    cols = ["event_id", "game_id", "period_id", "milliseconds", "team_id",
+            "player_id", "type_id", "type_name", "subtype_id", "subtype_name",
+            "positions", "tags"]
+    # Camel case to snake case column names
+    pattern = re.compile(r'(?<!^)(?=[A-Z])')
+    events.columns = [pattern.sub('_', c).lower() for c in events.columns]
+    #
+    events["type_id"] = pd.to_numeric(
+        events["event_id"] if "event_id" in events.columns else None,
+        errors='coerce'
+    ).fillna(0).astype(int)
+    del events["event_id"]
+    events["subtype_id"] = pd.to_numeric(
+        events["sub_event_id"]
+        if "sub_event_id" in events.columns
+        else None,
+        errors='coerce'
+    ).fillna(0).astype(int)
+    del events["sub_event_id"]
+    events["period_id"] = events.match_period.apply(lambda x: wyscout_periods[x])
+    events["milliseconds"] = events.event_sec * 1000
+    return events.rename(columns=eventmapping)[cols]
+
+
+def get_minutes_played(teamsData, events):
+    periods_ts = {i : [0] for i in range(6)}
+    for e in events:
+        period_id = wyscout_periods[e["matchPeriod"]]
+        periods_ts[period_id].append(e["eventSec"])
+    duration = int(sum([max(periods_ts[i])/60 for i in range(5)]))
     playergames : dict = {}
-    for team_id, teamData in teamsData.items():
+    if isinstance(teamsData, dict):
+        teamsData = list(teamsData.values())
+    for teamData in teamsData:
         formation = teamData.get("formation", {})
         pg = {
             player["playerId"]: {
-                "game_id": game_id,
-                "team_id": team_id,
+                "team_id": teamData['teamId'],
                 "player_id": player["playerId"],
+                "jersey_number": player.get("shirtNumber", 0),
                 "minutes_played": duration,
+                "is_starter": True
             }
             for player in formation.get("lineup", [])
         }
@@ -316,10 +420,13 @@ def get_player_games(match, events):
         if substitutions != "null":
             for substitution in substitutions:
                 substitute = {
-                    "game_id": game_id,
-                    "team_id": team_id,
+                    "team_id": teamData['teamId'],
                     "player_id": substitution["playerIn"],
+                    "jersey_number": next(p.get("shirtNumber", 0)
+                        for p in formation.get("bench", []) 
+                        if p["playerId"] == substitution["playerIn"]),
                     "minutes_played": duration - substitution["minute"],
+                    "is_starter": False
                 }
                 pg[substitution["playerIn"]] = substitute
                 pg[substitution["playerOut"]]["minutes_played"] = substitution["minute"]
@@ -327,35 +434,36 @@ def get_player_games(match, events):
     return pd.DataFrame(playergames.values())
 
 
-def convert_actions(events, home_team_id):
-    events = augment_events(events)
+def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+    """
+    Convert Wyscout events to SPADL actions.
+
+    Parameters
+    ----------
+    events : pd.DataFrame
+        DataFrame containing Wyscout events from a single game.
+    home_team_id : int
+        ID of the home team in the corresponding game.
+
+    Returns
+    -------
+    actions : pd.DataFrame
+        DataFrame with corresponding SPADL actions.
+
+    """
+    events = pd.concat([events, get_tagsdf(events)], axis=1)
+    events = make_new_positions(events)
     events = fix_wyscout_events(events)
     actions = create_df_actions(events)
     actions = fix_actions(actions)
-    actions = fix_direction_of_play(actions, home_team_id)
-    actions = fix_clearances(actions)
+    actions = _fix_direction_of_play(actions, home_team_id)
+    actions = _fix_clearances(actions)
     actions["action_id"] = range(len(actions))
-    actions = add_dribbles(actions)
+    actions = _add_dribbles(actions)
+    for col in actions.columns:
+        if "_id" in col:
+            actions[col] = actions[col].astype(int)
     return actions
-
-
-def augment_events(events_df):
-    events_df = pd.concat([events_df, get_tagsdf(events_df)], axis=1)
-    events_df = make_new_positions(events_df)
-    events_df["type_id"] = (
-        events_df["eventId"] if "eventId" in events_df.columns else events_df.eventName
-    )
-    events_df["subtype_id"] = (
-        events_df["subEventId"]
-        if "subEventId" in events_df.columns
-        else events_df.subEventName
-    )
-    events_df["period_id"] = events_df.matchPeriod.apply(lambda x: wyscout_periods[x])
-    events_df["player_id"] = events_df["playerId"]
-    events_df["team_id"] = events_df["teamId"]
-    events_df["game_id"] = events_df["matchId"]
-    events_df["milliseconds"] = events_df.eventSec * 1000
-    return events_df
 
 
 def get_tag_set(tags):
@@ -456,18 +564,18 @@ def make_position_vars(event_id, positions):
 
 
 def make_new_positions(events_df):
-    new_positions = events_df[["id", "positions"]].apply(
+    new_positions = events_df[["event_id", "positions"]].apply(
         lambda x: make_position_vars(x[0], x[1]), axis=1
     )
-    new_positions.columns = ["id", "start_x", "start_y", "end_x", "end_y"]
-    events_df = pd.merge(events_df, new_positions, left_on="id", right_on="id")
+    new_positions.columns = ["event_id", "start_x", "start_y", "end_x", "end_y"]
+    events_df = pd.merge(events_df, new_positions, left_on="event_id", right_on="event_id")
     events_df = events_df.drop("positions", axis=1)
     return events_df
 
 
 def fix_wyscout_events(df_events):
     """
-    This function does some fixes on the Wyscout events such that the 
+    This function does some fixes on the Wyscout events such that the
     spadl action dataframe can be built
 
     Args:
@@ -810,10 +918,10 @@ def determine_bodypart_id(event):
     elif event["subtype_id"] == 82:
         body_part = "head"
     elif event["type_id"] == 10 and event['head/body']:
-       body_part = "head/other" 
+        body_part = "head/other"
     else:  # all other cases
         body_part = "foot"
-    return bodyparts.index(body_part)
+    return spadlconfig.bodyparts.index(body_part)
 
 
 def determine_type_id(event):
@@ -869,7 +977,7 @@ def determine_type_id(event):
         action_type = "interception"
     else:
         action_type = "non_action"
-    return actiontypes.index(action_type)
+    return spadlconfig.actiontypes.index(action_type)
 
 
 def determine_result_id(event):
@@ -917,7 +1025,7 @@ def remove_non_actions(df_actions):
     Returns:
     pd.DataFrame: SciSports action dataframe without non-actions
     """
-    df_actions = df_actions[df_actions["type_id"] != actiontypes.index("non_action")]
+    df_actions = df_actions[df_actions["type_id"] != spadlconfig.actiontypes.index("non_action")]
     # remove remaining ball out of field, whistle and goalkeeper from line
     df_actions = df_actions.reset_index(drop=True)
     return df_actions
@@ -933,13 +1041,13 @@ def fix_actions(df_actions):
     Returns:
     pd.DataFrame: Wyscout event dataframe with end coordinates for shots
     """
-    df_actions["start_x"] = df_actions["start_x"] * spadl_length / 100
+    df_actions["start_x"] = df_actions["start_x"] * spadlconfig.field_length / 100
     df_actions["start_y"] = (
-        (100 - df_actions["start_y"]) * spadl_width / 100
+        (100 - df_actions["start_y"]) * spadlconfig.field_width / 100
     )  # y is from top to bottom in Wyscout
-    df_actions["end_x"] = df_actions["end_x"] * spadl_length / 100
+    df_actions["end_x"] = df_actions["end_x"] * spadlconfig.field_length / 100
     df_actions["end_y"] = (
-        (100 - df_actions["end_y"]) * spadl_width / 100
+        (100 - df_actions["end_y"]) * spadlconfig.field_width / 100
     )  # y is from top to bottom in Wyscout
     df_actions = fix_goalkick_coordinates(df_actions)
     df_actions = adjust_goalkick_result(df_actions)
@@ -962,7 +1070,7 @@ def fix_goalkick_coordinates(df_actions):
     Returns:
     pd.DataFrame: SciSports action dataframe including start coordinates for goalkicks
     """
-    goalkicks_idx = df_actions["type_id"] == actiontypes.index("goalkick")
+    goalkicks_idx = df_actions["type_id"] == spadlconfig.actiontypes.index("goalkick")
     df_actions.loc[goalkicks_idx, "start_x"] = 5.0
     df_actions.loc[goalkicks_idx, "start_y"] = 34.0
 
@@ -979,7 +1087,7 @@ def fix_foul_coordinates(df_actions):
     Returns:
     pd.DataFrame: SciSports action dataframe including start coordinates for goalkicks
     """
-    fouls_idx = df_actions["type_id"] == actiontypes.index("foul")
+    fouls_idx = df_actions["type_id"] == spadlconfig.actiontypes.index("foul")
     df_actions.loc[fouls_idx, "end_x"] = df_actions.loc[fouls_idx, "start_x"]
     df_actions.loc[fouls_idx, "end_y"] = df_actions.loc[fouls_idx, "start_y"]
 
@@ -997,7 +1105,7 @@ def fix_keeper_save_coordinates(df_actions):
     Returns:
     pd.DataFrame: SciSports action dataframe with correct keeper_save coordinates
     """
-    saves_idx = df_actions["type_id"] == actiontypes.index("keeper_save")
+    saves_idx = df_actions["type_id"] == spadlconfig.actiontypes.index("keeper_save")
     # invert the coordinates
     df_actions.loc[saves_idx, "end_x"] = 105.0 - df_actions.loc[saves_idx, "end_x"]
     df_actions.loc[saves_idx, "end_y"] = 68.0 - df_actions.loc[saves_idx, "end_y"]
@@ -1020,17 +1128,17 @@ def remove_keeper_goal_actions(df_actions):
     """
     prev_actions = df_actions.shift(1)
     same_phase = prev_actions.time_seconds + 10 > df_actions.time_seconds
-    shot_goals = (prev_actions.type_id == actiontypes.index("shot")) & (
+    shot_goals = (prev_actions.type_id == spadlconfig.actiontypes.index("shot")) & (
         prev_actions.result_id == 1
     )
-    penalty_goals = (prev_actions.type_id == actiontypes.index("shot_penalty")) & (
+    penalty_goals = (prev_actions.type_id == spadlconfig.actiontypes.index("shot_penalty")) & (
         prev_actions.result_id == 1
     )
-    freekick_goals = (prev_actions.type_id == actiontypes.index("shot_freekick")) & (
+    freekick_goals = (prev_actions.type_id == spadlconfig.actiontypes.index("shot_freekick")) & (
         prev_actions.result_id == 1
     )
     goals = shot_goals | penalty_goals | freekick_goals
-    keeper_save = df_actions["type_id"] == actiontypes.index("keeper_save")
+    keeper_save = df_actions["type_id"] == spadlconfig.actiontypes.index("keeper_save")
     goals_keepers_idx = same_phase & goals & keeper_save
     df_actions = df_actions.drop(df_actions.index[goals_keepers_idx])
     df_actions = df_actions.reset_index(drop=True)
@@ -1050,7 +1158,7 @@ def adjust_goalkick_result(df_actions):
     pd.DataFrame: SciSports action dataframe with correct goalkick results
     """
     nex_actions = df_actions.shift(-1)
-    goalkicks = df_actions["type_id"] == actiontypes.index("goalkick")
+    goalkicks = df_actions["type_id"] == spadlconfig.actiontypes.index("goalkick")
     same_team = df_actions["team_id"] == nex_actions["team_id"]
     accurate = same_team & goalkicks
     not_accurate = ~same_team & goalkicks
@@ -1058,64 +1166,3 @@ def adjust_goalkick_result(df_actions):
     df_actions.loc[not_accurate, "result_id"] = 0
 
     return df_actions
-
-
-def fix_clearances(actions):
-    next_actions = actions.shift(-1)
-    next_actions[-1:] = actions[-1:]
-    clearance_idx = actions.type_id == actiontypes.index("clearance")
-    actions.loc[clearance_idx, "end_x"] = next_actions[clearance_idx].start_x.values
-    actions.loc[clearance_idx, "end_y"] = next_actions[clearance_idx].start_y.values
-    return actions
-
-
-def fix_direction_of_play(actions, home_team_id):
-    away_idx = (actions.team_id != home_team_id).values
-    for col in ["start_x", "end_x"]:
-        actions.loc[away_idx, col] = spadl_length - actions[away_idx][col].values
-    for col in ["start_y", "end_y"]:
-        actions.loc[away_idx, col] = spadl_width - actions[away_idx][col].values
-
-    return actions
-
-
-def add_dribbles(actions):
-    next_actions = actions.shift(-1)
-
-    same_team = actions.team_id == next_actions.team_id
-    # not_clearance = actions.type_id != actiontypes.index("clearance")
-
-    dx = actions.end_x - next_actions.start_x
-    dy = actions.end_y - next_actions.start_y
-    far_enough = dx ** 2 + dy ** 2 >= min_dribble_length ** 2
-    not_too_far = dx ** 2 + dy ** 2 <= max_dribble_length ** 2
-
-    dt = next_actions.time_seconds - actions.time_seconds
-    same_phase = dt < max_dribble_duration
-    same_period = actions.period_id == next_actions.period_id
-
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
-
-    dribbles = pd.DataFrame()
-    prev = actions[dribble_idx]
-    nex = next_actions[dribble_idx]
-    dribbles["game_id"] = nex.game_id
-    dribbles["period_id"] = nex.period_id
-    dribbles["action_id"] = prev.action_id + 0.1
-    dribbles["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
-    dribbles["team_id"] = nex.team_id
-    dribbles["player_id"] = nex.player_id
-    dribbles["start_x"] = prev.end_x
-    dribbles["start_y"] = prev.end_y
-    dribbles["end_x"] = nex.start_x
-    dribbles["end_y"] = nex.start_y
-    dribbles["bodypart_id"] = bodyparts.index("foot")
-    dribbles["type_id"] = actiontypes.index("dribble")
-    dribbles["result_id"] = results.index("success")
-
-    actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
-    actions["action_id"] = range(len(actions))
-    return actions
