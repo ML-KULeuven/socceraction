@@ -53,3 +53,13 @@ def bodyparts_df() -> pd.DataFrame:
     return pd.DataFrame(
         list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
     )
+
+def add_names(actions) -> pd.DataFrame:
+    return (
+        actions
+        .drop(columns=['type_name', 'result_name', 'bodypart_name'], errors='ignore')
+        .merge(actiontypes_df(), how="left")
+        .merge(results_df(), how="left")
+        .merge(bodyparts_df(), how="left")
+    )
+

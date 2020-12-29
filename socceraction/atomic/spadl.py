@@ -27,6 +27,15 @@ def actiontypes_df():
     )
 
 
+def add_names(actions) -> pd.DataFrame:
+    return (
+        actions
+        .drop(columns=['type_name', 'bodypart_name'], errors='ignore')
+        .merge(actiontypes_df(), how="left")
+        .merge(bodyparts_df(), how="left")
+    )
+
+
 def convert_to_atomic(actions: pd.DataFrame) -> pd.DataFrame:
     actions = actions.copy()
     actions = _extra_from_passes(actions)
