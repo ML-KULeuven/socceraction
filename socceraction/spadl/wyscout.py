@@ -460,7 +460,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     actions = _fix_clearances(actions)
     actions["action_id"] = range(len(actions))
     actions = _add_dribbles(actions)
-    for col in actions.columns:
+    for col in [c for c in actions.columns.values if c != "original_event_id"]:
         if "_id" in col:
             actions[col] = actions[col].astype(int)
     return actions
@@ -894,6 +894,7 @@ def create_df_actions(df_events):
             "end_y",
         ]
     ].copy()
+    df_actions["original_event_id"] = df_events["event_id"].astype(object)
     df_actions["bodypart_id"] = df_events.apply(determine_bodypart_id, axis=1)
     df_actions["type_id"] = df_events.apply(determine_type_id, axis=1)
     df_actions["result_id"] = df_events.apply(determine_result_id, axis=1)

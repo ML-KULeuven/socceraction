@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 import pandas as pd  # type: ignore
 import pandera as pa
 import requests
-from pandera.typing import DateTime, Series
+from pandera.typing import DateTime, Series, Object
 
 from . import config as spadlconfig
 
@@ -127,6 +127,7 @@ class EventSchema(pa.SchemaModel):
 
 class SPADLSchema(pa.SchemaModel):
     game_id: Series[int]
+    original_event_id: Series[Object] = pa.Field(nullable=True)
     action_id: Series[int]
     period_id: Series[int]
     timestamp: Optional[Series[str]]

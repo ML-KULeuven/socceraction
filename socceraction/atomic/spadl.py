@@ -1,17 +1,11 @@
 import os
-import numpy as np
 import pandas as pd
 
 import socceraction.spadl as _spadl
-import tqdm
+from socceraction.spadl.base import _add_dribbles
 
 bodyparts = _spadl.bodyparts
 bodyparts_df = _spadl.bodyparts_df
-
-min_dribble_length = 3
-max_dribble_length = 60
-max_dribble_duration = 10
-# max_pass_duration = 15
 
 actiontypes = _spadl.actiontypes + [
     "receival",
@@ -33,33 +27,18 @@ def actiontypes_df():
     )
 
 
-def convert_to_atomic(actions):
+def convert_to_atomic(actions: pd.DataFrame) -> pd.DataFrame:
     actions = actions.copy()
-    actions = extra_from_passes(actions)
-    actions = add_dribbles(actions)  # for some reason this adds more dribbles
-    actions = extra_from_shots(actions)
-    actions = extra_from_fouls(actions)
-    actions = convert_columns(actions)
-    actions = simplify(actions)
+    actions = _extra_from_passes(actions)
+    actions = _add_dribbles(actions)  # for some reason this adds more dribbles
+    actions = _extra_from_shots(actions)
+    actions = _extra_from_fouls(actions)
+    actions = _convert_columns(actions)
+    actions = _simplify(actions)
     return actions
 
 
-def simplify(actions):
-    a = actions
-    ar = actiontypes
-
-    cornerlike = ["corner_crossed","corner_short"]
-    corner_ids = list(_spadl.actiontypes.index(ty) for ty in cornerlike)
-
-    freekicklike = ["freekick_crossed","freekick_short","shot_freekick"]
-    freekick_ids = list(_spadl.actiontypes.index(ty) for ty in freekicklike)
-
-    a["type_id"] = a.type_id.mask(a.type_id.isin(corner_ids), ar.index("corner"))
-    a["type_id"] = a.type_id.mask(a.type_id.isin(freekick_ids), ar.index("freekick"))
-    return a
-
-
-def extra_from_passes(actions):
+def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
     same_team = actions.team_id == next_actions.team_id
 
@@ -101,6 +80,7 @@ def extra_from_passes(actions):
 
     extra = pd.DataFrame()
     extra["game_id"] = prev.game_id
+    extra["original_event_id"] = prev.original_event_id
     extra["period_id"] = prev.period_id
     extra["action_id"] = prev.action_id + 0.1
     extra["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
@@ -136,7 +116,7 @@ def extra_from_passes(actions):
     return actions
 
 
-def extra_from_shots(actions):
+def _extra_from_shots(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
 
     shotlike = ["shot", "shot_freekick", "shot_penalty"]
@@ -163,6 +143,7 @@ def extra_from_shots(actions):
 
     extra = pd.DataFrame()
     extra["game_id"] = prev.game_id
+    extra["original_event_id"] = prev.original_event_id
     extra["period_id"] = prev.period_id
     extra["action_id"] = prev.action_id + 0.1
     extra["time_seconds"] = prev.time_seconds  # + nex.time_seconds) / 2
@@ -191,13 +172,14 @@ def extra_from_shots(actions):
     return actions
 
 
-def extra_from_fouls(actions):
+def _extra_from_fouls(actions: pd.DataFrame) -> pd.DataFrame:
     yellow = actions.result_id == _spadl.results.index("yellow_card")
     red = actions.result_id == _spadl.results.index("red_card")
 
     prev = actions[yellow | red]
     extra = pd.DataFrame()
     extra["game_id"] = prev.game_id
+    extra["original_event_id"] = prev.original_event_id
     extra["period_id"] = prev.period_id
     extra["action_id"] = prev.action_id + 0.1
     extra["time_seconds"] = prev.time_seconds  # + nex.time_seconds) / 2
@@ -224,49 +206,7 @@ def extra_from_fouls(actions):
     return actions
 
 
-def add_dribbles(actions):
-    next_actions = actions.shift(-1)
-
-    same_team = actions.team_id == next_actions.team_id
-    # not_clearance = actions.type_id != actiontypes.index("clearance")
-
-    dx = actions.end_x - next_actions.start_x
-    dy = actions.end_y - next_actions.start_y
-    far_enough = dx ** 2 + dy ** 2 >= min_dribble_length ** 2
-    not_too_far = dx ** 2 + dy ** 2 <= max_dribble_length ** 2
-
-    dt = next_actions.time_seconds - actions.time_seconds
-    same_phase = dt < max_dribble_duration
-
-    dribble_idx = same_team & far_enough & not_too_far & same_phase
-
-    dribbles = pd.DataFrame()
-    prev = actions[dribble_idx]
-    nex = next_actions[dribble_idx]
-    dribbles["game_id"] = nex.game_id
-    dribbles["period_id"] = nex.period_id
-    dribbles["action_id"] = prev.action_id + 0.1
-    dribbles["time_seconds"] = (prev.time_seconds + nex.time_seconds) / 2
-    dribbles["timestamp"] = nex.timestamp
-    dribbles["team_id"] = nex.team_id
-    dribbles["player_id"] = nex.player_id
-    dribbles["start_x"] = prev.end_x
-    dribbles["start_y"] = prev.end_y
-    dribbles["end_x"] = nex.start_x
-    dribbles["end_y"] = nex.start_y
-    dribbles["bodypart_id"] = bodyparts.index("foot")
-    dribbles["type_id"] = actiontypes.index("dribble")
-    dribbles["result_id"] = _spadl.results.index("success")
-
-    actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
-    actions["action_id"] = range(len(actions))
-    return actions
-
-
-def convert_columns(actions):
+def _convert_columns(actions: pd.DataFrame) -> pd.DataFrame:
     actions["x"] = actions.start_x
     actions["y"] = actions.start_y
     actions["dx"] = actions.end_x - actions.start_x
@@ -274,8 +214,9 @@ def convert_columns(actions):
     return actions[
         [
             "game_id",
-            "period_id",
+            "original_event_id"
             "action_id",
+            "period_id",
             "time_seconds",
             "timestamp",
             "team_id",
@@ -289,3 +230,17 @@ def convert_columns(actions):
         ]
     ]
 
+
+def _simplify(actions: pd.DataFrame) -> pd.DataFrame:
+    a = actions
+    ar = actiontypes
+
+    cornerlike = ["corner_crossed", "corner_short"]
+    corner_ids = list(_spadl.actiontypes.index(ty) for ty in cornerlike)
+
+    freekicklike = ["freekick_crossed", "freekick_short", "shot_freekick"]
+    freekick_ids = list(_spadl.actiontypes.index(ty) for ty in freekicklike)
+
+    a["type_id"] = a.type_id.mask(a.type_id.isin(corner_ids), ar.index("corner"))
+    a["type_id"] = a.type_id.mask(a.type_id.isin(freekick_ids), ar.index("freekick"))
+    return a

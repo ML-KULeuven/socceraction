@@ -71,7 +71,7 @@ class TestSpadlConvertor():
 
     def test_convert_start_location(self):
         event = pd.DataFrame([{
-            'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
+            'event_id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
             'period_id': 1,
             'timestamp': '00:00:00.920',
@@ -111,7 +111,7 @@ class TestSpadlConvertor():
 
     def test_convert_end_location(self):
         event = pd.DataFrame([{
-            'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
+            'event_id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
             'period_id': 1,
             'timestamp': '00:00:00.920',
@@ -161,7 +161,7 @@ class TestSpadlConvertor():
     )
     def test_convert_time(self, period, timestamp, minute, second):
         event = pd.DataFrame([{
-            'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
+            'event_id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
             'period_id': period,
             'timestamp': timestamp,
@@ -201,7 +201,7 @@ class TestSpadlConvertor():
 
     def test_convert_pass(self):
         pass_event = pd.DataFrame([{
-            'id': 'a1b55211-a292-4294-887b-5385cc3c5705',
+            'event_id': 'a1b55211-a292-4294-887b-5385cc3c5705',
             'index': 5,
             'period_id': 1,
             'timestamp': '00:00:00.920',

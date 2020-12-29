@@ -279,6 +279,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     events = events.fillna(0)
 
     actions["game_id"] = events.game_id
+    actions["original_event_id"] = events.event_id
     actions["period_id"] = events.period_id
 
     actions["time_seconds"] = (
@@ -319,7 +320,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     actions["action_id"] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    for col in actions.columns:
+    for col in [c for c in actions.columns.values if c != "original_event_id"]:
         if "_id" in col:
             actions[col] = actions[col].astype(int)
     return actions
