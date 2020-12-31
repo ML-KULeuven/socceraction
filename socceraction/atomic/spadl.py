@@ -223,7 +223,7 @@ def _convert_columns(actions: pd.DataFrame) -> pd.DataFrame:
     return actions[
         [
             "game_id",
-            "original_event_id"
+            "original_event_id",
             "action_id",
             "period_id",
             "time_seconds",

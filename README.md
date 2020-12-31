@@ -1,10 +1,26 @@
-# Socceraction
-`socceraction` is a Python package for objectively quantifying the impact of the individual actions performed by soccer players. It contains three components:
+<div align="center">
+	<img src="docs/_static/logo_white.png" height="200">
+	<p>
+		<b>Convert soccer event stream data to the SPADL format<br/>and value on-the-ball player actions</b>
+	</p>
+	<br>
+	<br>
+</div>
 
-- **SPADL** (Soccer Player Action Description Language): a unified and expressive language for on-the-ball player actions.
-- **VAEP** (Valuing Actions by Estimating Probabilities): a framework to value actions on their expected impact on the score line.
-- **xT** (Expected Threat): an alternative framework to value ball-progressing actions using a possession-based Markov model.
-- **Atomic-SPADL**: an alternative version of SPADL, see [our blogpost](https://dtai.cs.kuleuven.be/sports/blog/introducing-atomic-spadl-a-new-way-to-represent-event-stream-data).
+[![pypi](https://badge.fury.io/py/socceraction.svg)](https://pypi.org/project/socceraction)
+[![Python: 3.6+](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://pypi.org/project/socceraction)
+[![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
+[![Build Status](https://travis-ci.org/{{cookiecutter.github_username}}/socceraction.svg?branch=master)](https://travis-ci.org/{{cookiecutter.github_username}}/socceraction)
+[![Code coverage](https://codecov.io/gh/{{cookiecutter.github_username}}/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/{{cookiecutter.github_username}}/socceraction)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
+This is a Python package for objectively quantifying the impact of the individual actions performed by soccer players using event stream data. It contains the following components:
+
+- Converters for event stream data to the **SPADL** and **atomic-SPADL** formats, which are unified and expressive languages for on-the-ball player actions.   [Read more »](docs/documentation/SPADL.rst)
+- An implementation of the **VAEP** and **Atomic-VAEP** frameworks to value actions on their expected impact on the score line.  [Read more »](docs/documentation/VAEP.rst)
+- An implementation of the **xT** framework to value ball-progressing actions using a possession-based Markov model.  [Read more »](docs/documentation/xT.rst)
+
 <br/>
 <p align="center">
   <img src="docs/actions_bra-bel.png" width="650" title="Example Brazil-Belgium">
@@ -14,68 +30,13 @@
 
 The recommended way to install `socceraction` is to simply use pip:
 
-```
+```sh
 $ pip install socceraction
 ```
 
-`socceraction` officially supports Python 3.6--3.8.
+`socceraction` officially supports Python 3.6---3.8.
 
-The folder `public-notebooks` provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings.
-
-## How it works
-`socceraction` uses event stream data to value the individual actions performed by soccer players. Computing these action values requires the three steps described below. 
-
-
-### 1. Conversion from event stream format to SPADL
-
-SPADL is a language for describing player actions, as opposed to the formats by commercial vendors that describe events. The distinction is that actions are a subset of events that require a player to perform the action. For example, a passing event is an action, whereas an event signifying the end of the game is not an action. SPADL was designed to be _human-interpretable_, _simple_ and _complete_ to accurately define and describe actions on the pitch. Unlike all other event stream formats, we always store the same attributes for each action. Excluding optional information snippets enables us to store our data in a table and more easily apply automatic analysis tools.
-
-This package currently supports converters for [Opta](https://www.optasports.com), [Wyscout](https://www.wyscout.com), and [StatsBomb](https://www.statsbomb.com) event stream data.
-
-Here is an example of five actions in the SPADL format leading up to Belgium's second goal against England in the third place play-off in the 2018 FIFA world cup.
-
-
-|   game_id |   period_id |   seconds | team    | player          |   start_x |   start_y |   end_x |   end_y | actiontype   | result   | bodypart   |
-|-----------|-------------|-----------|---------|-----------------|-----------|-----------|---------|---------|--------------|----------|------------|
-|      8657 |           2 |      2179 | Belgium | Axel Witsel     |      37.1 |      44.8 |    53.8 |    48.2 | pass         | success  | foot       |
-|      8657 |           2 |      2181 | Belgium | Kevin De Bruyne |      53.8 |      48.2 |    70.6 |    42.2 | dribble      | success  | foot       |
-|      8657 |           2 |      2184 | Belgium | Kevin De Bruyne |      70.6 |      42.2 |    87.4 |    49.1 | pass         | success  | foot       |
-|      8657 |           2 |      2185 | Belgium | Eden Hazard     |      87.4 |      49.1 |    97.9 |    38.7 | dribble      | success  | foot       |
-|      8657 |           2 |      2187 | Belgium | Eden Hazard     |      97.9 |      38.7 |   105   |    37.4 | shot         | success  | foot       |
-
-
-Here is the same phase visualized using the `matplotsoccer` package
-```python
-matplotsoccer.actions(
-    location=actions[["start_x", "start_y", "end_x", "end_y"]],
-    action_type=actions.type_name,
-    team=actions.team_name,
-    result= actions.result_name == "success",
-    label=actions[["time_seconds", "type_name", "player_name", "team_name"]],
-    labeltitle=["time","actiontype","player","team"],
-    zoom=False
-)
-```
-![](docs/eden_hazard_goal.png)
-
-
-### 2. Estimating scoring and conceding probabilities
-
-The intuition is that all good actions should aim to  
-
-<ol type="a">
-  <li>increase the <i>chance of scoring</i> a goal in the short-term future and/or,</li>
-  <li>decrease the <i>chance of conceding</i> a goal in the short-term future.</li>
-</ol>
-
-Valuing an action for a team then requires assessing the change in probability for both scoring and conceding as a result of an action. Therefore, `socceraction` converts each game state to a feature-vector format and trains a probabilistic classifier to estimate the probabilities of scoring and conceding in the near future for both teams.
-
-### 3. Compute VAEP values
-
-An action moves the game state from one state to another. Using the probabilities computed in the previous step, we can define the *offensive value* of an action as the change in scoring probability before and after the action. This change will be positive if the action increased the probability that the team which performed the action will score (e.g., a successful tackle to recover the ball). Similarly, we define the *defensive value* of an action as the change in conceding probability. This change will be positive if the action increased the probability that the team will concede a goal (e.g., a failed pass). Finally, the total VAEP value of an action is the difference between that action's offensive value and defensive value.
-
-We can also aggregate the individual action values into a player rating for multiple time granularities (i.e., a single game or a full season) as well as per action type.
-
+The folder [`public-notebooks`](public-notebooks) provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings. More detailed installation/usage instructions can be found in [the documentation](TODO).
 
 ## Research
 
