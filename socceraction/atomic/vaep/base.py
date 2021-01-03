@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Implements the Atomic-VAEP framework.
+
+Attributes
+----------
+xfns_default : list(callable)
+    The default VAEP features.
+
+"""
+from typing import List, Optional
 
 import socceraction.atomic.spadl as _spadlcfg
-
 from socceraction.vaep.base import VAEP
+
 from . import features as fs
 from . import formula as _vaep
 from . import labels as lab
-
 
 xfns_default = [
     fs.actiontype,
@@ -20,7 +28,7 @@ xfns_default = [
     fs.polar,
     fs.movement_polar,
     fs.direction,
-    fs.goalscore
+    fs.goalscore,
 ]
 
 
@@ -36,7 +44,8 @@ class AtomicVAEP(VAEP):
     ----------
     xfns : list
         List of feature transformers (see :mod:`socceraction.atomic.vaep.features`)
-        used to describe the game states.
+        used to describe the game states. Uses :attr:`~socceraction.vaep.base.xfns_default`
+        if None.
     nb_prev_actions : int, default=3
         Number of previous actions used to decscribe the game state.
 
@@ -51,10 +60,15 @@ class AtomicVAEP(VAEP):
         Discovery & Data Mining, pp. 1851-1861. 2019.
     """
 
-    def __init__(self, xfns=xfns_default, nb_prev_actions=3):
-        super(AtomicVAEP, self).__init__(xfns, nb_prev_actions)
-        self.spadlcfg = _spadlcfg
-        self.vaep = _vaep
-        self.fs = fs
+    def __init__(
+        self,
+        xfns: Optional[List[fs.FeatureTransfomer]] = None,
+        nb_prev_actions: int = 3,
+    ):
+        super().__init__(xfns, nb_prev_actions)
+        self.xfns = xfns_default if xfns is None else xfns
+        self.spadlcfg = _spadlcfg  # type: ignore
+        self.vaep = _vaep  # type: ignore
+        self.fs = fs  # type: ignore
         self.yfns = [lab.scores, lab.concedes]
-
+        self.nb_prev_actions = nb_prev_actions

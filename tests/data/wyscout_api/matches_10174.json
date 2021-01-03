@@ -1,0 +1,68 @@
+{
+  "matches": [
+    {
+      "competitionId": 10,
+      "date": "2016-12-21 15:30:00",
+      "dateutc": "2016-12-21 15:30:00",
+      "gameweek": 0,
+      "label": "United Arab Emirates - Maldives, 1-0",
+      "matchId": 2316513,
+      "roundId": 4168881,
+      "seasonId": 10174,
+      "status": "Played"
+    },
+    {
+      "competitionId": 10,
+      "date": "2016-12-20 04:00:00",
+      "dateutc": "2016-12-20 04:00:00",
+      "gameweek": 0,
+      "label": "New Zealand B - Thailand, 3-1",
+      "matchId": 2317953,
+      "roundId": 4168881,
+      "seasonId": 10174,
+      "status": "Played"
+    },
+    {
+      "competitionId": 10,
+      "date": "2016-12-19 22:45:00",
+      "dateutc": "2016-12-19 22:45:00",
+      "gameweek": 0,
+      "label": "Brazil - Italy, 5-3",
+      "matchId": 2317887,
+      "roundId": 4168881,
+      "seasonId": 10174,
+      "status": "Played"
+    },
+    {
+      "competitionId": 10,
+      "date": "2016-12-18 20:30:00",
+      "dateutc": "2016-12-18 20:30:00",
+      "gameweek": 0,
+      "label": "Russia - Costa Rica, 1-0",
+      "matchId": 2317886,
+      "roundId": 4168881,
+      "seasonId": 10174,
+      "status": "Played"
+    },
+    {
+      "competitionId": 10,
+      "date": "2016-12-18 15:30:00",
+      "dateutc": "2016-12-18 15:30:00",
+      "gameweek": 0,
+      "label": "United Arab Emirates - Maldives, 0-1",
+      "matchId": 2316512,
+      "roundId": 4168881,
+      "seasonId": 10174,
+      "status": "Played"
+    }
+  ],
+  "season": {
+    "active": false,
+    "competitionId": 10,
+    "endDate": "2016-12-31",
+    "gsmId": 12124,
+    "name": "2016",
+    "startDate": "2016-01-01",
+    "wyId": 10174
+  }
+}

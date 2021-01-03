@@ -1,5 +1,5 @@
 # folders to ignore
-data/*
+data-*/*
 private-notebooks*
 tests/data/*
 !tests/data/download.py

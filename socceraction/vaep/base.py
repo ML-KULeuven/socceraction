@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
+"""Implements the VAEP framework.
 
+Attributes
+----------
+xfns_default : list(callable)
+    The default VAEP features.
+
+"""
 import math
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import socceraction.spadl.config as _spadlcfg
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import brier_score_loss, roc_auc_score
+
+import socceraction.spadl.config as _spadlcfg
 
 from . import features as fs
 from . import formula as _vaep
@@ -26,25 +35,21 @@ except ImportError:
     lightgbm = None
 
 
-
 xfns_default = [
-   fs.actiontype,
-   fs.actiontype_onehot,
-   fs.result,
-   fs.result_onehot,
-   fs.actiontype_result_onehot,
-   fs.bodypart,
-   fs.bodypart_onehot,
-   fs.time,
-   fs.startlocation,
-   fs.endlocation,
-   fs.startpolar,
-   fs.endpolar,
-   fs.movement,
-   fs.team,
-   fs.time_delta,
-   fs.space_delta,
-   fs.goalscore
+    fs.actiontype_onehot,
+    fs.result_onehot,
+    fs.actiontype_result_onehot,
+    fs.bodypart_onehot,
+    fs.time,
+    fs.startlocation,
+    fs.endlocation,
+    fs.startpolar,
+    fs.endpolar,
+    fs.movement,
+    fs.team,
+    fs.time_delta,
+    fs.space_delta,
+    fs.goalscore,
 ]
 
 
@@ -61,7 +66,8 @@ class VAEP:
     ----------
     xfns : list
         List of feature transformers (see :mod:`socceraction.vaep.features`)
-        used to describe the game states.
+        used to describe the game states. Uses :attr:`~socceraction.vaep.base.xfns_default`
+        if None.
     nb_prev_actions : int, default=3
         Number of previous actions used to decscribe the game state.
 
@@ -72,21 +78,25 @@ class VAEP:
         Discovery & Data Mining, pp. 1851-1861. 2019.
     """
 
-    def __init__(self, xfns=xfns_default, nb_prev_actions=3):
-        self.__models = {}
+    def __init__(
+        self,
+        xfns: Optional[List[Callable[[List[pd.DataFrame]], pd.DataFrame]]] = None,
+        nb_prev_actions: int = 3,
+    ):
+        self.__models: Dict[str, Any] = {}
         self.fs = fs
-        self.xfns = xfns
+        self.xfns = xfns_default if xfns is None else xfns
         self.yfns = [lab.scores, lab.concedes]
         self.spadlcfg = _spadlcfg
         self.vaep = _vaep
         self.nb_prev_actions = nb_prev_actions
 
-    def compute_features(self, game, game_actions):
+    def compute_features(self, game: pd.Series, game_actions: pd.DataFrame) -> pd.DataFrame:
         """
         Transform actions to the feature-based representation of game states.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         game : pd.Series
             The SPADL representation of a single game.
         game_actions : pd.DataFrame
@@ -102,12 +112,14 @@ class VAEP:
         gamestates = self.fs.play_left_to_right(gamestates, game.home_team_id)
         return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
 
-    def compute_labels(self, game, game_actions):
+    def compute_labels(
+        self, game: pd.Series, game_actions: pd.DataFrame
+    ) -> pd.DataFrame:  # pylint: disable=W0613
         """
-        Compute the labels for each game state in the given game. 
+        Compute the labels for each game state in the given game.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         game : pd.Series
             The SPADL representation of a single game.
         game_actions : pd.DataFrame
@@ -121,7 +133,15 @@ class VAEP:
         game_actions_with_names = self.spadlcfg.add_names(game_actions)
         return pd.concat([fn(game_actions_with_names) for fn in self.yfns], axis=1)
 
-    def fit(self, X, y, learner='xgboost', val_size=.25, tree_params={}, fit_params={}):
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.DataFrame,
+        learner: str = 'xgboost',
+        val_size: float = 0.25,
+        tree_params: Optional[Dict[str, Any]] = None,
+        fit_params: Optional[Dict[str, Any]] = None,
+    ) -> 'VAEP':
         """
         Fit the model according to the given training data.
 
@@ -150,81 +170,116 @@ class VAEP:
         """
         nb_states = len(X)
         idx = np.random.permutation(nb_states)
-        train_idx = idx[:math.floor(nb_states * (1-val_size))]
-        val_idx = idx[math.floor(nb_states * (1-val_size))+1:]
+        # fmt: off
+        train_idx = idx[:math.floor(nb_states * (1 - val_size))]
+        val_idx = idx[(math.floor(nb_states * (1 - val_size)) + 1):]
+        # fmt: on
 
         X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
         X_val, y_val = X.iloc[val_idx], y.iloc[val_idx]
 
         # train classifiers F(X) = Y
         for col in list(y.columns):
-            val_params = {}
-            if val_size > 0:
-                val_params = dict(
-                    early_stopping_rounds=10,
-                    eval_set=[(X_val, y_val[col])])
- 
+            eval_set = [(X_val, y_val[col])] if val_size > 0 else None
             if learner == 'xgboost':
-                if xgboost is None:
-                    raise ImportError("xgboost is not installed.")
-                # XGboost
-                tree_params_default = dict(
-                        n_estimators=100,
-                        max_depth=3)
-                tree_params = {**tree_params_default, **tree_params}
-                fit_params_default = dict(
-                    eval_metric="auc",
-                    verbose=True)
-                fit_params = {**fit_params_default, **val_params, **fit_params}
-                model = xgboost.XGBClassifier(**tree_params)
+                self.__models[col] = self._fit_xgboost(
+                    X_train, y_train[col], eval_set, tree_params, fit_params
+                )
             elif learner == 'catboost':
-                if catboost is None:
-                    raise ImportError("catboost is not installed.")
-                tree_params_default = dict(
-                    eval_metric="BrierScore", 
-                    loss_function="Logloss",
-                    iterations=100)
-                tree_params = {**tree_params_default, **tree_params}
-                fit_params_default = dict(
-                    cat_features=np.nonzero([c.dtype.name == 'category' for (_, c) in X.iteritems()])[0].tolist(),
-                    verbose=True)
-                fit_params = {**fit_params_default, **val_params, **fit_params}
-                model = catboost.CatBoostClassifier(**tree_params)
+                self.__models[col] = self._fit_catboost(
+                    X_train, y_train[col], eval_set, tree_params, fit_params
+                )
             elif learner == 'lightgbm':
-                if lightgbm is None:
-                    raise ImportError("lightgbm is not installed.")
-                tree_params_default = dict(
-                        n_estimators=100,
-                        max_depth=3)
-                tree_params = {**tree_params_default, **val_params, **tree_params}
-                fit_params_default = dict(
-                    eval_metric="auc",
-                    verbose=True
-                    )
-                fit_params = {**fit_params_default, **fit_params}
-                model = lightgbm.LGBMClassifier(**tree_params)
+                self.__models[col] = self._fit_lightgbm(
+                    X_train, y_train[col], eval_set, tree_params, fit_params
+                )
             else:
-                raise ValueError("A {} learner is not supported".format(learner))
-
-            model.fit(X_train, y_train[col].astype(int), **fit_params)
-            self.__models[col] = model
+                raise ValueError('A {} learner is not supported'.format(learner))
         return self
 
+    def _fit_xgboost(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        eval_set: Optional[List[Tuple[pd.DataFrame, pd.Series]]] = None,
+        tree_params: Optional[Dict[str, Any]] = None,
+        fit_params: Optional[Dict[str, Any]] = None,
+    ) -> 'xgboost.XGBClassifier':
+        if xgboost is None:
+            raise ImportError('xgboost is not installed.')
+        # Default settings
+        if tree_params is None:
+            tree_params = dict(n_estimators=100, max_depth=3)
+        if fit_params is None:
+            fit_params = dict(eval_metric='auc', verbose=True)
+        if eval_set is not None:
+            val_params = dict(early_stopping_rounds=10, eval_set=eval_set)
+            fit_params = {**fit_params, **val_params}
+        # Train the model
+        model = xgboost.XGBClassifier(**tree_params)
+        return model.fit(X, y, **fit_params)
 
-    def _estimate_probabilities(self, gamestates):
+    def _fit_catboost(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        eval_set: Optional[List[Tuple[pd.DataFrame, pd.Series]]] = None,
+        tree_params: Optional[Dict[str, Any]] = None,
+        fit_params: Optional[Dict[str, Any]] = None,
+    ) -> 'catboost.CatBoostClassifier':
+        if catboost is None:
+            raise ImportError('catboost is not installed.')
+        # Default settings
+        if tree_params is None:
+            tree_params = dict(eval_metric='BrierScore', loss_function='Logloss', iterations=100)
+        if fit_params is None:
+            is_cat_feature = [c.dtype.name == 'category' for (_, c) in X.iteritems()]
+            fit_params = dict(
+                cat_features=np.nonzero(is_cat_feature)[0].tolist(),
+                verbose=True,
+            )
+        if eval_set is not None:
+            val_params = dict(early_stopping_rounds=10, eval_set=eval_set)
+            fit_params = {**fit_params, **val_params}
+        # Train the model
+        model = catboost.CatBoostClassifier(**tree_params)
+        return model.fit(X, y, **fit_params)
+
+    def _fit_lightgbm(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        eval_set: Optional[List[Tuple[pd.DataFrame, pd.Series]]] = None,
+        tree_params: Optional[Dict[str, Any]] = None,
+        fit_params: Optional[Dict[str, Any]] = None,
+    ) -> 'lightgbm.LGBMClassifier':
+        if lightgbm is None:
+            raise ImportError('lightgbm is not installed.')
+        if tree_params is None:
+            tree_params = dict(n_estimators=100, max_depth=3)
+        if fit_params is None:
+            fit_params = dict(eval_metric='auc', verbose=True)
+        if eval_set is not None:
+            val_params = dict(early_stopping_rounds=10, eval_set=eval_set)
+            fit_params = {**fit_params, **val_params}
+        # Train the model
+        model = lightgbm.LGBMClassifier(**tree_params)
+        return model.fit(X, y, **fit_params)
+
+    def _estimate_probabilities(self, X: pd.DataFrame) -> pd.DataFrame:
         Y_hat = pd.DataFrame()
-        for col in self.__models.keys():
-            Y_hat[col] = [p[1] for p in self.__models[col].predict_proba(gamestates)]
+        for col in self.__models:
+            Y_hat[col] = [p[1] for p in self.__models[col].predict_proba(X)]
         return Y_hat
 
-
-    def rate(self, game, game_actions, game_states=None):
+    def rate(
+        self, game: pd.Series, game_actions: pd.DataFrame, game_states: pd.DataFrame = None
+    ) -> pd.DataFrame:
         """
-        Computes the VAEP rating for the given game states.
+        Compute the VAEP rating for the given game states.
 
         Parameters
         ----------
-
         game : pd.Series
             The SPADL representation of a single game.
         game_actions : pd.DataFrame
@@ -251,8 +306,8 @@ class VAEP:
         vaep_values = self.vaep.value(game_actions_with_names, p_scores, p_concedes)
         return pd.concat([game_actions, vaep_values], axis=1)
 
-    def score(self, X, y):
-        """Evaluates the fit of the model on the given test data and labels.
+    def score(self, X: pd.DataFrame, y: pd.DataFrame) -> Dict[str, Dict[str, float]]:
+        """Evaluate the fit of the model on the given test data and labels.
 
         Parameters
         ----------
@@ -271,8 +326,8 @@ class VAEP:
 
         y_hat = self._estimate_probabilities(X)
 
-        scores = {}
-        for col in self.__models.keys():
+        scores: Dict[str, Dict[str, float]] = {}
+        for col in self.__models:
             scores[col] = {}
             scores[col]['brier'] = brier_score_loss(y[col], y_hat[col])
             scores[col]['auroc'] = roc_auc_score(y[col], y_hat[col])

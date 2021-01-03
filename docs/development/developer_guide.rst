@@ -25,7 +25,7 @@ project.
 
 
 Steps for Submitting Code
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When contributing code, you'll want to follow this checklist:
 

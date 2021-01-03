@@ -1,0 +1,33 @@
+{
+  "competition": {
+    "area": {
+      "alpha2code": "JO",
+      "alpha3code": "JOR",
+      "id": 400,
+      "name": "Jordan"
+    },
+    "category": "default",
+    "divisionLevel": 0,
+    "format": "Domestic league",
+    "gender": "male",
+    "gsmId": 1195,
+    "name": "1st Division",
+    "type": "club",
+    "wyId": 1495
+  },
+  "competitionId": 1495,
+  "seasons": [
+    {
+      "season": {
+        "active": true,
+        "competitionId": 1495,
+        "endDate": "2017-05-22",
+        "gsmId": 12307,
+        "name": "2017",
+        "startDate": "2017-02-27",
+        "wyId": 15872
+      },
+      "seasonId": "15872"
+    }
+  ]
+}
