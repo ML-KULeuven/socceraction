@@ -581,7 +581,6 @@ class WyscoutLoader(EventDataLoader):
         )
         df_players['minutes_played'] = df_players.minutes_played.fillna(0)
         df_players['game_id'] = game_id
-        pd.set_option('display.max_columns', None)
         return df_players
 
     def events(self, game_id: int) -> DataFrame[WyscoutEventSchema]:

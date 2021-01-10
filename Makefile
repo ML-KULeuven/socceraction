@@ -6,6 +6,7 @@ CODE = socceraction
 init:
 	python3 -m venv .venv
 	$(BIN)pip install -e .
+	$(BIN)pip install -r requirements_dev.txt
 
 tests/data/statsbomb/spadl-WorldCup-2018.h5:
 	$(BIN)python tests/data/download.py statsbomb
