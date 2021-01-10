@@ -1,0 +1,11 @@
+black
+bumpversion==0.6.0
+mypy==0.790
+pylint==2.6.0
+pytest==6.2.1
+pytest-deadfixtures==2.2.1
+unify==0.5
+flake8==3.8.4
+pydocstyle==5.1.1
+tables==3.6.1
+sphinx

@@ -1,0 +1,20 @@
+{
+  "competitions": [
+    {
+      "area": {
+        "alpha2code": "JO",
+        "alpha3code": "JOR",
+        "id": 400,
+        "name": "Jordan"
+      },
+      "category": "default",
+      "divisionLevel": 0,
+      "format": "Domestic league",
+      "gender": "male",
+      "gsmId": 1195,
+      "name": "1st Division",
+      "type": "club",
+      "wyId": 1495
+    }
+  ]
+}
