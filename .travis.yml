@@ -1,24 +1,19 @@
 language: python
-
 cache: pip
-
 python:
-  - "3.6"
-  - "3.7"
-  - "3.8"
-  - "3.9"
-
+- '3.6'
+- '3.7'
+- '3.8'
+- '3.9'
 install:
-  - pip install -r requirements_dev.txt
-
+- pip install -r requirements_dev.txt
 script:
-  - make lint test BIN=""
-
+- make lint test BIN=""
 deploy:
   provider: pypi
-  username: "__token__"
-  password: 
-    secure: ?
+  username: __token__
+  password:
+    secure: cqQ4WijOydrp9YMdEv194hW1E7PUAh5f964l2hJIanHb9iwgBizOIxg7s2oDrPpSzwteYBKWMXiNnOQm7AbhdtUHUEMSnUNqheIgb+/WzvjDfvwW1Wp6PPl2V1+HMwM1Hp2jwUeQbst9lV+IImW+lJ3RDMAPWsIGoMn0cHb7W0fesiqNQnCIooOTu6JxBvPBB7HkmxLqSVkBgcw+ROgqDrJb0uhpUDTJoSHkcB0SZChNbj3HhydU17VgXLQEeyyVRn9lyrYJA7AbPlVhZ7B6r8exyDAcTb35bsl50GrpEraY5MgOt49zbfxbPKGJJrLI/0z1+YVE/2uycIS1ljN3HCq0zRYX7h4wxXaf+QlfHflCD88jU/iBhZC7UYRDdDYEEtYgWlvrTZJiXc0ESxcMYmdr0yErQqDBfYwwCPjDmEXiNBFhfMt9jekUseabnsIfJfug5BaOm6edw/WZo/Be17DpgoUemXEn3Pj/TEznEdty4XWWoE1C5E7NiRQN6zvETJqZ3T0xsJLyGuHlJ1M0gi0a6/ftlQ6OTuNIef0+C6ZAU1PUzzEo+gvVOZYtVjScbl7p8uCOOjFAFX8ybhc6qfrUhuh5MNLvMuLEU0seyQaFFJBvdgauyHvimPqFTLaafl5EiFnz/E5OyyXzU1lMh874AKipA7Tgtk+S4cSM7dM=
   on:
     branch: master
     tags: true
