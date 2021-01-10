@@ -10,8 +10,8 @@
 [![pypi](https://badge.fury.io/py/socceraction.svg)](https://pypi.org/project/socceraction)
 [![Python: 3.6+](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://pypi.org/project/socceraction)
 [![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
-[![Build Status](https://travis-ci.org/{{cookiecutter.github_username}}/socceraction.svg?branch=master)](https://travis-ci.org/{{cookiecutter.github_username}}/socceraction)
-[![Code coverage](https://codecov.io/gh/{{cookiecutter.github_username}}/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/{{cookiecutter.github_username}}/socceraction)
+[![Build Status](https://travis-ci.org/ML-KULeuven/socceraction.svg?branch=master)](https://travis-ci.org/ML-KULeuven/socceraction)
+[![Code coverage](https://codecov.io/gh/ML-KULeuven/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/ML-KULeuven/socceraction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
