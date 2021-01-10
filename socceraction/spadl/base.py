@@ -34,7 +34,7 @@ class CompetitionSchema(pa.SchemaModel):
     competition_id: Series[int]
     competition_name: Series[str]
 
-    class _Config(pa.model.BaseConfig):
+    class Config:  # noqa: D106
         strict = True
 
 
@@ -49,7 +49,7 @@ class GameSchema(pa.SchemaModel):
     home_team_id: Series[int]
     away_team_id: Series[int]
 
-    class _Config(pa.model.BaseConfig):
+    class Config:  # noqa: D106
         strict = True
 
 
@@ -59,7 +59,7 @@ class TeamSchema(pa.SchemaModel):
     team_id: Series[int]
     team_name: Series[str]
 
-    class _Config(pa.model.BaseConfig):
+    class Config:  # noqa: D106
         strict = True
 
 
@@ -74,7 +74,7 @@ class PlayerSchema(pa.SchemaModel):
     minutes_played: Series[int]
     jersey_number: Series[int]
 
-    class _Config(pa.model.BaseConfig):
+    class Config:  # noqa: D106
         strict = True
 
 
@@ -89,7 +89,7 @@ class EventSchema(pa.SchemaModel):
     type_id: Series[int]
     type_name: Series[str]
 
-    class _Config(pa.model.BaseConfig):
+    class Config:  # noqa: D106
         strict = True
 
 
@@ -98,24 +98,23 @@ class SPADLSchema(pa.SchemaModel):
 
     game_id: Series[int]
     original_event_id: Series[Object] = pa.Field(nullable=True)
-    action_id: Series[int]
-    period_id: Series[int]
-    timestamp: Optional[Series[str]]
-    time_seconds: Series[float]
+    action_id: Series[int] = pa.Field(allow_duplicates=False)
+    period_id: Series[int] = pa.Field(ge=1, le=5)
+    time_seconds: Series[float] = pa.Field(ge=0, le=60 * 60)  # assuming overtime < 15 min
     team_id: Series[int]
     player_id: Series[int]
-    start_x: Series[float]
-    start_y: Series[float]
-    end_x: Series[float]
-    end_y: Series[float]
-    bodypart_id: Series[int]
-    bodypart_name: Optional[Series[str]]
-    type_id: Series[int]
-    type_name: Optional[Series[str]]
-    result_id: Series[int]
-    result_name: Optional[Series[str]]
+    start_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)
+    start_y: Series[float] = pa.Field(ge=0, le=spadlconfig.field_width)
+    end_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)
+    end_y: Series[float] = pa.Field(ge=0, le=spadlconfig.field_width)
+    bodypart_id: Series[int] = pa.Field(isin=spadlconfig.bodyparts_df().bodypart_id)
+    bodypart_name: Optional[Series[str]] = pa.Field(isin=spadlconfig.bodyparts_df().bodypart_name)
+    type_id: Series[int] = pa.Field(isin=spadlconfig.actiontypes_df().type_id)
+    type_name: Optional[Series[str]] = pa.Field(isin=spadlconfig.actiontypes_df().type_name)
+    result_id: Series[int] = pa.Field(isin=spadlconfig.results_df().result_id)
+    result_name: Optional[Series[str]] = pa.Field(isin=spadlconfig.results_df().result_name)
 
-    class _Config(pa.model.BaseConfig):
+    class Config:  # noqa: D106
         strict = True
 
 

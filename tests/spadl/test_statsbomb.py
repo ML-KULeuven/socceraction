@@ -231,7 +231,6 @@ class TestSpadlConvertor:
             - ((period > 4) * 15 * 60)
             + second
         )
-        assert action['timestamp'] == timestamp
 
     def test_convert_pass(self):
         pass_event = pd.DataFrame(

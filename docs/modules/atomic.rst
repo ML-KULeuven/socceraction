@@ -8,6 +8,7 @@ socceraction.atomic.spadl
 .. automodule:: socceraction.atomic.spadl
    :members:
    :undoc-members:
+   :exclude-members: Config
 
 socceraction.atomic.vaep
 -----------------------------

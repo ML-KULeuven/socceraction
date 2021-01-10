@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple
 
 import pandas as pd  # type: ignore
 import pandera as pa
-from pandera.typing import DataFrame, Series
+from pandera.typing import DataFrame, DateTime, Series
 
 from . import config as spadlconfig
 from .base import (
@@ -66,9 +66,9 @@ class StatsBombEventSchema(EventSchema):
 
     event_id: Series[object]
     index: Series[int]
-    timestamp: Series[str]
+    timestamp: Series[DateTime]
     minute: Series[int]
-    second: Series[int]
+    second: Series[int] = pa.Field(ge=0, le=59)
     possession: Series[int]
     possession_team_id: Series[int]
     possession_team_name: Series[str]
@@ -277,6 +277,7 @@ class StatsBombLoader(EventDataLoader):
             raise ParseError('{} should contain a list of events'.format(path))
         eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
         eventsdf['game_id'] = game_id
+        eventsdf['timestamp'] = pd.to_datetime(eventsdf['timestamp'], format='%H:%M:%S.%f')
         eventsdf['related_events'] = eventsdf['related_events'].apply(
             lambda d: d if isinstance(d, list) else []
         )
@@ -409,7 +410,6 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
         - ((events.period_id > 3) * 15 * 60)
         - ((events.period_id > 4) * 15 * 60)
     )
-    actions['timestamp'] = events.timestamp
     actions['team_id'] = events.team_id
     actions['player_id'] = events.player_id
 
@@ -430,7 +430,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
 
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
-        .sort_values(['game_id', 'period_id', 'time_seconds', 'timestamp'])
+        .sort_values(['game_id', 'period_id', 'time_seconds'])
         .reset_index(drop=True)
     )
     actions = _fix_direction_of_play(actions, home_team_id)

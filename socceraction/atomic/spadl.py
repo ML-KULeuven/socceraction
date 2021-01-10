@@ -42,30 +42,6 @@ actiontypes = _spadl.actiontypes + [
 ]
 
 
-class AtomicSPADLSchema(pa.SchemaModel):
-    """Definition of an Atomic-SPADL dataframe."""
-
-    game_id: Series[int]
-    original_event_id: Series[Object] = pa.Field(nullable=True)
-    action_id: Series[int]
-    period_id: Series[int]
-    timestamp: Optional[Series[str]]
-    time_seconds: Series[float]
-    team_id: Series[int]
-    player_id: Series[int]
-    x: Series[float]
-    y: Series[float]
-    dx: Series[float]
-    dy: Series[float]
-    bodypart_id: Series[int]
-    bodypart_name: Optional[Series[str]]
-    type_id: Series[int]
-    type_name: Optional[Series[str]]
-
-    class _Config(pa.model.BaseConfig):
-        strict = True
-
-
 def actiontypes_df() -> DataFrame:
     """Return a dataframe with the type id and type name of each Atomic-SPADL action type.
 
@@ -75,6 +51,29 @@ def actiontypes_df() -> DataFrame:
         The 'type_id' and 'type_name' of each Atomic-SPADL action type.
     """
     return pd.DataFrame(list(enumerate(actiontypes)), columns=['type_id', 'type_name'])
+
+
+class AtomicSPADLSchema(pa.SchemaModel):
+    """Definition of an Atomic-SPADL dataframe."""
+
+    game_id: Series[int]
+    original_event_id: Series[Object] = pa.Field(nullable=True)
+    action_id: Series[int] = pa.Field(allow_duplicates=False)
+    period_id: Series[int] = pa.Field(ge=1, le=5)
+    time_seconds: Series[float] = pa.Field(ge=0, le=60 * 60)  # assuming overtime < 15 min
+    team_id: Series[int]
+    player_id: Series[int]
+    x: Series[float] = pa.Field(ge=0, le=field_length)
+    y: Series[float] = pa.Field(ge=0, le=field_width)
+    dx: Series[float] = pa.Field(ge=-field_length, le=field_length)
+    dy: Series[float] = pa.Field(ge=-field_width, le=field_width)
+    bodypart_id: Series[int] = pa.Field(isin=bodyparts_df().bodypart_id)
+    bodypart_name: Optional[Series[str]] = pa.Field(isin=bodyparts_df().bodypart_name)
+    type_id: Series[int] = pa.Field(isin=actiontypes_df().type_id)
+    type_name: Optional[Series[str]] = pa.Field(isin=actiontypes_df().type_name)
+
+    class Config:  # noqa: D106
+        strict = True
 
 
 def add_names(actions: DataFrame[AtomicSPADLSchema]) -> DataFrame[AtomicSPADLSchema]:

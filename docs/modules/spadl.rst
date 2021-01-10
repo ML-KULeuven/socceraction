@@ -15,6 +15,7 @@ socceraction.spadl.base
 .. automodule:: socceraction.spadl.base
    :members:
    :undoc-members:
+   :exclude-members: Config
 
 socceraction.spadl.statsbomb
 -----------------------------

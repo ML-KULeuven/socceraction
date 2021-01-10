@@ -24,6 +24,7 @@ setuptools.setup(name='socceraction',
      install_requires=[
        "tqdm",
        "pandas",
+       "pandera",
        "numpy",
        "unidecode",
        "requests",
