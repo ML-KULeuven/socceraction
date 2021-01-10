@@ -96,7 +96,9 @@ def scoring_prob(actions: DataFrame[SPADLSchema], l: int = N, w: int = M) -> np.
 def get_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
     """Get all ball-progressing actions.
 
-    These include passes, dribbles and crosses.
+    These include passes, dribbles and crosses. Take-ons are ignored because
+    they typically coincide with dribbles and do not move the ball to
+    a different cell.
 
     Parameters
     ----------
@@ -108,7 +110,6 @@ def get_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
     pd.DataFrame
         All ball-progressing actions in the input dataframe.
     """
-    # FIXME: Shouldn't take-ons be include here?
     return actions[
         (actions.type_name == 'pass')
         | (actions.type_name == 'dribble')
@@ -329,9 +330,7 @@ class ExpectedThreat:
         )
         return self
 
-    def interpolator(
-        self, kind: str = 'linear'
-    ) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    def interpolator(self, kind: str = 'linear') -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
         """Interpolate over the pitch.
 
         This is a wrapper around :func:`scipy.interpolate.interp2d`.
