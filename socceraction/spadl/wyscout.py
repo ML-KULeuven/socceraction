@@ -687,7 +687,7 @@ def convert_teams(teams: pd.DataFrame) -> pd.DataFrame:
     return teams.rename(columns=teammapping)[cols]
 
 
-def convert_events(events: pd.DataFrame) -> pd.DataFrame:
+def convert_events(raw_events: pd.DataFrame) -> pd.DataFrame:
     eventmapping = {
         'id': 'event_id',
         'match_id': 'game_id',
@@ -708,6 +708,7 @@ def convert_events(events: pd.DataFrame) -> pd.DataFrame:
         'positions',
         'tags',
     ]
+    events = raw_events.copy()
     # Camel case to snake case column names
     pattern = re.compile(r'(?<!^)(?=[A-Z])')
     events.columns = [pattern.sub('_', c).lower() for c in events.columns]

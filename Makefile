@@ -12,7 +12,7 @@ tests/data/statsbomb/spadl-WorldCup-2018.h5:
 	$(BIN)python tests/data/download.py statsbomb
 
 tests/data/wyscout_public/spadl-WorldCup-2018.h5:
-	$(BIN)python tests/data/download.py wyscout_public
+	$(BIN)python tests/data/download.py wyscout
 
 test: tests/data/statsbomb/spadl-WorldCup-2018.h5 tests/data/wyscout_public/spadl-WorldCup-2018.h5
 	$(BIN)pytest --verbosity=2 --showlocals --strict --log-level=DEBUG $(args)
@@ -46,3 +46,5 @@ bump_patch:
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
+	rm -rf tests/data/wyscout_public
+	rm -rf tests/data/statsbomb

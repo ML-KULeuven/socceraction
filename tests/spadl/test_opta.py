@@ -126,17 +126,17 @@ class TestWhoscoredLoader:
 
 class TestSpadlConvertor:
     def setup_method(self):
-        data_dir = (
-            '/cw/dtaijupiter/NoCsBack/dtai/pieterr/Data/soccer-opta-xml/ftp.performgroup.com/'
-        )
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'opta')
+
         loader = opta.OptaLoader(
             root=data_dir,
             parser='xml',
             feeds={
-                'f7': 'La Liga/srml-{competition_id}-{season_id}-f{game_id}-matchresults.xml',
-                'f24': 'La Liga/f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml',
+                'f7': 'f7-{competition_id}-{season_id}-{game_id}-matchresults.xml',
+                'f24': 'f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml',
             },
         )
+
         self.events = loader.events(1009316)
 
     def test_convert_to_actions(self):

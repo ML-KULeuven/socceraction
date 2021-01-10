@@ -166,7 +166,6 @@ def _extra_from_passes(actions: DataFrame) -> DataFrame:
     extra['period_id'] = prev.period_id
     extra['action_id'] = prev.action_id + 0.1
     extra['time_seconds'] = (prev.time_seconds + nex.time_seconds) / 2
-    extra['timestamp'] = nex.timestamp
     extra['start_x'] = prev.end_x
     extra['start_y'] = prev.end_y
     extra['end_x'] = prev.end_x
@@ -227,7 +226,6 @@ def _extra_from_shots(actions: DataFrame) -> DataFrame:
     extra['period_id'] = prev.period_id
     extra['action_id'] = prev.action_id + 0.1
     extra['time_seconds'] = prev.time_seconds  # + nex.time_seconds) / 2
-    extra['timestamp'] = prev.timestamp
     extra['start_x'] = prev.end_x
     extra['start_y'] = prev.end_y
     extra['end_x'] = prev.end_x
@@ -261,7 +259,6 @@ def _extra_from_fouls(actions: DataFrame) -> DataFrame:
     extra['period_id'] = prev.period_id
     extra['action_id'] = prev.action_id + 0.1
     extra['time_seconds'] = prev.time_seconds  # + nex.time_seconds) / 2
-    extra['timestamp'] = prev.timestamp
     extra['start_x'] = prev.end_x
     extra['start_y'] = prev.end_y
     extra['end_x'] = prev.end_x
@@ -294,7 +291,6 @@ def _convert_columns(actions: DataFrame) -> DataFrame:
             'action_id',
             'period_id',
             'time_seconds',
-            'timestamp',
             'team_id',
             'player_id',
             'x',
