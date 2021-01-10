@@ -25,8 +25,8 @@ setuptools.setup(
     install_requires=[
         "cython",  # required for scikit-learn
         "lxml",
-        "numpy",
-        "pandas",
+        "numpy>=1.15.4",
+        "pandas>=1.1.0",
         "pandera",
         "requests",
         "scikit-learn",

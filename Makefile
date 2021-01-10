@@ -23,7 +23,6 @@ lint:
 	$(BIN)pydocstyle socceraction
 	$(BIN)mypy $(CODE) tests
 	$(BIN)black --target-version py36 --skip-string-normalization --line-length=99 --check $(CODE) tests
-	$(BIN)pytest --dead-fixtures --dup-fixtures
 
 pretty:
 	$(BIN)isort $(CODE) tests
