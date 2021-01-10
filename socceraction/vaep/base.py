@@ -15,10 +15,10 @@ import pandas as pd
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
-import socceraction.spadl.config as _spadlcfg
+import socceraction.spadl.config as spadlcfg
 
 from . import features as fs
-from . import formula as _vaep
+from . import formula as vaep
 from . import labels as lab
 
 try:
@@ -78,17 +78,19 @@ class VAEP:
         Discovery & Data Mining, pp. 1851-1861. 2019.
     """
 
+    _spadlcfg = spadlcfg
+    _fs = fs
+    _lab = lab
+    _vaep = vaep
+
     def __init__(
         self,
         xfns: Optional[List[Callable[[List[pd.DataFrame]], pd.DataFrame]]] = None,
         nb_prev_actions: int = 3,
     ):
         self.__models: Dict[str, Any] = {}
-        self.fs = fs
         self.xfns = xfns_default if xfns is None else xfns
-        self.yfns = [lab.scores, lab.concedes]
-        self.spadlcfg = _spadlcfg
-        self.vaep = _vaep
+        self.yfns = [self._lab.scores, self._lab.concedes]
         self.nb_prev_actions = nb_prev_actions
 
     def compute_features(self, game: pd.Series, game_actions: pd.DataFrame) -> pd.DataFrame:
@@ -107,9 +109,9 @@ class VAEP:
         features : pd.DataFrame
             Returns the feature-based representation of each game state in the game.
         """
-        game_actions_with_names = self.spadlcfg.add_names(game_actions)
-        gamestates = self.fs.gamestates(game_actions_with_names, self.nb_prev_actions)
-        gamestates = self.fs.play_left_to_right(gamestates, game.home_team_id)
+        game_actions_with_names = self._spadlcfg.add_names(game_actions)
+        gamestates = self._fs.gamestates(game_actions_with_names, self.nb_prev_actions)
+        gamestates = self._fs.play_left_to_right(gamestates, game.home_team_id)
         return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
 
     def compute_labels(
@@ -130,7 +132,7 @@ class VAEP:
         labels : pd.DataFrame
             Returns the labels of each game state in the game.
         """
-        game_actions_with_names = self.spadlcfg.add_names(game_actions)
+        game_actions_with_names = self._spadlcfg.add_names(game_actions)
         return pd.concat([fn(game_actions_with_names) for fn in self.yfns], axis=1)
 
     def fit(
@@ -175,8 +177,15 @@ class VAEP:
         val_idx = idx[(math.floor(nb_states * (1 - val_size)) + 1):]
         # fmt: on
 
-        X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
-        X_val, y_val = X.iloc[val_idx], y.iloc[val_idx]
+        # filter feature columns
+        cols = self._fs.feature_column_names(self.xfns, self.nb_prev_actions)
+        if not set(cols).issubset(set(X.columns)):
+            missing_cols = ' and '.join(set(cols).difference(X.columns))
+            raise ValueError('{} are not available in the features dataframe'.format(missing_cols))
+
+        # split train and validation data
+        X_train, y_train = X.iloc[train_idx][cols], y.iloc[train_idx]
+        X_val, y_val = X.iloc[val_idx][cols], y.iloc[val_idx]
 
         # train classifiers F(X) = Y
         for col in list(y.columns):
@@ -267,6 +276,12 @@ class VAEP:
         return model.fit(X, y, **fit_params)
 
     def _estimate_probabilities(self, X: pd.DataFrame) -> pd.DataFrame:
+        # filter feature columns
+        cols = self._fs.feature_column_names(self.xfns, self.nb_prev_actions)
+        if not set(cols).issubset(set(X.columns)):
+            missing_cols = ' and '.join(set(cols).difference(X.columns))
+            raise ValueError('{} are not available in the features dataframe'.format(missing_cols))
+
         Y_hat = pd.DataFrame()
         for col in self.__models:
             Y_hat[col] = [p[1] for p in self.__models[col].predict_proba(X)]
@@ -297,13 +312,13 @@ class VAEP:
         if not self.__models:
             raise NotFittedError()
 
-        game_actions_with_names = self.spadlcfg.add_names(game_actions)
+        game_actions_with_names = self._spadlcfg.add_names(game_actions)
         if game_states is None:
             game_states = self.compute_features(game, game_actions)
 
         y_hat = self._estimate_probabilities(game_states)
         p_scores, p_concedes = y_hat.scores, y_hat.concedes
-        vaep_values = self.vaep.value(game_actions_with_names, p_scores, p_concedes)
+        vaep_values = self._vaep.value(game_actions_with_names, p_scores, p_concedes)
         return pd.concat([game_actions, vaep_values], axis=1)
 
     def score(self, X: pd.DataFrame, y: pd.DataFrame) -> Dict[str, Dict[str, float]]:

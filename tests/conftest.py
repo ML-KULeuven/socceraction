@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def sb_worldcup_data() -> pd.HDFStore:
     hdf_file = os.path.join(
         os.path.dirname(__file__), 'data', 'statsbomb', 'spadl-WorldCup-2018.h5'

@@ -1,12 +1,14 @@
 import pandas as pd
+import pytest
 
 from socceraction.vaep import VAEP
 from socceraction.vaep import features as fs
 
 
-def test_predict(sb_worldcup_data):
+@pytest.fixture(scope='session')
+def vaep_model(sb_worldcup_data):
     # Test the vAEP framework on the StatsBomb World Cup data
-    model = VAEP()
+    model = VAEP(nb_prev_actions=1)
     # comppute features and labels
     games = sb_worldcup_data['games']
     features = pd.concat(
@@ -28,11 +30,25 @@ def test_predict(sb_worldcup_data):
     assert len(features) == len(labels)
     # fit the model
     model.fit(features, labels)
-    # rate a game
+    return model
+
+
+def test_predict(sb_worldcup_data, vaep_model):
+    games = sb_worldcup_data['games']
     game = games.iloc[-1]
     actions = sb_worldcup_data[f'actions/game_{game.game_id}']
-    ratings = model.rate(game, actions)
+    ratings = vaep_model.rate(game, actions)
     expected_rating_columns = set(
         list(actions.columns) + ['offensive_value', 'defensive_value', 'vaep_value']
     )
     assert set(ratings.columns) == expected_rating_columns
+
+
+def test_predict_with_missing_features(sb_worldcup_data, vaep_model):
+    games = sb_worldcup_data['games']
+    game = games.iloc[-1]
+    actions = sb_worldcup_data[f'actions/game_{game.game_id}']
+    X = vaep_model.compute_features(game, actions)
+    del X['period_id_a0']
+    with pytest.raises(ValueError):
+        vaep_model.rate(game, actions, X)

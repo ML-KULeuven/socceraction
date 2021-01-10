@@ -15,7 +15,7 @@ def test_predict(sb_worldcup_data):
         for game in games.itertuples()
     }
     # Test the vAEP framework on the StatsBomb World Cup data
-    model = AtomicVAEP()
+    model = AtomicVAEP(nb_prev_actions=1)
     # comppute features and labels
     features = pd.concat(
         [

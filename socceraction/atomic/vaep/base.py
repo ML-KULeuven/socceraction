@@ -9,11 +9,11 @@ xfns_default : list(callable)
 """
 from typing import List, Optional
 
-import socceraction.atomic.spadl as _spadlcfg
+import socceraction.atomic.spadl as spadlcfg
 from socceraction.vaep.base import VAEP
 
 from . import features as fs
-from . import formula as _vaep
+from . import formula as vaep
 from . import labels as lab
 
 xfns_default = [
@@ -60,15 +60,15 @@ class AtomicVAEP(VAEP):
         Discovery & Data Mining, pp. 1851-1861. 2019.
     """
 
+    _spadlcfg = spadlcfg
+    _lab = lab
+    _fs = fs
+    _vaep = vaep
+
     def __init__(
         self,
         xfns: Optional[List[fs.FeatureTransfomer]] = None,
         nb_prev_actions: int = 3,
     ):
+        xfns = xfns_default if xfns is None else xfns
         super().__init__(xfns, nb_prev_actions)
-        self.xfns = xfns_default if xfns is None else xfns
-        self.spadlcfg = _spadlcfg  # type: ignore
-        self.vaep = _vaep  # type: ignore
-        self.fs = fs  # type: ignore
-        self.yfns = [lab.scores, lab.concedes]
-        self.nb_prev_actions = nb_prev_actions
