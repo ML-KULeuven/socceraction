@@ -7,6 +7,7 @@ python:
 - '3.9'
 install:
 - pip install -r requirements_dev.txt
+- pip install .
 script:
 - make lint test BIN=""
 deploy:
