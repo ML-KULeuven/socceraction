@@ -22,10 +22,10 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    python_requires=">=3.7.1",
     install_requires=[
         "cython",  # required for scikit-learn
         "lxml",
-        "numpy>=1.15.4",
         "pandas>=1.1.0",
         "pandera",
         "requests",
