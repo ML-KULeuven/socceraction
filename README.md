@@ -36,7 +36,7 @@ $ pip install socceraction
 
 `socceraction` officially supports Python 3.7--3.9.
 
-The folder [`public-notebooks`](public-notebooks) provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings. More detailed installation/usage instructions can be found in [the documentation](https://ml-kuleuven.github.io/socceraction/).
+The folder [`public-notebooks`](public-notebooks) provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings. More detailed installation/usage instructions can be found in [the documentation](https://socceraction.readthedocs.io/en/latest/).
 
 ## Research
 
