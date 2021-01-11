@@ -67,4 +67,4 @@ html_static_path = ['_static']
 html_css_files = ["custom.css"]
 
 # mock imported packages
-autodoc_mock_imports = ["pandas","numpy","pandas"]
+autodoc_mock_imports = ["pandas","numpy","pandas","pandera","sklearn"]
