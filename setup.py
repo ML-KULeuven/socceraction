@@ -22,11 +22,12 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.7.1",
+    python_requires=">=3.6",
     install_requires=[
         "cython",  # required for scikit-learn
         "lxml",
         "pandas>=1.1.0",
+        "packaging>=20.0",  # required until https://github.com/pandera-dev/pandera/pull/380 is released
         "pandera>=0.6.1",
         "requests",
         "scikit-learn",
