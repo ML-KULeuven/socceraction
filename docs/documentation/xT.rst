@@ -27,15 +27,16 @@ intuitive explanation of how this works, we refer to `Karun's blog post
 
     import socceraction.xthreat as xthreat
 
+    # 1. Convert direction of play
+    [actions] = fs.play_left_to_right([actions], game.home_team_id)
 
-    ## Train model
+    # 2. Train xT model
     xTModel = xthreat.ExpectedThreat(l=16, w=12)
     xTModel.fit(actions)
 
-    ## Predict
-
-    # xT should only be used to value actions that move the ball·
-    # and also keep the current team in possession of the ball
+    # 3. Rate ball-progressing actions
+    # xT should only be used to value actions that move the ball
+    # and that keep the current team in possession of the ball
     mov_actions = xthreat.get_successful_move_actions(actions)
     mov_actions["xT_value"] = xTModel.predict(mov_actions)
 
