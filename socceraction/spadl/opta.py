@@ -124,6 +124,21 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
             target[k] = copy.copy(v)
 
 
+def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, int]:
+    regex = re.compile(
+        '.+?'
+        + re.escape(pattern)
+        .replace(r'\{competition_id\}', r'(?P<competition_id>\d+)')
+        .replace(r'\{season_id\}', r'(?P<season_id>\d+)')
+        .replace(r'\{game_id\}', r'(?P<game_id>\d+)')
+    )
+    m = re.match(regex, path)
+    if m is None:
+        raise ValueError('The filepath {} does not match the format {}.'.format(path, pattern))
+    ids = m.groupdict()
+    return {k: int(v) for k, v in ids.items()}
+
+
 class OptaParser(ABC):
     """Extract data from an Opta data stream.
 
@@ -133,7 +148,7 @@ class OptaParser(ABC):
         Path of the data file.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, *args: Any, **kwargs: Any):
         pass
 
     def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
@@ -246,11 +261,12 @@ class OptaLoader(EventDataLoader):
             :class:`~socceraction.spadl.opta.OptaCompetitionSchema` for the schema.
         """
         data: Dict[int, Dict[str, Any]] = {}
-        for feed in self.feeds.keys():
-            glob_pattern = self.feeds[feed].format(competition_id='*', season_id='*', game_id='*')
+        for feed, feed_pattern in self.feeds.items():
+            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id='*')
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
-                parser = self.parsers[feed](ffp)
+                ids = _extract_ids_from_path(ffp, feed_pattern)
+                parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_competitions())
         return pd.DataFrame(list(data.values()))
 
@@ -271,14 +287,15 @@ class OptaLoader(EventDataLoader):
             :class:`~socceraction.spadl.opta.OptaGameSchema` for the schema.
         """
         data: Dict[int, Dict[str, Any]] = {}
-        for feed in self.feeds.keys():
-            glob_pattern = self.feeds[feed].format(
+        for feed, feed_pattern in self.feeds.items():
+            glob_pattern = feed_pattern.format(
                 competition_id=competition_id, season_id=season_id, game_id='*'
             )
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 try:
-                    parser = self.parsers[feed](ffp)
+                    ids = _extract_ids_from_path(ffp, feed_pattern)
+                    parser = self.parsers[feed](ffp, **ids)
                     _deepupdate(data, parser.extract_games())
                 except Exception:
                     warnings.warn('Could not parse {}'.format(ffp))
@@ -299,13 +316,12 @@ class OptaLoader(EventDataLoader):
             :class:`~socceraction.spadl.opta.OptaTeamSchema` for the schema.
         """
         data: Dict[int, Dict[str, Any]] = {}
-        for feed in self.feeds.keys():
-            glob_pattern = self.feeds[feed].format(
-                competition_id='*', season_id='*', game_id=game_id
-            )
+        for feed, feed_pattern in self.feeds.items():
+            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
-                parser = self.parsers[feed](ffp)
+                ids = _extract_ids_from_path(ffp, feed_pattern)
+                parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_teams())
         return pd.DataFrame(list(data.values()))
 
@@ -324,13 +340,12 @@ class OptaLoader(EventDataLoader):
             :class:`~socceraction.spadl.opta.OptaPlayerSchema` for the schema.
         """
         data: Dict[int, Dict[str, Any]] = {}
-        for feed in self.feeds.keys():
-            glob_pattern = self.feeds[feed].format(
-                competition_id='*', season_id='*', game_id=game_id
-            )
+        for feed, feed_pattern in self.feeds.items():
+            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
-                parser = self.parsers[feed](ffp)
+                ids = _extract_ids_from_path(ffp, feed_pattern)
+                parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_players())
         df_players = pd.DataFrame(list(data.values()))
         df_players['game_id'] = game_id
@@ -351,13 +366,12 @@ class OptaLoader(EventDataLoader):
             :class:`~socceraction.spadl.opta.OptaEventSchema` for the schema.
         """
         data: Dict[int, Dict[str, Any]] = {}
-        for feed in self.feeds.keys():
-            glob_pattern = self.feeds[feed].format(
-                competition_id='*', season_id='*', game_id=game_id
-            )
+        for feed, feed_pattern in self.feeds.items():
+            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
-                parser = self.parsers[feed](ffp)
+                ids = _extract_ids_from_path(ffp, feed_pattern)
+                parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_events())
         events = (
             pd.DataFrame(list(data.values()))
@@ -377,7 +391,7 @@ class OptaJSONParser(OptaParser):
         Path of the data file.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, *args: Any, **kwargs: Any):
         with open(path, 'rt', encoding='utf-8') as fh:
             self.root = json.load(fh)
 
@@ -391,7 +405,7 @@ class OptaXMLParser(OptaParser):
         Path of the data file.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, *args: Any, **kwargs: Any):
         with open(path, 'rb') as fh:
             self.root = objectify.fromstring(fh.read())
 
@@ -930,12 +944,61 @@ class _WhoScoredParser(OptaParser):
     ----------
     path : str
         Path of the data file.
+    competition_id : int
+        ID of the competition to which the provided data file belongs. If
+        None, this information is extracted from a field 'competition_id' in
+        the JSON.
+    season_id : int
+        ID of the season to which the provided data file belongs. If None,
+        this information is extracted from a field 'season_id' in the JSON.
+    game_id : int
+        ID of the game to which the provided data file belongs. If None, this
+        information is extracted from a field 'game_id' in the JSON.
     """
 
-    def __init__(self, path: str):
+    def __init__(  # noqa: C901
+        self,
+        path: str,
+        competition_id: Optional[int] = None,
+        season_id: Optional[int] = None,
+        game_id: Optional[int] = None,
+        *args: Any,
+        **kwargs: Any,
+    ):
         with open(path, 'rt', encoding='utf-8') as fh:
             self.root = json.load(fh)
             self.position_mapping = lambda formation, x, y: 'Unknown'
+
+        if competition_id is None:
+            try:
+                competition_id = int(assertget(self.root, 'competition_id'))
+            except AssertionError:
+                raise MissingDataError(
+                    """Could not determine the competition id. Add it to the
+                    file path or include a field 'competition_id' in the
+                    JSON."""
+                )
+        self.competition_id = competition_id
+
+        if season_id is None:
+            try:
+                season_id = int(assertget(self.root, 'season_id'))
+            except AssertionError:
+                raise MissingDataError(
+                    """Could not determine the season id. Add it to the file
+                    path or include a field 'season_id' in the JSON."""
+                )
+        self.season_id = season_id
+
+        if game_id is None:
+            try:
+                game_id = int(assertget(self.root, 'game_id'))
+            except AssertionError:
+                raise MissingDataError(
+                    """Could not determine the game id. Add it to the file
+                    path or include a field 'game_id' in the JSON."""
+                )
+        self.game_id = game_id
 
     def get_period_id(self, event: Dict[str, Any]) -> int:
         period = assertget(event, 'period')
@@ -947,7 +1010,7 @@ class _WhoScoredParser(OptaParser):
         period_id = self.get_period_id(event)
         if period_id == 16:  # Pre-match
             return 0
-        elif period_id == 14:  # Post-game
+        if period_id == 14:  # Post-game
             return 0
         minute = int(assertget(event, 'minute'))
         period_minute = minute
@@ -959,11 +1022,11 @@ class _WhoScoredParser(OptaParser):
     def extract_games(self) -> Dict[int, Dict[str, Any]]:
         team_home = assertget(self.root, 'home')
         team_away = assertget(self.root, 'away')
-        game_id = int(assertget(self.root, 'id'))
+        game_id = self.game_id
         game_dict = dict(
             game_id=game_id,
-            season_id=int(assertget(self.root, 'season_id')),
-            competition_id=int(assertget(self.root, 'competition_id')),
+            season_id=self.season_id,
+            competition_id=self.competition_id,
             game_day=0,  # TODO: not defined in the JSON object
             game_date=datetime.strptime(
                 assertget(self.root, 'startTime'), '%Y-%m-%dT%H:%M:%S'
@@ -987,7 +1050,7 @@ class _WhoScoredParser(OptaParser):
 
     def extract_players(self) -> Dict[int, Dict[str, Any]]:
         player_gamestats = self.extract_playergamestats()
-        game_id = int(assertget(self.root, 'id'))
+        game_id = self.game_id
         players = {}
         for team in [self.root['home'], self.root['away']]:
             team_id = int(assertget(team, 'teamId'))
@@ -1018,7 +1081,7 @@ class _WhoScoredParser(OptaParser):
         return players
 
     def extract_substitutions(self) -> Dict[int, Dict[str, Any]]:
-        game_id = int(assertget(self.root, 'id'))
+        game_id = self.game_id
 
         subs = {}
         subonevents = [e for e in self.root['events'] if e['type'].get('value') == 19]
@@ -1036,7 +1099,7 @@ class _WhoScoredParser(OptaParser):
         return subs
 
     def extract_positions(self) -> Dict[int, Dict[str, Any]]:  # noqa: C901
-        game_id = int(assertget(self.root, 'id'))
+        game_id = self.game_id
 
         positions = {}
         for t in [self.root['home'], self.root['away']]:
@@ -1116,7 +1179,7 @@ class _WhoScoredParser(OptaParser):
         return {referee_id: referee}
 
     def extract_teamgamestats(self) -> List[Dict[str, Any]]:
-        game_id = self.root['id']
+        game_id = self.game_id
 
         teams_gamestats = []
         teams = [self.root['home'], self.root['away']]
@@ -1140,7 +1203,7 @@ class _WhoScoredParser(OptaParser):
         return teams_gamestats
 
     def extract_playergamestats(self) -> Dict[int, Dict[str, Any]]:  # noqa: C901
-        game_id = self.root['id']
+        game_id = self.game_id
 
         players_gamestats = {}
         for team in [self.root['home'], self.root['away']]:
@@ -1194,7 +1257,7 @@ class _WhoScoredParser(OptaParser):
     def extract_events(self) -> Dict[int, Dict[str, Any]]:
         events = {}
 
-        game_id = int(assertget(self.root, 'id'))
+        game_id = self.game_id
         time_start_str = str(assertget(self.root, 'startTime'))
         time_start = datetime.strptime(time_start_str, '%Y-%m-%dT%H:%M:%S')
         for attr in self.root['events']:

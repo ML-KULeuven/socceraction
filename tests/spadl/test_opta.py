@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from socceraction.spadl import opta as opta
 from socceraction.spadl.base import SPADLSchema
 from socceraction.spadl.opta import (
@@ -145,3 +147,19 @@ class TestSpadlConvertor:
         SPADLSchema.validate(df_actions)
         assert (df_actions.game_id == 1009316).all()
         assert ((df_actions.team_id == 174) | (df_actions.team_id == 957)).all()
+
+
+def test_extract_ids_from_path():
+    glob_pattern = '{competition_id}-{season_id}/{game_id}.json'
+    ffp = 'blah/blah/blah/1-2021/1234.json'
+    ids = opta._extract_ids_from_path(ffp, glob_pattern)
+    assert ids['competition_id'] == 1
+    assert ids['season_id'] == 2021
+    assert ids['game_id'] == 1234
+
+
+def test_extract_ids_from_path_with_incorrect_pattern():
+    glob_pattern = '{competition_id}-{season_id}/{game_id}.json'
+    ffp = 'blah/blah/blah/1-2021/g1234.json'
+    with pytest.raises(ValueError):
+        opta._extract_ids_from_path(ffp, glob_pattern)
