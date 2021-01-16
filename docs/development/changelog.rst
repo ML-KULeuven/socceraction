@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.0.1_ - 2021-01-16
+====================
+
 Changed
 -------
 - The WhoScored parser extracts the 'competition_id', 'season_id' and
@@ -174,7 +177,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v0.2.1...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.0.1...HEAD
+.. _1.0.1: https://github.com/ML-KULeuven/socceraction/compare/v1.0.0...v1.0.1
 .. _1.0.0: https://github.com/ML-KULeuven/socceraction/compare/v0.2.1...v1.0.0
 .. _0.2.1: https://github.com/ML-KULeuven/socceraction/compare/v0.2.0...v0.2.1
 .. _0.2.0: https://github.com/ML-KULeuven/socceraction/compare/v0.1.1...v0.2.0
