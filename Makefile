@@ -1,4 +1,4 @@
-.PHONY: init test lint pretty precommit_install bump_major bump_minor bump_patch clean
+.PHONY: init test lint pretty notebooks precommit_install bump_major bump_minor bump_patch clean
 
 BIN = .venv/bin/
 CODE = socceraction
@@ -28,6 +28,9 @@ pretty:
 	$(BIN)isort $(CODE) tests
 	$(BIN)black --target-version py36 --skip-string-normalization --line-length=99 $(CODE) tests
 	$(BIN)unify --in-place --recursive $(CODE) tests
+
+notebooks:
+	$(BIN)python -m nbconvert --execute --inplace --config=default.json public-notebooks/*.ipynb
 
 precommit_install:
 	echo '#!/bin/sh\nmake lint test\n' > .git/hooks/pre-commit
