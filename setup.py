@@ -12,7 +12,7 @@ For more information, see https://github.com/ML-KULeuven/socceraction
 
 setuptools.setup(
     name='socceraction',
-    version='1.0.0',
+    version='1.0.1',
     description='Convert soccer event stream data to the SPADL format and value on-the-ball player actions',
     url='https://github.com/ML-KULeuven/socceraction',
     author='Tom Decroos',
