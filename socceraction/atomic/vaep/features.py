@@ -242,7 +242,7 @@ def goalscore(gamestates: GameStates) -> Features:
     """
     actions = gamestates[0]
     teamA = actions['team_id'].values[0]
-    goals = actions['type_name'].str.contains('goal')
+    goals = actions.type_name == 'goal'
     owngoals = actions['type_name'].str.contains('owngoal')
 
     teamisA = actions['team_id'] == teamA
