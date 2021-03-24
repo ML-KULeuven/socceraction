@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+Fixed
+-----
+- Fix StatsBomb converter for the public CL dataset (`GH46 <https://github.com/ML-KULeuven/socceraction/issues/46>`_)
+- The `goalscore` feature also counted goalkicks as goals
+
 1.0.1_ - 2021-01-16
 ====================
 

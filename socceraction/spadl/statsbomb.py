@@ -147,11 +147,28 @@ class StatsBombLoader(EventDataLoader):
             A dataframe containing all available games. See
             :class:`~socceraction.spadl.statsbomb.StatsBombGameSchema` for the schema.
         """
+        cols = [
+            'game_id',
+            'season_id',
+            'competition_id',
+            'competition_stage',
+            'game_day',
+            'game_date',
+            'home_team_id',
+            'away_team_id',
+            'home_score',
+            'away_score',
+            'venue',
+            'referee_id',
+        ]
         path = os.path.join(self.root, f'matches/{competition_id}/{season_id}.json')
         obj = self.get(path)
         if not isinstance(obj, list):
             raise ParseError('{} should contain a list of games'.format(path))
+        if not len(obj):
+            return pd.DataFrame(columns=cols)
         gamesdf = pd.DataFrame(_flatten(m) for m in obj)
+        gamesdf['kick_off'] = gamesdf['kick_off'].fillna("12:00:00.000")
         gamesdf['match_date'] = pd.to_datetime(
             gamesdf[['match_date', 'kick_off']].agg(' '.join, axis=1)
         )
@@ -165,22 +182,11 @@ class StatsBombLoader(EventDataLoader):
             },
             inplace=True,
         )
-        return gamesdf[
-            [
-                'game_id',
-                'season_id',
-                'competition_id',
-                'competition_stage',
-                'game_day',
-                'game_date',
-                'home_team_id',
-                'away_team_id',
-                'home_score',
-                'away_score',
-                'venue',
-                'referee_id',
-            ]
-        ]
+        if 'venue' not in gamesdf:
+            gamesdf['venue'] = None
+        if 'referee_id' not in gamesdf:
+            gamesdf['referee_id'] = None
+        return gamesdf[cols]
 
     def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
         path = os.path.join(self.root, f'lineups/{game_id}.json')
