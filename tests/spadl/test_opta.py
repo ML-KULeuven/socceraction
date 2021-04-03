@@ -1,6 +1,6 @@
 import os
-import pandas as pd
 
+import pandas as pd
 import pytest
 
 import socceraction.spadl.config as spadlcfg
@@ -154,26 +154,27 @@ class TestSpadlConvertor:
         event = pd.DataFrame(
             [
                 {
-                'game_id': 318175,
-                'event_id': 1619686768,
-                'type_id': 1,
-                'period_id': 1,
-                'minute': 2,
-                'second': 14,
-                'timestamp': '2010-01-27 19:47:14',
-                'player_id': 8786,
-                'team_id': 157,
-                'outcome': False,
-                'start_x': 5.0,
-                'start_y': 37.0,
-                'end_x': 73.0,
-                'end_y': 18.7,
-                'assist': False,
-                'keypass': False,
-                'qualifiers': {56: 'Right', 141: '18.7', 124: True, 140: '73.0', 1: True},
-                'type_name': 'pass',
+                    'game_id': 318175,
+                    'event_id': 1619686768,
+                    'type_id': 1,
+                    'period_id': 1,
+                    'minute': 2,
+                    'second': 14,
+                    'timestamp': '2010-01-27 19:47:14',
+                    'player_id': 8786,
+                    'team_id': 157,
+                    'outcome': False,
+                    'start_x': 5.0,
+                    'start_y': 37.0,
+                    'end_x': 73.0,
+                    'end_y': 18.7,
+                    'assist': False,
+                    'keypass': False,
+                    'qualifiers': {56: 'Right', 141: '18.7', 124: True, 140: '73.0', 1: True},
+                    'type_name': 'pass',
                 }
-            ])
+            ]
+        )
         action = opta.convert_to_actions(event, 0).iloc[0]
         assert action['type_id'] == spadlcfg.actiontypes.index('goalkick')
 

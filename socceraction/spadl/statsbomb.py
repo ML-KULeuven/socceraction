@@ -168,7 +168,7 @@ class StatsBombLoader(EventDataLoader):
         if not len(obj):
             return pd.DataFrame(columns=cols)
         gamesdf = pd.DataFrame(_flatten(m) for m in obj)
-        gamesdf['kick_off'] = gamesdf['kick_off'].fillna("12:00:00.000")
+        gamesdf['kick_off'] = gamesdf['kick_off'].fillna('12:00:00.000')
         gamesdf['match_date'] = pd.to_datetime(
             gamesdf[['match_date', 'kick_off']].agg(' '.join, axis=1)
         )
