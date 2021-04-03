@@ -1541,6 +1541,7 @@ def _get_type_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:  # noqa: C901
         freekick = 5 in q
         corner = 6 in q
         throw_in = 107 in q
+        goalkick = 124 in q
         if throw_in:
             a = 'throw_in'
         elif freekick and cross:
@@ -1553,6 +1554,8 @@ def _get_type_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:  # noqa: C901
             a = 'corner_short'
         elif cross:
             a = 'cross'
+        elif goalkick:
+            a = 'goalkick'
         else:
             a = 'pass'
     elif eventname == 'take on':
