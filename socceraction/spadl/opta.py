@@ -648,7 +648,12 @@ class _F9JSONParser(OptaJSONParser):
                     stat['@attributes']['Type']: stat['@value'] for stat in player['Stat']
                 }
                 sub_on = next(
-                    (item['Time'] for item in subst if item['SubOn'] == f'p{player_id}'), 0
+                    (
+                        item['Time']
+                        for item in subst
+                        if 'Retired' not in item and item['SubOn'] == f'p{player_id}'
+                    ),
+                    matchstatsdict['match_time'] if attr['Status'] == 'Sub' else 0,
                 )
                 sub_off = next(
                     (item['Time'] for item in subst if item['SubOff'] == f'p{player_id}'),
@@ -825,7 +830,14 @@ class _F7XMLParser(OptaXMLParser):
             for player_elm in player_elms:
                 player_id = int(player_elm.attrib['PlayerRef'][1:])
                 sub_on = int(
-                    next((item['Time'] for item in subst if item['SubOn'] == f'p{player_id}'), 0)
+                    next(
+                        (
+                            item['Time']
+                            for item in subst
+                            if 'Retired' not in item and item['SubOn'] == f'p{player_id}'
+                        ),
+                        stats['match_time'] if player_elm.attrib['Status'] == 'Sub' else 0,
+                    )
                 )
                 sub_off = int(
                     next(
@@ -838,7 +850,7 @@ class _F7XMLParser(OptaXMLParser):
                     starting_position_id=int(player_elm.attrib['Formation_Place']),
                     starting_position_name=player_elm.attrib['Position'],
                     jersey_number=int(player_elm.attrib['ShirtNumber']),
-                    is_starter=player_elm.attrib['Formation_Place'] != 0,
+                    is_starter=int(player_elm.attrib['Formation_Place']) != 0,
                     minutes_played=minutes_played,
                 )
         return lineups

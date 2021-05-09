@@ -179,6 +179,29 @@ class TestSpadlConvertor:
         assert action['type_id'] == spadlcfg.actiontypes.index('goalkick')
 
 
+def test_extract_lineups_f7xml():
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'opta')
+    parser = opta._F7XMLParser(os.path.join(data_dir, 'f7-23-2018-1009316-matchresults.xml'))
+    lineups = parser.extract_lineups()
+    for _, lineup in lineups.items():
+        # each team should have 11 starters
+        assert sum([p['is_starter'] for p in lineup['players'].values()]) == 11
+        # the summed match time of all players should equal the total time available
+        assert sum([p['minutes_played'] for p in lineup['players'].values()]) == 11 * 96
+
+
+def test_extract_lineups_f9json():
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'opta')
+    parser = opta._F9JSONParser(os.path.join(data_dir, 'match-2017-8-918893.json'))
+    lineups = parser.extract_lineups()
+    for _, lineup in lineups.items():
+        print([p['minutes_played'] for p in lineup['players'].values()])
+        # each team should have 11 starters
+        assert sum([p['is_starter'] for p in lineup['players'].values()]) == 11
+        # the summed match time of all players should equal the total time available
+        assert sum([p['minutes_played'] for p in lineup['players'].values()]) == 11 * 96
+
+
 def test_extract_ids_from_path():
     glob_pattern = '{competition_id}-{season_id}/{game_id}.json'
     ffp = 'blah/blah/blah/1-2021/1234.json'

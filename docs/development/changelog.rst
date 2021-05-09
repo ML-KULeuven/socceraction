@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+Fixed
+-----
+- Bugs in OptaLoader's `extract_lineups()` function affecting "is_starter" & "minutes_played" columns (`GH48 <https://github.com/ML-KULeuven/socceraction/issues/48>`_)
+
 1.0.2_ - 2021-04-03
 ====================
 
