@@ -87,7 +87,7 @@ SPADL distinguishes between 22 possible types of actions, up to three different
 body parts and up to six possible results. The table below gives the
 definition of each action type. The possible body parts are foot,
 head, other, and none. For Wyscout, which does not distinguish between the
-head and other body parts a special baody part 'head/other' is used. The two
+head and other body parts a special body part 'head/other' is used. The two
 most common results are success or fail, which
 indicates whether the action had its intended result or not. For example, a
 pass reaching a teammate or a tackle recovering the ball. The four
