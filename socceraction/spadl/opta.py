@@ -128,15 +128,15 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, int]:
     regex = re.compile(
         '.+?'
         + re.escape(pattern)
-        .replace(r'\{competition_id\}', r'(?P<competition_id>\d+)')
-        .replace(r'\{season_id\}', r'(?P<season_id>\d+)')
-        .replace(r'\{game_id\}', r'(?P<game_id>\d+)')
+        .replace(r'\{competition_id\}', r'(?P<competition_id>[a-z0-9]+)')
+        .replace(r'\{season_id\}', r'(?P<season_id>[a-z0-9]+)')
+        .replace(r'\{game_id\}', r'(?P<game_id>[a-z0-9]+)')
     )
     m = re.match(regex, path)
     if m is None:
         raise ValueError('The filepath {} does not match the format {}.'.format(path, pattern))
     ids = m.groupdict()
-    return {k: int(v) for k, v in ids.items()}
+    return {k: v for k, v in ids.items()}
 
 
 class OptaParser(ABC):
