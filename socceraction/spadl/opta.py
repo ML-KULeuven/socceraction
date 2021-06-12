@@ -750,7 +750,6 @@ class _F24JSONParser(OptaJSONParser):
 
 
 class _MA3JSONParser(OptaJSONParser):
-
     def get_match_info(self) -> Dict[str, Any]:
         if 'matchInfo' in self.root:
             return self.root['matchInfo']
@@ -802,8 +801,7 @@ class _MA3JSONParser(OptaJSONParser):
             timestamp = self._convert_timestamp(timestamp_string)
 
             qualifiers = {
-                int(q['qualifierId']): q.get('value')
-                for q in element.get('qualifier', [])
+                int(q['qualifierId']): q.get('value') for q in element.get('qualifier', [])
             }
             start_x = float(assertget(element, 'x'))
             start_y = float(assertget(element, 'y'))
@@ -855,7 +853,6 @@ class _MA3JSONParser(OptaJSONParser):
 
 
 class _MA1JSONParser(OptaJSONParser):
-
     def get_match_info(self) -> Dict[str, Any]:
         if 'matchInfo' in self.root:
             return self.root['matchInfo']
