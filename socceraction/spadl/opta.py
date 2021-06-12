@@ -8,7 +8,7 @@ import re
 import warnings
 from abc import ABC
 from datetime import datetime, timedelta
-from typing import Any, AnyStr, Dict, List, Mapping, Optional, Tuple, Type
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Type
 
 import pandas as pd  # type: ignore
 import pandera as pa
@@ -124,7 +124,7 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
             target[k] = copy.copy(v)
 
 
-def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, AnyStr]:
+def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, str]:
     regex = re.compile(
         '.+?'
         + re.escape(pattern)
@@ -838,7 +838,7 @@ class _MA3JSONParser(OptaJSONParser):
         return events
 
     @staticmethod
-    def _extract_team_id(teams: List[Dict], side: str) -> Any:
+    def _extract_team_id(teams: List[Dict[str]], side: str) -> Any:
         for team in teams:
             team_side = assertget(team, 'position')
             if team_side == side:
@@ -915,7 +915,7 @@ class _MA1JSONParser(OptaJSONParser):
         return players
 
     @staticmethod
-    def _extract_team_id(teams: List[Dict], side: str) -> Any:
+    def _extract_team_id(teams: List[Dict[str]], side: str) -> Any:
         for team in teams:
             team_side = assertget(team, 'position')
             if team_side == side:
