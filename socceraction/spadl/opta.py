@@ -838,7 +838,7 @@ class _MA3JSONParser(OptaJSONParser):
         return events
 
     @staticmethod
-    def _extract_team_id(teams: List[Dict], side: str):
+    def _extract_team_id(teams: List[Dict], side: str) -> Any:
         for team in teams:
             team_side = assertget(team, 'position')
             if team_side == side:
@@ -915,7 +915,7 @@ class _MA1JSONParser(OptaJSONParser):
         return players
 
     @staticmethod
-    def _extract_team_id(teams: List[Dict], side: str):
+    def _extract_team_id(teams: List[Dict], side: str) -> Any:
         for team in teams:
             team_side = assertget(team, 'position')
             if team_side == side:
