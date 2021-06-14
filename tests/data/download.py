@@ -149,6 +149,7 @@ def convert_wyscout_data():
     # select competitions
     json_competitions = read_json_file(f"{raw_datafolder}/competitions.json")
     df_competitions = pd.read_json(json_competitions)
+    df_competitions["wyId"] = df_competitions["wyId"].astype(str)
     # Rename competitions to the names used in the file names
     df_competitions["name"] = df_competitions.apply(
         lambda x: x.area["name"] if x.area["name"] != "" else x["name"], axis=1
@@ -167,8 +168,8 @@ def convert_wyscout_data():
             f"{raw_datafolder}/matches_{competition.name.replace(' ', '_')}.json"
         )
         df_games = pd.read_json(json_games)
-        competition_id = leagues[competition.wyId]
-        season_id = seasons[df_games.seasonId.unique()[0]]
+        competition_id = leagues[str(competition.wyId)]
+        season_id = seasons[str(df_games.seasonId.unique()[0])]
         df_games = wyscout.convert_games(df_games)
         df_games["competition_id"] = competition_id
         df_games["season_id"] = season_id
