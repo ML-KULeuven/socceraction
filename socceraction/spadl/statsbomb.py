@@ -690,9 +690,9 @@ def _parse_own_goal_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_goalkeeper_event(
+def _parse_goalkeeper_event(  # noqa: C901
     extra: Dict[str, Any]
-) -> Tuple[str, str, str]:  # noqa: C901
+) -> Tuple[str, str, str]:
     extra_type = extra.get("goalkeeper", {}).get("type", {}).get("name")
     if extra_type == "Shot Saved":
         a = "keeper_save"

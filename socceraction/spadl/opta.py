@@ -921,7 +921,7 @@ class _MA1JSONParser(OptaJSONParser):
             teams[team_id] = team
         return teams
 
-    def extract_players(self) -> Dict[str, Dict[str, Any]]:
+    def extract_players(self) -> Dict[str, Dict[str, Optional[str]]]:
         live_data = self.get_live_data()
         lineups = assertget(live_data, "lineUp")
         players = {}
@@ -1396,8 +1396,8 @@ class _WhoScoredParser(OptaParser):
     def extract_referee(self) -> Dict[str, Dict[str, Any]]:
         if "referee" not in self.root:
             return {
-                0: dict(
-                    referee_id=0,
+                "0": dict(
+                    referee_id="0",
                     first_name="Unkown",
                     last_name="Unkown",
                     short_name="Unkown",
@@ -1693,7 +1693,7 @@ _eventtypesdf = pd.DataFrame(
 )
 
 
-def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+def convert_to_actions(events: pd.DataFrame, home_team_id: str) -> pd.DataFrame:
     """
     Convert Opta events to SPADL actions.
 

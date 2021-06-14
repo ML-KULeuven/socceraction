@@ -452,9 +452,9 @@ class WyscoutLoader(EventDataLoader):
     def _get_file_or_url(
         self,
         feed: str,
-        competition_id: Optional[int] = None,
-        season_id: Optional[int] = None,
-        game_id: Optional[int] = None,
+        competition_id: Optional[str] = None,
+        season_id: Optional[str] = None,
+        game_id: Optional[str] = None,
     ) -> List[str]:
         competition_id_glob = "*" if competition_id is None else competition_id
         season_id_glob = "*" if season_id is None else season_id
@@ -574,7 +574,7 @@ class WyscoutLoader(EventDataLoader):
         df_games = convert_games(pd.DataFrame(games))
         return df_games
 
-    def teams(self, game_id: int) -> DataFrame[WyscoutTeamSchema]:
+    def teams(self, game_id: str) -> DataFrame[WyscoutTeamSchema]:
         """Return a dataframe with both teams that participated in a game.
 
         Parameters
@@ -597,7 +597,7 @@ class WyscoutLoader(EventDataLoader):
         df_teams = convert_teams(pd.DataFrame(teams))
         return df_teams
 
-    def players(self, game_id: int) -> DataFrame[WyscoutPlayerSchema]:
+    def players(self, game_id: str) -> DataFrame[WyscoutPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
 
         Parameters
@@ -633,7 +633,7 @@ class WyscoutLoader(EventDataLoader):
         df_players["game_id"] = game_id
         return df_players
 
-    def events(self, game_id: int) -> DataFrame[WyscoutEventSchema]:
+    def events(self, game_id: str) -> DataFrame[WyscoutEventSchema]:
         """Return a dataframe with the event stream of a game.
 
         Parameters
