@@ -7,10 +7,10 @@ from socceraction.atomic.vaep import features as fs
 
 def test_predict(sb_worldcup_data):
     # Convert to atomic actions
-    games = sb_worldcup_data['games']
+    games = sb_worldcup_data["games"]
     atomic_actions = {
         game.game_id: atomicspadl.convert_to_atomic(
-            sb_worldcup_data[f'actions/game_{game.game_id}']
+            sb_worldcup_data[f"actions/game_{game.game_id}"]
         )
         for game in games.itertuples()
     }
@@ -31,7 +31,7 @@ def test_predict(sb_worldcup_data):
             for game in games.iloc[:-1].itertuples()
         ]
     )
-    expected_labels = set(['scores', 'concedes'])
+    expected_labels = set(["scores", "concedes"])
     assert set(labels.columns) == expected_labels
     assert len(features) == len(labels)
     # fit the model
@@ -41,6 +41,6 @@ def test_predict(sb_worldcup_data):
     actions = atomic_actions[game.game_id]
     ratings = model.rate(game, actions)
     expected_rating_columns = set(
-        list(actions.columns) + ['offensive_value', 'defensive_value', 'vaep_value']
+        list(actions.columns) + ["offensive_value", "defensive_value", "vaep_value"]
     )
     assert set(ratings.columns) == expected_rating_columns
