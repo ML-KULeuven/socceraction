@@ -177,7 +177,9 @@ def convert_wyscout_data():
         json_events = read_json_file(
             f"{raw_datafolder}/events_{competition.name.replace(' ', '_')}.json"
         )
-        df_events = pd.read_json(json_events).groupby("matchId", as_index=False)
+        df_events = pd.read_json(json_events)
+        df_events["matchId"] = df_events["matchId"].astype(str)
+        df_events = df_events.groupby("matchId", as_index=False)
 
         spadl_h5 = os.path.join(spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5")
 
@@ -195,7 +197,7 @@ def convert_wyscout_data():
                 game_events = wyscout.convert_events(df_events.get_group(game_id))
 
                 # convert events to SPADL actions
-                home_team = game.home_team_id
+                home_team = str(game.home_team_id)
                 df_actions = wyscout.convert_to_actions(game_events, home_team)
                 df_actions["action_id"] = range(len(df_actions))
                 spadlstore[f"actions/game_{game_id}"] = df_actions
