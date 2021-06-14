@@ -95,9 +95,7 @@ class TestXMLOptaLoader:
 
 class TestWhoscoredLoader:
     def setup_method(self):
-        data_dir = os.path.join(
-            os.path.dirname(__file__), os.pardir, "data", "whoscored"
-        )
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data", "whoscored")
 
         self.loader = opta.OptaLoader(
             root=data_dir,
@@ -189,9 +187,7 @@ class TestSpadlConvertor:
 
 def test_extract_lineups_f7xml():
     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data", "opta")
-    parser = opta._F7XMLParser(
-        os.path.join(data_dir, "f7-23-2018-1009316-matchresults.xml")
-    )
+    parser = opta._F7XMLParser(os.path.join(data_dir, "f7-23-2018-1009316-matchresults.xml"))
     lineups = parser.extract_lineups()
     for _, lineup in lineups.items():
         # each team should have 11 starters

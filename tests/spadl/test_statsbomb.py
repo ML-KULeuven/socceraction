@@ -17,9 +17,7 @@ from socceraction.spadl.statsbomb import (
 
 class TestStatsBombLoader:
     def setup_method(self):
-        data_dir = os.path.join(
-            os.path.dirname(__file__), os.pardir, "data", "statsbomb", "raw"
-        )
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data", "statsbomb", "raw")
         self.SBL = sb.StatsBombLoader(root=data_dir, getter="local")
 
     def test_default_remote(self):
@@ -54,9 +52,7 @@ class TestStatsBombLoader:
 
 class TestSpadlConvertor:
     def setup_method(self):
-        data_dir = os.path.join(
-            os.path.dirname(__file__), os.pardir, "data", "statsbomb", "raw"
-        )
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data", "statsbomb", "raw")
         SBL = sb.StatsBombLoader(root=data_dir, getter="local")
         self.events = SBL.events(7584)
 

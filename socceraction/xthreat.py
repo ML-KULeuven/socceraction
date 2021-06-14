@@ -85,8 +85,8 @@ def scoring_prob(actions: DataFrame[SPADLSchema], l: int = N, w: int = M) -> np.
     np.ndarray
         A matrix, denoting the probability of scoring for each cell.
     """
-    shot_actions = actions[(actions.type_name == 'shot')]
-    goals = shot_actions[(shot_actions.result_name == 'success')]
+    shot_actions = actions[(actions.type_name == "shot")]
+    goals = shot_actions[(shot_actions.result_name == "success")]
 
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
     goalmatrix = _count(goals.start_x, goals.start_y, l, w)
@@ -111,13 +111,15 @@ def get_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
         All ball-progressing actions in the input dataframe.
     """
     return actions[
-        (actions.type_name == 'pass')
-        | (actions.type_name == 'dribble')
-        | (actions.type_name == 'cross')
+        (actions.type_name == "pass")
+        | (actions.type_name == "dribble")
+        | (actions.type_name == "cross")
     ]
 
 
-def get_successful_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
+def get_successful_move_actions(
+    actions: DataFrame[SPADLSchema],
+) -> DataFrame[SPADLSchema]:
     """Get all successful ball-progressing actions.
 
     These include successful passes, dribbles and crosses.
@@ -133,7 +135,7 @@ def get_successful_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SP
         All ball-progressing actions in the input dataframe.
     """
     move_actions = get_move_actions(actions)
-    return move_actions[move_actions.result_name == 'success']
+    return move_actions[move_actions.result_name == "success"]
 
 
 def action_prob(
@@ -160,7 +162,7 @@ def action_prob(
         For each cell the probability of choosing to move.
     """
     move_actions = get_move_actions(actions)
-    shot_actions = actions[(actions.type_name == 'shot')]
+    shot_actions = actions[(actions.type_name == "shot")]
 
     movematrix = _count(move_actions.start_x, move_actions.start_y, l, w)
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
@@ -192,9 +194,9 @@ def move_transition_matrix(actions: DataFrame[SPADLSchema], l: int = N, w: int =
     move_actions = get_move_actions(actions)
 
     X = pd.DataFrame()
-    X['start_cell'] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
-    X['end_cell'] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
-    X['result_name'] = move_actions.result_name
+    X["start_cell"] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
+    X["end_cell"] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
+    X["result_name"] = move_actions.result_name
 
     vc = X.start_cell.value_counts(sort=False)
     start_counts = np.zeros(w * l)
@@ -203,7 +205,7 @@ def move_transition_matrix(actions: DataFrame[SPADLSchema], l: int = N, w: int =
     transition_matrix = np.zeros((w * l, w * l))
 
     for i in range(0, w * l):
-        vc2 = X[((X.start_cell == i) & (X.result_name == 'success'))].end_cell.value_counts(
+        vc2 = X[((X.start_cell == i) & (X.result_name == "success"))].end_cell.value_counts(
             sort=False
         )
         transition_matrix[i, vc2.index] = vc2 / start_counts[i]
@@ -304,9 +306,9 @@ class ExpectedThreat:
             self.heatmaps.append(self.xT.copy())
             it += 1
 
-        print('# iterations: ', it)
+        print("# iterations: ", it)
 
-    def fit(self, actions: DataFrame[SPADLSchema]) -> 'ExpectedThreat':
+    def fit(self, actions: DataFrame[SPADLSchema]) -> "ExpectedThreat":
         """Fits the xT model with the given actions.
 
         Parameters
@@ -330,7 +332,7 @@ class ExpectedThreat:
         )
         return self
 
-    def interpolator(self, kind: str = 'linear') -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    def interpolator(self, kind: str = "linear") -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
         """Interpolate over the pitch.
 
         This is a wrapper around :func:`scipy.interpolate.interp2d`.
@@ -346,7 +348,7 @@ class ExpectedThreat:
             A function that interpolates xT values over the pitch.
         """
         if interp2d is None:
-            raise ImportError('Interpolation requires scipy to be installed.')
+            raise ImportError("Interpolation requires scipy to be installed.")
 
         cell_length = spadlconfig.field_length / self.l
         cell_width = spadlconfig.field_width / self.w

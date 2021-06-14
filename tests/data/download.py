@@ -58,9 +58,7 @@ def convert_statsbomb_data():
     }
     spadl_datafolder = os.path.join(_data_dir, "statsbomb")
 
-    free_open_data_remote = (
-        "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
-    )
+    free_open_data_remote = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
 
     SBL = statsbomb.StatsBombLoader(root=free_open_data_remote, getter="remote")
 
@@ -79,9 +77,7 @@ def convert_statsbomb_data():
 
         competition_id = leagues[competition.competition_name]
         season_id = seasons[competition.season_id]
-        spadl_h5 = os.path.join(
-            spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5"
-        )
+        spadl_h5 = os.path.join(spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5")
         with pd.HDFStore(spadl_h5) as spadlstore:
 
             spadlstore.put("actiontypes", spadl.actiontypes_df(), format="table")
@@ -158,9 +154,7 @@ def convert_wyscout_data():
         lambda x: x.area["name"] if x.area["name"] != "" else x["name"], axis=1
     )
 
-    df_selected_competitions = df_competitions[
-        df_competitions.wyId.isin(leagues.keys())
-    ]
+    df_selected_competitions = df_competitions[df_competitions.wyId.isin(leagues.keys())]
 
     json_teams = read_json_file(f"{raw_datafolder}/teams.json")
     df_teams = wyscout.convert_teams(pd.read_json(json_teams))
@@ -184,9 +178,7 @@ def convert_wyscout_data():
         )
         df_events = pd.read_json(json_events).groupby("matchId", as_index=False)
 
-        spadl_h5 = os.path.join(
-            spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5"
-        )
+        spadl_h5 = os.path.join(spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5")
 
         # Store all spadl data in h5-file
         print(f"Converting {competition_id} {season_id}")

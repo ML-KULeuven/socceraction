@@ -52,7 +52,7 @@ def offensive_value(
     # prev_scores[toolong_idx] = 0
 
     # if the previous action was a goal, the odds of scoring are now 0
-    prevgoal_idx = _prev(actions.type_name).isin(['goal', 'owngoal'])
+    prevgoal_idx = _prev(actions.type_name).isin(["goal", "owngoal"])
     prev_scores[prevgoal_idx] = 0
 
     return scores - prev_scores
@@ -98,7 +98,7 @@ def defensive_value(
     # prev_concedes[toolong_idx] = 0
 
     # if the previous action was a goal, the odds of conceding are now 0
-    prevgoal_idx = _prev(actions.type_name).isin(['goal', 'owngoal'])
+    prevgoal_idx = _prev(actions.type_name).isin(["goal", "owngoal"])
     prev_concedes[prevgoal_idx] = 0
 
     return -(concedes - prev_concedes)
@@ -134,7 +134,7 @@ def value(actions: DataFrame[AtomicSPADLSchema], Pscores: Series, Pconcedes: Ser
     :func:`~socceraction.vaep.formula.defensive_value`: The defensive value
     """
     v = pd.DataFrame()
-    v['offensive_value'] = offensive_value(actions, Pscores, Pconcedes)
-    v['defensive_value'] = defensive_value(actions, Pscores, Pconcedes)
-    v['vaep_value'] = v['offensive_value'] + v['defensive_value']
+    v["offensive_value"] = offensive_value(actions, Pscores, Pconcedes)
+    v["defensive_value"] = defensive_value(actions, Pscores, Pconcedes)
+    v["vaep_value"] = v["offensive_value"] + v["defensive_value"]
     return v

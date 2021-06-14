@@ -20,21 +20,21 @@ from socceraction.vaep.features import (
 )
 
 __all__ = [
-    'feature_column_names',
-    'play_left_to_right',
-    'gamestates',
-    'actiontype',
-    'actiontype_onehot',
-    'bodypart',
-    'bodypart_onehot',
-    'team',
-    'time',
-    'time_delta',
-    'location',
-    'polar',
-    'movement_polar',
-    'direction',
-    'goalscore',
+    "feature_column_names",
+    "play_left_to_right",
+    "gamestates",
+    "actiontype",
+    "actiontype_onehot",
+    "bodypart",
+    "bodypart_onehot",
+    "team",
+    "time",
+    "time_delta",
+    "location",
+    "polar",
+    "movement_polar",
+    "direction",
+    "goalscore",
 ]
 
 Actions = Type[DataFrame[AtomicSPADLSchema]]
@@ -59,24 +59,24 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
         The name of each generated feature.
     """
     spadlcolumns = [
-        'game_id',
-        'period_id',
-        'time_seconds',
-        'timestamp',
-        'team_id',
-        'player_id',
-        'x',
-        'y',
-        'dx',
-        'dy',
-        'bodypart_id',
-        'bodypart_name',
-        'type_id',
-        'type_name',
+        "game_id",
+        "period_id",
+        "time_seconds",
+        "timestamp",
+        "team_id",
+        "player_id",
+        "x",
+        "y",
+        "dx",
+        "dy",
+        "bodypart_id",
+        "bodypart_name",
+        "type_id",
+        "type_name",
     ]
     dummy_actions = pd.DataFrame(np.zeros((10, len(spadlcolumns))), columns=spadlcolumns)
     for c in spadlcolumns:
-        if 'name' in c:
+        if "name" in c:
             dummy_actions[c] = dummy_actions[c].astype(str)
     gs = gamestates(dummy_actions, nb_prev_actions)
     return list(pd.concat([f(gs) for f in fs], axis=1).columns)
@@ -103,10 +103,10 @@ def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
     a0 = gamestates[0]
     away_idx = a0.team_id != home_team_id
     for actions in gamestates:
-        actions.loc[away_idx, 'x'] = atomicspadl.field_length - actions[away_idx]['x'].values
-        actions.loc[away_idx, 'y'] = atomicspadl.field_width - actions[away_idx]['y'].values
-        actions.loc[away_idx, 'dx'] = -actions[away_idx]['dx'].values
-        actions.loc[away_idx, 'dy'] = -actions[away_idx]['dy'].values
+        actions.loc[away_idx, "x"] = atomicspadl.field_length - actions[away_idx]["x"].values
+        actions.loc[away_idx, "y"] = atomicspadl.field_width - actions[away_idx]["y"].values
+        actions.loc[away_idx, "dx"] = -actions[away_idx]["dx"].values
+        actions.loc[away_idx, "dy"] = -actions[away_idx]["dy"].values
     return gamestates
 
 
@@ -126,8 +126,8 @@ def actiontype_onehot(actions: Actions) -> Features:
     """
     X = pd.DataFrame()
     for type_name in atomicspadl.actiontypes:
-        col = 'type_' + type_name
-        X[col] = actions['type_name'] == type_name
+        col = "type_" + type_name
+        X[col] = actions["type_name"] == type_name
     return X
 
 
@@ -145,7 +145,7 @@ def location(actions: Actions) -> Features:
     pd.DataFrame
         The 'x' and 'y' location of each action.
     """
-    return actions[['x', 'y']]
+    return actions[["x", "y"]]
 
 
 _goal_x = atomicspadl.field_length
@@ -169,11 +169,11 @@ def polar(actions: Actions) -> Features:
         The 'dist_to_goal' and 'angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
-    dx = abs(_goal_x - actions['x'])
-    dy = abs(_goal_y - actions['y'])
-    polardf['dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        polardf['angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
+    dx = abs(_goal_x - actions["x"])
+    dy = abs(_goal_y - actions["y"])
+    polardf["dist_to_goal"] = np.sqrt(dx ** 2 + dy ** 2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        polardf["angle_to_goal"] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
 
 
@@ -192,10 +192,10 @@ def movement_polar(actions: Actions) -> Features:
         The distance covered ('mov_d') and direction ('mov_angle') of each action.
     """
     mov = pd.DataFrame()
-    mov['mov_d'] = np.sqrt(actions.dx ** 2 + actions.dy ** 2)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        mov['mov_angle'] = np.arctan2(actions.dy, actions.dx)
-        mov.loc[actions.dy == 0, 'mov_angle'] = 0  # fix float errors
+    mov["mov_d"] = np.sqrt(actions.dx ** 2 + actions.dy ** 2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mov["mov_angle"] = np.arctan2(actions.dy, actions.dx)
+        mov.loc[actions.dy == 0, "mov_angle"] = 0  # fix float errors
     return mov
 
 
@@ -216,7 +216,7 @@ def direction(actions: Actions) -> Features:
     """
     mov = pd.DataFrame()
     totald = np.sqrt(actions.dx ** 2 + actions.dy ** 2)
-    for d in ['dx', 'dy']:
+    for d in ["dx", "dy"]:
         # we don't want to give away the end location,
         # just the direction of the ball
         # We also don't want to divide by zero
@@ -241,11 +241,11 @@ def goalscore(gamestates: GameStates) -> Features:
         and the goal difference between both teams ('goalscore_diff').
     """
     actions = gamestates[0]
-    teamA = actions['team_id'].values[0]
-    goals = actions.type_name == 'goal'
-    owngoals = actions['type_name'].str.contains('owngoal')
+    teamA = actions["team_id"].values[0]
+    goals = actions.type_name == "goal"
+    owngoals = actions["type_name"].str.contains("owngoal")
 
-    teamisA = actions['team_id'] == teamA
+    teamisA = actions["team_id"] == teamA
     teamisB = ~teamisA
     goalsteamA = (goals & teamisA) | (owngoals & teamisB)
     goalsteamB = (goals & teamisB) | (owngoals & teamisA)
@@ -253,7 +253,7 @@ def goalscore(gamestates: GameStates) -> Features:
     goalscoreteamB = goalsteamB.cumsum() - goalsteamB
 
     scoredf = pd.DataFrame()
-    scoredf['goalscore_team'] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
-    scoredf['goalscore_opponent'] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
-    scoredf['goalscore_diff'] = scoredf['goalscore_team'] - scoredf['goalscore_opponent']
+    scoredf["goalscore_team"] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
+    scoredf["goalscore_opponent"] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
+    scoredf["goalscore_diff"] = scoredf["goalscore_team"] - scoredf["goalscore_opponent"]
     return scoredf

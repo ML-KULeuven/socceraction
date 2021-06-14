@@ -88,9 +88,7 @@ def bodyparts_df() -> pd.DataFrame:
     pd.DataFrame
         The 'bodypart_id' and 'bodypart_name' of each SPADL action type.
     """
-    return pd.DataFrame(
-        list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"]
-    )
+    return pd.DataFrame(list(enumerate(bodyparts)), columns=["bodypart_id", "bodypart_name"])
 
 
 def add_names(actions: pd.DataFrame) -> pd.DataFrame:
@@ -108,9 +106,7 @@ def add_names(actions: pd.DataFrame) -> pd.DataFrame:
         'bodypart_name' appended.
     """
     return (
-        actions.drop(
-            columns=["type_name", "result_name", "bodypart_name"], errors="ignore"
-        )
+        actions.drop(columns=["type_name", "result_name", "bodypart_name"], errors="ignore")
         .merge(actiontypes_df(), how="left")
         .merge(results_df(), how="left")
         .merge(bodyparts_df(), how="left")

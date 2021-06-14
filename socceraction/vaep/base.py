@@ -24,15 +24,15 @@ from . import labels as lab
 try:
     import xgboost
 except ImportError:
-    xgboost = None
+    xgboost = None  # type:ignore
 try:
     import catboost
 except ImportError:
-    catboost = None
+    catboost = None  # type:ignore
 try:
     import lightgbm
 except ImportError:
-    lightgbm = None
+    lightgbm = None  # type:ignore
 
 
 xfns_default = [
@@ -93,9 +93,7 @@ class VAEP:
         self.yfns = [self._lab.scores, self._lab.concedes]
         self.nb_prev_actions = nb_prev_actions
 
-    def compute_features(
-        self, game: pd.Series, game_actions: pd.DataFrame
-    ) -> pd.DataFrame:
+    def compute_features(self, game: pd.Series, game_actions: pd.DataFrame) -> pd.DataFrame:
         """
         Transform actions to the feature-based representation of game states.
 
@@ -183,9 +181,7 @@ class VAEP:
         cols = self._fs.feature_column_names(self.xfns, self.nb_prev_actions)
         if not set(cols).issubset(set(X.columns)):
             missing_cols = " and ".join(set(cols).difference(X.columns))
-            raise ValueError(
-                "{} are not available in the features dataframe".format(missing_cols)
-            )
+            raise ValueError("{} are not available in the features dataframe".format(missing_cols))
 
         # split train and validation data
         X_train, y_train = X.iloc[train_idx][cols], y.iloc[train_idx]
@@ -244,9 +240,7 @@ class VAEP:
             raise ImportError("catboost is not installed.")
         # Default settings
         if tree_params is None:
-            tree_params = dict(
-                eval_metric="BrierScore", loss_function="Logloss", iterations=100
-            )
+            tree_params = dict(eval_metric="BrierScore", loss_function="Logloss", iterations=100)
         if fit_params is None:
             is_cat_feature = [c.dtype.name == "category" for (_, c) in X.iteritems()]
             fit_params = dict(
@@ -286,9 +280,7 @@ class VAEP:
         cols = self._fs.feature_column_names(self.xfns, self.nb_prev_actions)
         if not set(cols).issubset(set(X.columns)):
             missing_cols = " and ".join(set(cols).difference(X.columns))
-            raise ValueError(
-                "{} are not available in the features dataframe".format(missing_cols)
-            )
+            raise ValueError("{} are not available in the features dataframe".format(missing_cols))
 
         Y_hat = pd.DataFrame()
         for col in self.__models:

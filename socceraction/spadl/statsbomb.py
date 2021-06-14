@@ -102,9 +102,7 @@ class StatsBombLoader(EventDataLoader):
 
     """
 
-    _free_open_data: str = (
-        "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
-    )
+    _free_open_data: str = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
 
     def __init__(self, root: str = _free_open_data, getter: str = "remote"):
         super().__init__(root, getter)
@@ -137,9 +135,7 @@ class StatsBombLoader(EventDataLoader):
             df[str_id] = df[str_id].astype("Int64").astype(str)
         return df
 
-    def games(
-        self, competition_id: str, season_id: str
-    ) -> DataFrame[StatsBombGameSchema]:
+    def games(self, competition_id: str, season_id: str) -> DataFrame[StatsBombGameSchema]:
         """Return a dataframe with all available games in a season.
 
         Parameters
@@ -246,9 +242,7 @@ class StatsBombLoader(EventDataLoader):
             :class:`~socceraction.spadl.statsbomb.StatsBombPlayerSchema` for the schema.
         """
         playersdf = pd.DataFrame(
-            _flatten_id(p)
-            for lineup in self._lineups(game_id)
-            for p in lineup["lineup"]
+            _flatten_id(p) for lineup in self._lineups(game_id) for p in lineup["lineup"]
         )
         playersdf["player_id"] = playersdf["player_id"].astype(str)
         playergamesdf = extract_player_games(self.events(game_id))
@@ -316,15 +310,11 @@ class StatsBombLoader(EventDataLoader):
             raise ParseError("{} should contain a list of events".format(path))
         eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
         eventsdf["game_id"] = game_id
-        eventsdf["timestamp"] = pd.to_datetime(
-            eventsdf["timestamp"], format="%H:%M:%S.%f"
-        )
+        eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"], format="%H:%M:%S.%f")
         eventsdf["related_events"] = eventsdf["related_events"].apply(
             lambda d: d if isinstance(d, list) else []
         )
-        eventsdf["under_pressure"] = (
-            eventsdf["under_pressure"].fillna(False).astype(bool)
-        )
+        eventsdf["under_pressure"] = eventsdf["under_pressure"].fillna(False).astype(bool)
         eventsdf["counterpress"] = eventsdf["counterpress"].fillna(False).astype(bool)
         eventsdf.rename(
             columns={
@@ -362,9 +352,7 @@ def _flatten(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
             if "id" in v and "name" in v:
                 newd[k + "_id"] = v["id"]
                 newd[k + "_name"] = v["name"]
-                newd[k + "_extra"] = {
-                    l: w for (l, w) in v.items() if l in ("id", "name")
-                }
+                newd[k + "_extra"] = {l: w for (l, w) in v.items() if l in ("id", "name")}
             else:
                 newd = {**newd, **_flatten(v)}
         else:
@@ -475,9 +463,9 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: str) -> pd.DataFrame:
     actions["end_x"] = ((actions["end_x"] - 1) / 119) * spadlconfig.field_length
     actions["end_y"] = 68 - ((actions["end_y"] - 1) / 79) * spadlconfig.field_width
 
-    actions[["type_id", "result_id", "bodypart_id"]] = events[
-        ["type_name", "extra"]
-    ].apply(_parse_event, axis=1, result_type="expand")
+    actions[["type_id", "result_id", "bodypart_id"]] = events[["type_name", "extra"]].apply(
+        _parse_event, axis=1, result_type="expand"
+    )
 
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index("non_action")]
@@ -690,9 +678,7 @@ def _parse_own_goal_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_goalkeeper_event(  # noqa: C901
-    extra: Dict[str, Any]
-) -> Tuple[str, str, str]:
+def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C901
     extra_type = extra.get("goalkeeper", {}).get("type", {}).get("name")
     if extra_type == "Shot Saved":
         a = "keeper_save"

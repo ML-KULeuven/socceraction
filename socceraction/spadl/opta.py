@@ -134,9 +134,7 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, str]:
     )
     m = re.match(regex, path)
     if m is None:
-        raise ValueError(
-            "The filepath {} does not match the format {}.".format(path, pattern)
-        )
+        raise ValueError("The filepath {} does not match the format {}.".format(path, pattern))
     return m.groupdict()
 
 
@@ -207,9 +205,7 @@ class OptaLoader(EventDataLoader):
 
     """
 
-    def __init__(
-        self, root: str, feeds: Dict[str, str], parser: Mapping[str, Type[OptaParser]]
-    ):
+    def __init__(self, root: str, feeds: Dict[str, str], parser: Mapping[str, Type[OptaParser]]):
         self.root = root
         if parser == "json":
             self.parsers = self._get_parsers_for_feeds(_jsonparsers, feeds)
@@ -250,9 +246,7 @@ class OptaLoader(EventDataLoader):
                 parsers[feed] = available_parsers[feed]
             else:
                 warnings.warn(
-                    "No parser available for {} feeds. This feed is ignored.".format(
-                        feed
-                    )
+                    "No parser available for {} feeds. This feed is ignored.".format(feed)
                 )
         return parsers
 
@@ -267,9 +261,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[str, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(
-                competition_id="*", season_id="*", game_id="*"
-            )
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id="*")
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -324,9 +316,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[str, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(
-                competition_id="*", season_id="*", game_id=game_id
-            )
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -350,9 +340,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[str, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(
-                competition_id="*", season_id="*", game_id=game_id
-            )
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -378,9 +366,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[str, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(
-                competition_id="*", season_id="*", game_id=game_id
-            )
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -565,25 +551,19 @@ class _F9JSONParser(OptaJSONParser):
                         firstname=nameobj.get("first").strip() or None,
                         lastname=nameobj.get("last").strip() or None,
                         player_name=nameobj.get("full").strip() or None,
-                        nickname=nameobj.get("known")
-                        or nameobj.get("full").strip()
-                        or None,
+                        nickname=nameobj.get("known") or nameobj.get("full").strip() or None,
                     )
                     if player_id in lineups[team_id]["players"]:
                         player = dict(
                             **player,
-                            jersey_number=lineups[team_id]["players"][player_id][
-                                "jersey_number"
+                            jersey_number=lineups[team_id]["players"][player_id]["jersey_number"],
+                            starting_position_name=lineups[team_id]["players"][player_id][
+                                "starting_position_name"
                             ],
-                            starting_position_name=lineups[team_id]["players"][
-                                player_id
-                            ]["starting_position_name"],
                             starting_position_id=lineups[team_id]["players"][player_id][
                                 "starting_position_id"
                             ],
-                            is_starter=lineups[team_id]["players"][player_id][
-                                "is_starter"
-                            ],
+                            is_starter=lineups[team_id]["players"][player_id]["is_starter"],
                             minutes_played=lineups[team_id]["players"][player_id][
                                 "minutes_played"
                             ],
@@ -627,9 +607,7 @@ class _F9JSONParser(OptaJSONParser):
         teams_gamestats = []
         for team in rootf9:
             attr = team["@attributes"]
-            statsdict = {
-                stat["@attributes"]["Type"]: stat["@value"] for stat in team["Stat"]
-            }
+            statsdict = {stat["@attributes"]["Type"]: stat["@value"] for stat in team["Stat"]}
 
             team_gamestats = dict(
                 game_id=game_id,
@@ -653,9 +631,7 @@ class _F9JSONParser(OptaJSONParser):
             raise MissingDataError
         matchstats = optadocument["MatchData"]["Stat"]
         matchstats = [matchstats] if isinstance(matchstats, dict) else matchstats
-        matchstatsdict = {
-            stat["@attributes"]["Type"]: stat["@value"] for stat in matchstats
-        }
+        matchstatsdict = {stat["@attributes"]["Type"]: stat["@value"] for stat in matchstats}
 
         lineups: Dict[str, Dict[str, Any]] = {}
         for team in rootf9:
@@ -668,8 +644,7 @@ class _F9JSONParser(OptaJSONParser):
                 attr = player["@attributes"]
                 player_id = str(attr["PlayerRef"].replace("p", ""))
                 playerstatsdict = {
-                    stat["@attributes"]["Type"]: stat["@value"]
-                    for stat in player["Stat"]
+                    stat["@attributes"]["Type"]: stat["@value"] for stat in player["Stat"]
                 }
                 sub_on = next(
                     (
@@ -680,11 +655,7 @@ class _F9JSONParser(OptaJSONParser):
                     matchstatsdict["match_time"] if attr["Status"] == "Sub" else 0,
                 )
                 sub_off = next(
-                    (
-                        item["Time"]
-                        for item in subst
-                        if item["SubOff"] == f"p{player_id}"
-                    ),
+                    (item["Time"] for item in subst if item["SubOff"] == f"p{player_id}"),
                     matchstatsdict["match_time"],
                 )
                 minutes_played = sub_off - sub_on
@@ -739,9 +710,7 @@ class _F24JSONParser(OptaJSONParser):
         events = {}
         for element in assertget(game, "Event"):
             attr = element["@attributes"]
-            timestamp = (
-                attr["TimeStamp"].get("locale") if attr.get("TimeStamp") else None
-            )
+            timestamp = attr["TimeStamp"].get("locale") if attr.get("TimeStamp") else None
             timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
             qualifiers = {
                 int(q["@attributes"]["qualifier_id"]): q["@attributes"]["value"]
@@ -832,8 +801,7 @@ class _MA3JSONParser(OptaJSONParser):
             timestamp = self._convert_timestamp(timestamp_string)
 
             qualifiers = {
-                int(q["qualifierId"]): q.get("value")
-                for q in element.get("qualifier", [])
+                int(q["qualifierId"]): q.get("value") for q in element.get("qualifier", [])
             }
             start_x = float(assertget(element, "x"))
             start_y = float(assertget(element, "y"))
@@ -921,7 +889,7 @@ class _MA1JSONParser(OptaJSONParser):
             teams[team_id] = team
         return teams
 
-    def extract_players(self) -> Dict[str, Dict[str, Optional[str]]]:
+    def extract_players(self) -> Dict[str, Dict[str, Any]]:
         live_data = self.get_live_data()
         lineups = assertget(live_data, "lineUp")
         players = {}
@@ -939,7 +907,9 @@ class _MA1JSONParser(OptaJSONParser):
                 )
                 for name_field in ["firstname", "lastname", "nickname"]:
                     if player[name_field]:
-                        player[name_field] = unidecode.unidecode(player[name_field])
+                        player[name_field] = unidecode.unidecode(
+                            player[name_field]  # type:ignore
+                        )
                 players[player_id] = player
         return players
 
@@ -986,9 +956,9 @@ class _F7XMLParser(OptaXMLParser):
             game_id=game_id,
             venue=optadocument.Venue.Name.text,
             referee_id=str(optadocument.MatchData.MatchOfficial.attrib["uID"][1:]),
-            game_date=datetime.strptime(
-                match_info.Date.text, "%Y%m%dT%H%M%S%z"
-            ).replace(tzinfo=None),
+            game_date=datetime.strptime(match_info.Date.text, "%Y%m%dT%H%M%S%z").replace(
+                tzinfo=None
+            ),
             attendance=int(match_info.Attendance),
             duration=int(stats["match_time"]),
         )
@@ -1037,21 +1007,14 @@ class _F7XMLParser(OptaXMLParser):
                         (
                             item["Time"]
                             for item in subst
-                            if "Retired" not in item
-                            and item["SubOn"] == f"p{player_id}"
+                            if "Retired" not in item and item["SubOn"] == f"p{player_id}"
                         ),
-                        stats["match_time"]
-                        if player_elm.attrib["Status"] == "Sub"
-                        else 0,
+                        stats["match_time"] if player_elm.attrib["Status"] == "Sub" else 0,
                     )
                 )
                 sub_off = int(
                     next(
-                        (
-                            item["Time"]
-                            for item in subst
-                            if item["SubOff"] == f"p{player_id}"
-                        ),
+                        (item["Time"] for item in subst if item["SubOff"] == f"p{player_id}"),
                         stats["match_time"],
                     )
                 )
@@ -1105,9 +1068,7 @@ class _F24XMLParser(OptaXMLParser):
             competition_id=str(assertget(attr, "competition_id")),
             season_id=str(assertget(attr, "season_id")),
             game_day=int(assertget(attr, "matchday")),
-            game_date=datetime.strptime(
-                assertget(attr, "game_date"), "%Y-%m-%dT%H:%M:%S"
-            ),
+            game_date=datetime.strptime(assertget(attr, "game_date"), "%Y-%m-%dT%H:%M:%S"),
             home_team_id=str(assertget(attr, "home_team_id")),
             home_score=int(assertget(attr, "home_score")),
             away_team_id=str(assertget(attr, "away_team_id")),
@@ -1126,9 +1087,7 @@ class _F24XMLParser(OptaXMLParser):
             event_id = int(attr["id"])
 
             qualifiers = {
-                int(qualifier_elm.attrib["qualifier_id"]): qualifier_elm.attrib.get(
-                    "value"
-                )
+                int(qualifier_elm.attrib["qualifier_id"]): qualifier_elm.attrib.get("value")
                 for qualifier_elm in event_elm.iterchildren("Q")
             }
             start_x = float(assertget(attr, "x"))
@@ -1147,9 +1106,7 @@ class _F24XMLParser(OptaXMLParser):
                 period_id=int(assertget(attr, "period_id")),
                 minute=int(assertget(attr, "min")),
                 second=int(assertget(attr, "sec")),
-                timestamp=datetime.strptime(
-                    assertget(attr, "timestamp"), "%Y-%m-%dT%H:%M:%S.%f"
-                ),
+                timestamp=datetime.strptime(assertget(attr, "timestamp"), "%Y-%m-%dT%H:%M:%S.%f"),
                 player_id=str(attr.get("player_id", 0)),
                 team_id=str(assertget(attr, "team_id")),
                 outcome=bool(int(attr.get("outcome", 1))),
@@ -1267,12 +1224,8 @@ class _WhoScoredParser(OptaParser):
             # is_golden_goal=None, # TODO
             # is_silver_goal=None, # TODO
             # Optional fields
-            home_score=int(
-                assertget(assertget(self.root["home"], "scores"), "fulltime")
-            ),
-            away_score=int(
-                assertget(assertget(self.root["away"], "scores"), "fulltime")
-            ),
+            home_score=int(assertget(assertget(self.root["home"], "scores"), "fulltime")),
+            away_score=int(assertget(assertget(self.root["away"], "scores"), "fulltime")),
             attendance=int(self.root.get("attendance", 0)),
             venue=str(self.root.get("venueName")),
             referee_id=str(self.root.get("referee", {}).get("officialId", 0)),
@@ -1351,9 +1304,7 @@ class _WhoScoredParser(OptaParser):
                 period_id = int(period_id)
                 period_minute = start_minute
                 if period_id > 1:
-                    period_minute = (
-                        start_minute - period_minute_limits[str(period_id - 1)]
-                    )
+                    period_minute = start_minute - period_minute_limits[str(period_id - 1)]
 
                 for i, p in enumerate(fpositions):
                     x = float(assertget(p, "vertical"))
@@ -1485,9 +1436,7 @@ class _WhoScoredParser(OptaParser):
                 # Substitud in and played the remainder of the game
                 elif "minute_start" in p and "minute_end" not in p:
                     p["minute_end"] = self.root["expandedMaxMinute"]
-                    p["minutes_played"] = (
-                        self.root["expandedMaxMinute"] - p["minute_start"]
-                    )
+                    p["minutes_played"] = self.root["expandedMaxMinute"] - p["minute_start"]
                 # Substitud in and out
                 elif "minute_start" in p and "minute_end" in p:
                     p["minutes_played"] = p["minute_end"] - p["minute_start"]
@@ -1504,8 +1453,7 @@ class _WhoScoredParser(OptaParser):
         for attr in self.root["events"]:
             qualifiers = {}
             qualifiers = {
-                int(q["type"]["value"]): q.get("value", True)
-                for q in attr.get("qualifiers", [])
+                int(q["type"]["value"]): q.get("value", True) for q in attr.get("qualifiers", [])
             }
             start_x = float(assertget(attr, "x"))
             start_y = float(assertget(attr, "y"))
@@ -1732,9 +1680,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: str) -> pd.DataFrame:
     for col in ["start_y", "end_y"]:
         actions[col] = events[col] / 100 * spadlconfig.field_width
 
-    actions["type_id"] = events[["type_name", "outcome", "qualifiers"]].apply(
-        _get_type_id, axis=1
-    )
+    actions["type_id"] = events[["type_name", "outcome", "qualifiers"]].apply(_get_type_id, axis=1)
     actions["result_id"] = events[["type_name", "outcome", "qualifiers"]].apply(
         _get_result_id, axis=1
     )

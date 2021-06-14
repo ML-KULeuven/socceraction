@@ -49,9 +49,7 @@ class TestPublicWyscoutLoader:
 
 class TestWyscoutLoader:
     def setup_method(self):
-        data_dir = os.path.join(
-            os.path.dirname(__file__), os.pardir, "data", "wyscout_api"
-        )
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data", "wyscout_api")
         feeds = {
             "competitions": "competitions.json",
             "seasons": "seasons_{competition_id}.json",

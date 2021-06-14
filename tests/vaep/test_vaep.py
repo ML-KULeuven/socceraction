@@ -13,9 +13,7 @@ def vaep_model(sb_worldcup_data):
     games = sb_worldcup_data["games"]
     features = pd.concat(
         [
-            model.compute_features(
-                game, sb_worldcup_data[f"actions/game_{game.game_id}"]
-            )
+            model.compute_features(game, sb_worldcup_data[f"actions/game_{game.game_id}"])
             for game in games.iloc[:-1].itertuples()
         ]
     )

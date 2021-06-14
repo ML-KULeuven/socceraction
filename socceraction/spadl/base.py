@@ -100,9 +100,7 @@ class SPADLSchema(pa.SchemaModel):
     original_event_id: Series[Object] = pa.Field(nullable=True)
     action_id: Series[int] = pa.Field(allow_duplicates=False)
     period_id: Series[int] = pa.Field(ge=1, le=5)
-    time_seconds: Series[float] = pa.Field(
-        ge=0, le=60 * 60
-    )  # assuming overtime < 15 min
+    time_seconds: Series[float] = pa.Field(ge=0, le=60 * 60)  # assuming overtime < 15 min
     team_id: Series[str]
     player_id: Series[str]
     start_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)
@@ -110,17 +108,11 @@ class SPADLSchema(pa.SchemaModel):
     end_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)
     end_y: Series[float] = pa.Field(ge=0, le=spadlconfig.field_width)
     bodypart_id: Series[int] = pa.Field(isin=spadlconfig.bodyparts_df().bodypart_id)
-    bodypart_name: Optional[Series[str]] = pa.Field(
-        isin=spadlconfig.bodyparts_df().bodypart_name
-    )
+    bodypart_name: Optional[Series[str]] = pa.Field(isin=spadlconfig.bodyparts_df().bodypart_name)
     type_id: Series[int] = pa.Field(isin=spadlconfig.actiontypes_df().type_id)
-    type_name: Optional[Series[str]] = pa.Field(
-        isin=spadlconfig.actiontypes_df().type_name
-    )
+    type_name: Optional[Series[str]] = pa.Field(isin=spadlconfig.actiontypes_df().type_name)
     result_id: Series[int] = pa.Field(isin=spadlconfig.results_df().result_id)
-    result_name: Optional[Series[str]] = pa.Field(
-        isin=spadlconfig.results_df().result_name
-    )
+    result_name: Optional[Series[str]] = pa.Field(isin=spadlconfig.results_df().result_name)
 
     class Config:  # noqa: D106
         strict = True
@@ -256,13 +248,9 @@ def _fix_clearances(actions: DataFrame) -> DataFrame:
 def _fix_direction_of_play(actions: DataFrame, home_team_id: str) -> DataFrame:
     away_idx = (actions.team_id != home_team_id).values
     for col in ["start_x", "end_x"]:
-        actions.loc[away_idx, col] = (
-            spadlconfig.field_length - actions[away_idx][col].values
-        )
+        actions.loc[away_idx, col] = spadlconfig.field_length - actions[away_idx][col].values
     for col in ["start_y", "end_y"]:
-        actions.loc[away_idx, col] = (
-            spadlconfig.field_width - actions[away_idx][col].values
-        )
+        actions.loc[away_idx, col] = spadlconfig.field_width - actions[away_idx][col].values
 
     return actions
 
@@ -309,8 +297,6 @@ def _add_dribbles(actions: DataFrame) -> DataFrame:
     dribbles["result_id"] = spadlconfig.results.index("success")
 
     actions = pd.concat([actions, dribbles], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
+    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(drop=True)
     actions["action_id"] = range(len(actions))
     return actions

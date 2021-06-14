@@ -181,10 +181,7 @@ class PublicWyscoutLoader(EventDataLoader):
 
     def _create_match_index(self) -> DataFrame:
         df_matches = pd.concat(
-            [
-                pd.DataFrame(self.get(path))
-                for path in glob.iglob(f"{self.root}/matches_*.json")
-            ]
+            [pd.DataFrame(self.get(path)) for path in glob.iglob(f"{self.root}/matches_*.json")]
         )
         df_matches.rename(
             columns={
@@ -213,9 +210,7 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing all available competitions and seasons. See
             :class:`~socceraction.spadl.wyscout.WyscoutCompetitionSchema` for the schema.
         """
-        df_competitions = pd.DataFrame(
-            self.get(os.path.join(self.root, "competitions.json"))
-        )
+        df_competitions = pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))
         df_competitions.rename(
             columns={"wyId": "competition_id", "name": "competition_name"}, inplace=True
         )
@@ -224,9 +219,7 @@ class PublicWyscoutLoader(EventDataLoader):
             axis=1,
         )
         df_competitions["competition_gender"] = "male"
-        df_competitions["competition_id"] = df_competitions["competition_id"].astype(
-            str
-        )
+        df_competitions["competition_id"] = df_competitions["competition_id"].astype(str)
         df_competitions = pd.merge(
             df_competitions,
             self._index.reset_index()[["competition_id", "season_id", "season_name"]],
@@ -247,9 +240,7 @@ class PublicWyscoutLoader(EventDataLoader):
             ]
         ]
 
-    def games(
-        self, competition_id: str, season_id: str
-    ) -> DataFrame[WyscoutGameSchema]:
+    def games(self, competition_id: str, season_id: str) -> DataFrame[WyscoutGameSchema]:
         """Return a dataframe with all available games in a season.
 
         Parameters
@@ -265,9 +256,7 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing all available games. See
             :class:`~socceraction.spadl.wyscout.WyscoutGameSchema` for the schema.
         """
-        path = os.path.join(
-            self.root, self._index.at[(competition_id, season_id), "db_matches"]
-        )
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), "db_matches"])
         df_matches = pd.DataFrame(self.get(path))
         str_ids = ["wyId", "seasonId", "competitionId"]
         for str_id in str_ids:
@@ -275,12 +264,8 @@ class PublicWyscoutLoader(EventDataLoader):
         return convert_games(df_matches)
 
     def _lineups(self, game_id: str) -> List[Dict[str, Any]]:
-        competition_id, season_id = self._match_index.loc[
-            game_id, ["competition_id", "season_id"]
-        ]
-        path = os.path.join(
-            self.root, self._index.at[(competition_id, season_id), "db_matches"]
-        )
+        competition_id, season_id = self._match_index.loc[game_id, ["competition_id", "season_id"]]
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), "db_matches"])
         df_matches = pd.DataFrame(self.get(path))
         df_matches["wyId"] = df_matches["wyId"].astype(str)
         df_matches.set_index("wyId", inplace=True)
@@ -300,9 +285,7 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing both teams. See
             :class:`~socceraction.spadl.wyscout.WyscoutTeamSchema` for the schema.
         """
-        df_teams = pd.DataFrame(
-            self.get(os.path.join(self.root, "teams.json"))
-        ).set_index("wyId")
+        df_teams = pd.DataFrame(self.get(os.path.join(self.root, "teams.json"))).set_index("wyId")
         df_teams_match_id = pd.DataFrame(self._lineups(game_id))["teamId"]
         df_teams_match = df_teams.loc[df_teams_match_id].reset_index()
         return convert_teams(df_teams_match)
@@ -321,9 +304,9 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing all players. See
             :class:`~socceraction.spadl.wyscout.WyscoutPlayerSchema` for the schema.
         """
-        df_players = pd.DataFrame(
-            self.get(os.path.join(self.root, "players.json"))
-        ).set_index("wyId")
+        df_players = pd.DataFrame(self.get(os.path.join(self.root, "players.json"))).set_index(
+            "wyId"
+        )
         lineups = self._lineups(game_id)
         players_match = []
         for team in lineups:
@@ -354,9 +337,7 @@ class PublicWyscoutLoader(EventDataLoader):
         df_players_match = convert_players(df_players_match)
 
         # get minutes played
-        competition_id, season_id = self._match_index.loc[
-            game_id, ["competition_id", "season_id"]
-        ]
+        competition_id, season_id = self._match_index.loc[game_id, ["competition_id", "season_id"]]
         path_events = os.path.join(
             self.root, self._index.at[(competition_id, season_id), "db_events"]
         )
@@ -380,12 +361,8 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing the event stream. See
             :class:`~socceraction.spadl.wyscout.WyscoutEventSchema` for the schema.
         """
-        competition_id, season_id = self._match_index.loc[
-            game_id, ["competition_id", "season_id"]
-        ]
-        path = os.path.join(
-            self.root, self._index.at[(competition_id, season_id), "db_events"]
-        )
+        competition_id, season_id = self._match_index.loc[game_id, ["competition_id", "season_id"]]
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), "db_events"])
         df_events = pd.DataFrame(self.get(path))
         df_events["matchId"] = df_events["matchId"].astype(str)
         df_events.set_index("matchId", inplace=True)
@@ -486,9 +463,7 @@ class WyscoutLoader(EventDataLoader):
             path = os.path.join(self.root, competitions_url)
             obj = self.get(path)
             if not isinstance(obj, dict) or "competitions" not in obj:
-                raise ParseError(
-                    "{} should contain a list of competitions".format(path)
-                )
+                raise ParseError("{} should contain a list of competitions".format(path))
             seasons_urls = [
                 self._get_file_or_url("seasons", competition_id=c["wyId"])[0]
                 for c in obj["competitions"]
@@ -502,15 +477,9 @@ class WyscoutLoader(EventDataLoader):
             try:
                 path = os.path.join(self.root, seasons_url)
                 obj = self.get(path)
-                if (
-                    not isinstance(obj, dict)
-                    or "competition" not in obj
-                    or "seasons" not in obj
-                ):
+                if not isinstance(obj, dict) or "competition" not in obj or "seasons" not in obj:
                     raise ParseError(
-                        "{} should contain a list of competition and list of seasons".format(
-                            path
-                        )
+                        "{} should contain a list of competition and list of seasons".format(path)
                     )
                 competitions.append(obj["competition"])
                 seasons.extend([s["season"] for s in obj["seasons"]])
@@ -521,9 +490,7 @@ class WyscoutLoader(EventDataLoader):
         # Merge into a single dataframe
         return pd.merge(df_competitions, df_seasons, on="competition_id")
 
-    def games(
-        self, competition_id: str, season_id: str
-    ) -> DataFrame[WyscoutGameSchema]:
+    def games(self, competition_id: str, season_id: str) -> DataFrame[WyscoutGameSchema]:
         """Return a dataframe with all available games in a season.
 
         Parameters
@@ -729,9 +696,7 @@ def convert_players(players: pd.DataFrame) -> pd.DataFrame:
     }
     cols = ["player_id", "nickname", "firstname", "lastname", "birth_date"]
     df_players = players.rename(columns=playermapping)[cols]
-    df_players["player_name"] = df_players[["firstname", "lastname"]].agg(
-        " ".join, axis=1
-    )
+    df_players["player_name"] = df_players[["firstname", "lastname"]].agg(" ".join, axis=1)
     df_players["birth_date"] = pd.to_datetime(df_players["birth_date"])
     return df_players
 
@@ -958,9 +923,7 @@ wyscout_tags = [
 ]
 
 
-def make_position_vars(
-    event_id: int, positions: List[Dict[str, Optional[float]]]
-) -> pd.Series:
+def make_position_vars(event_id: int, positions: List[Dict[str, Optional[float]]]) -> pd.Series:
     if len(positions) == 2:  # if less than 2 then action is removed
         start_x = positions[0]["x"]
         start_y = positions[0]["y"]
@@ -984,9 +947,7 @@ def make_new_positions(events_df: pd.DataFrame) -> pd.DataFrame:
         lambda x: make_position_vars(x[0], x[1]), axis=1
     )
     new_positions.columns = ["event_id", "start_x", "start_y", "end_x", "end_y"]
-    events_df = pd.merge(
-        events_df, new_positions, left_on="event_id", right_on="event_id"
-    )
+    events_df = pd.merge(events_df, new_positions, left_on="event_id", right_on="event_id")
     events_df = events_df.drop("positions", axis=1)
     return events_df
 
@@ -1049,9 +1010,7 @@ def create_shot_coordinates(df_events: pd.DataFrame) -> pd.DataFrame:
     df_events.loc[goal_left_idx, "end_x"] = 100.0
     df_events.loc[goal_left_idx, "end_y"] = 45.0
 
-    out_center_idx = (
-        df_events["position_out_high_center"] | df_events["position_post_high_center"]
-    )
+    out_center_idx = df_events["position_out_high_center"] | df_events["position_post_high_center"]
     df_events.loc[out_center_idx, "end_x"] = 100.0
     df_events.loc[out_center_idx, "end_y"] = 50.0
 
@@ -1155,12 +1114,8 @@ def convert_duels(df_events: pd.DataFrame) -> pd.DataFrame:
     # set end location equal to ball out of field location
     df_events.loc[selector_duel_won, "accurate"] = False
     df_events.loc[selector_duel_won, "not_accurate"] = True
-    df_events.loc[selector_duel_won, "end_x"] = (
-        100 - df_events2.loc[selector_duel_won, "start_x"]
-    )
-    df_events.loc[selector_duel_won, "end_y"] = (
-        100 - df_events2.loc[selector_duel_won, "start_y"]
-    )
+    df_events.loc[selector_duel_won, "end_x"] = 100 - df_events2.loc[selector_duel_won, "start_x"]
+    df_events.loc[selector_duel_won, "end_y"] = 100 - df_events2.loc[selector_duel_won, "start_y"]
 
     # df_events.loc[selector_duel_won, 'end_x'] = df_events2.loc[selector_duel_won, 'start_x']
     # df_events.loc[selector_duel_won, 'end_y'] = df_events2.loc[selector_duel_won, 'start_y']
@@ -1284,9 +1239,7 @@ def convert_touches(df_events: pd.DataFrame) -> pd.DataFrame:
     selector_same_team = df_events["team_id"] == df_events1["team_id"]
 
     # selector_touch_same_player = selector_touch & selector_same_player
-    selector_touch_same_team = (
-        selector_touch & ~selector_same_player & selector_same_team
-    )
+    selector_touch_same_team = selector_touch & ~selector_same_player & selector_same_team
     selector_touch_other = selector_touch & ~selector_same_player & ~selector_same_team
 
     same_x = abs(df_events["end_x"] - df_events1["start_x"]) < min_dribble_length
@@ -1482,9 +1435,7 @@ def remove_non_actions(df_actions: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         SciSports action dataframe without non-actions
     """
-    df_actions = df_actions[
-        df_actions["type_id"] != spadlconfig.actiontypes.index("non_action")
-    ]
+    df_actions = df_actions[df_actions["type_id"] != spadlconfig.actiontypes.index("non_action")]
     # remove remaining ball out of field, whistle and goalkeeper from line
     df_actions = df_actions.reset_index(drop=True)
     return df_actions
@@ -1613,12 +1564,12 @@ def remove_keeper_goal_actions(df_actions: pd.DataFrame) -> pd.DataFrame:
     shot_goals = (prev_actions.type_id == spadlconfig.actiontypes.index("shot")) & (
         prev_actions.result_id == 1
     )
-    penalty_goals = (
-        prev_actions.type_id == spadlconfig.actiontypes.index("shot_penalty")
-    ) & (prev_actions.result_id == 1)
-    freekick_goals = (
-        prev_actions.type_id == spadlconfig.actiontypes.index("shot_freekick")
-    ) & (prev_actions.result_id == 1)
+    penalty_goals = (prev_actions.type_id == spadlconfig.actiontypes.index("shot_penalty")) & (
+        prev_actions.result_id == 1
+    )
+    freekick_goals = (prev_actions.type_id == spadlconfig.actiontypes.index("shot_freekick")) & (
+        prev_actions.result_id == 1
+    )
     goals = shot_goals | penalty_goals | freekick_goals
     keeper_save = df_actions["type_id"] == spadlconfig.actiontypes.index("keeper_save")
     goals_keepers_idx = same_phase & goals & keeper_save

@@ -11,13 +11,13 @@ For more information, see https://github.com/ML-KULeuven/socceraction
 """
 
 setuptools.setup(
-    name='socceraction',
-    version='1.0.2',
-    description='Convert soccer event stream data to the SPADL format and value on-the-ball player actions',
-    url='https://github.com/ML-KULeuven/socceraction',
-    author='Tom Decroos',
-    author_email='tom.decroos.be@gmail.com',
-    license='MIT',
+    name="socceraction",
+    version="1.0.2",
+    description="Convert soccer event stream data to the SPADL format and value on-the-ball player actions",
+    url="https://github.com/ML-KULeuven/socceraction",
+    author="Tom Decroos",
+    author_email="tom.decroos.be@gmail.com",
+    license="MIT",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -34,8 +34,8 @@ setuptools.setup(
         "requests",
         "scikit-learn",
         "tqdm",
-        "unidecode"
+        "unidecode",
     ],
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
 )

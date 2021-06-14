@@ -60,9 +60,7 @@ class AtomicSPADLSchema(pa.SchemaModel):
     original_event_id: Series[Object] = pa.Field(nullable=True)
     action_id: Series[int] = pa.Field(allow_duplicates=False)
     period_id: Series[int] = pa.Field(ge=1, le=5)
-    time_seconds: Series[float] = pa.Field(
-        ge=0, le=60 * 60
-    )  # assuming overtime < 15 min
+    time_seconds: Series[float] = pa.Field(ge=0, le=60 * 60)  # assuming overtime < 15 min
     team_id: Series[int]
     player_id: Series[int]
     x: Series[float] = pa.Field(ge=0, le=field_length)
@@ -192,9 +190,7 @@ def _extra_from_passes(actions: DataFrame) -> DataFrame:
     extra["player_id"] = nex.player_id.mask(out | offside, prev.player_id)
 
     actions = pd.concat([actions, extra], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
+    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(drop=True)
     actions["action_id"] = range(len(actions))
     return actions
 
@@ -247,9 +243,7 @@ def _extra_from_shots(actions: DataFrame) -> DataFrame:
         .mask(out, ar.index("out"))
     )
     actions = pd.concat([actions, extra], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
+    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(drop=True)
     actions["action_id"] = range(len(actions))
     return actions
 
@@ -280,9 +274,7 @@ def _extra_from_fouls(actions: DataFrame) -> DataFrame:
         red, ar.index("red_card")
     )
     actions = pd.concat([actions, extra], ignore_index=True, sort=False)
-    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(
-        drop=True
-    )
+    actions = actions.sort_values(["game_id", "period_id", "action_id"]).reset_index(drop=True)
     actions["action_id"] = range(len(actions))
     return actions
 

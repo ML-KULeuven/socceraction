@@ -15,9 +15,7 @@ def _prev(x: pd.Series) -> pd.Series:
 _samephase_nb: int = 10
 
 
-def offensive_value(
-    actions: DataFrame[SPADLSchema], scores: Series, concedes: Series
-) -> Series:
+def offensive_value(actions: DataFrame[SPADLSchema], scores: Series, concedes: Series) -> Series:
     r"""Compute the offensive value of each action.
 
     VAEP defines the *offensive value* of an action as the change in scoring
@@ -49,15 +47,13 @@ def offensive_value(
     prev_scores = _prev(scores) * sameteam + _prev(concedes) * (~sameteam)
 
     # if the previous action was too long ago, the odds of scoring are now 0
-    toolong_idx = (
-        abs(actions.time_seconds - _prev(actions.time_seconds)) > _samephase_nb
-    )
+    toolong_idx = abs(actions.time_seconds - _prev(actions.time_seconds)) > _samephase_nb
     prev_scores[toolong_idx] = 0
 
     # if the previous action was a goal, the odds of scoring are now 0
-    prevgoal_idx = (
-        _prev(actions.type_name).isin(["shot", "shot_freekick", "shot_penalty"])
-    ) & (_prev(actions.result_name) == "success")
+    prevgoal_idx = (_prev(actions.type_name).isin(["shot", "shot_freekick", "shot_penalty"])) & (
+        _prev(actions.result_name) == "success"
+    )
     prev_scores[prevgoal_idx] = 0
 
     # fixed odds of scoring when penalty
@@ -71,9 +67,7 @@ def offensive_value(
     return scores - prev_scores
 
 
-def defensive_value(
-    actions: DataFrame[SPADLSchema], scores: Series, concedes: Series
-) -> Series:
+def defensive_value(actions: DataFrame[SPADLSchema], scores: Series, concedes: Series) -> Series:
     r"""Compute the defensive value of each action.
 
     VAEP defines the *defensive value* of an action as the change in conceding
@@ -104,23 +98,19 @@ def defensive_value(
     sameteam = _prev(actions.team_id) == actions.team_id
     prev_concedes = _prev(concedes) * sameteam + _prev(scores) * (~sameteam)
 
-    toolong_idx = (
-        abs(actions.time_seconds - _prev(actions.time_seconds)) > _samephase_nb
-    )
+    toolong_idx = abs(actions.time_seconds - _prev(actions.time_seconds)) > _samephase_nb
     prev_concedes[toolong_idx] = 0
 
     # if the previous action was a goal, the odds of conceding are now 0
-    prevgoal_idx = (
-        _prev(actions.type_name).isin(["shot", "shot_freekick", "shot_penalty"])
-    ) & (_prev(actions.result_name) == "success")
+    prevgoal_idx = (_prev(actions.type_name).isin(["shot", "shot_freekick", "shot_penalty"])) & (
+        _prev(actions.result_name) == "success"
+    )
     prev_concedes[prevgoal_idx] = 0
 
     return -(concedes - prev_concedes)
 
 
-def value(
-    actions: DataFrame[SPADLSchema], Pscores: Series, Pconcedes: Series
-) -> DataFrame:
+def value(actions: DataFrame[SPADLSchema], Pscores: Series, Pconcedes: Series) -> DataFrame:
     r"""Compute the offensive, defensive and VAEP value of each action.
 
     The total VAEP value of an action is the difference between that action's
