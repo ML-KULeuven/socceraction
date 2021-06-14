@@ -51,7 +51,7 @@ def download_statsbomb_data():
 
 def convert_statsbomb_data():
     seasons = {
-        3: "2018",
+        "3": "2018",
     }
     leagues = {
         "FIFA World Cup": "WorldCup",
@@ -137,10 +137,10 @@ def download_wyscout_data():
 
 def convert_wyscout_data():
     seasons = {
-        10078: "2018",
+        "10078": "2018",
     }
     leagues = {
-        28: "WorldCup",
+        "28": "WorldCup",
     }
 
     raw_datafolder = os.path.join(_data_dir, "wyscout_public", "raw")
