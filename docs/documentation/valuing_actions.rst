@@ -4,7 +4,7 @@ Valuing actions
 Once you've collected the data and converted it to the SPADL format, you can
 start valuing the contributions of soccer players. This document gives
 a general introduction to action valuing framweworks  and links to a detailled
-discussion of the three implmented framweworks.
+discussion of the three implmented frameworks.
 
 General idea
 ------------
