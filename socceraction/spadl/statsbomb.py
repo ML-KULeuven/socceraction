@@ -401,8 +401,9 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     """
     actions = pd.DataFrame()
 
-    events['extra'] = events['extra'].fillna({})
-    events = events.fillna(0)
+    events = events.copy()
+    events['extra'].fillna({}, inplace=True)
+    events.fillna(0, inplace=True)
 
     actions['game_id'] = events.game_id
     actions['original_event_id'] = events.event_id
@@ -638,7 +639,7 @@ def _parse_shot_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
 
 
 def _parse_own_goal_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
-    a = 'shot'
+    a = 'bad_touch'
     r = 'owngoal'
     b = 'foot'
     return a, r, b

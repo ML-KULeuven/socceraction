@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+Changed
+-------
+- Own goals are converted to a "bad_touch" SPADL event with outcome "owngoal". Previously, the action type differed between providers. (`GH26 <https://github.com/ML-KULeuven/socceraction/issues/26>`)
+
 Fixed
 -----
 - Bugs in OptaLoader's `extract_lineups()` function affecting "is_starter" & "minutes_played" columns (`GH48 <https://github.com/ML-KULeuven/socceraction/issues/48>`_)

@@ -178,6 +178,35 @@ class TestSpadlConvertor:
         action = opta.convert_to_actions(event, 0).iloc[0]
         assert action['type_id'] == spadlcfg.actiontypes.index('goalkick')
 
+    def test_convert_own_goal(self):
+        event = pd.DataFrame(
+            [
+                {
+                    'game_id': 318175,
+                    'event_id': 1619686768,
+                    'type_id': 16,
+                    'period_id': 1,
+                    'minute': 2,
+                    'second': 14,
+                    'timestamp': '2010-01-27 19:47:14',
+                    'player_id': 8786,
+                    'team_id': 157,
+                    'outcome': 1,
+                    'start_x': 5.0,
+                    'start_y': 37.0,
+                    'end_x': 73.0,
+                    'end_y': 18.7,
+                    'assist': False,
+                    'keypass': False,
+                    'qualifiers': {28: True},
+                    'type_name': 'goal',
+                }
+            ]
+        )
+        action = opta.convert_to_actions(event, 0).iloc[0]
+        assert action['type_id'] == spadlcfg.actiontypes.index('bad_touch')
+        assert action['result_id'] == spadlcfg.results.index('owngoal')
+
 
 def test_extract_lineups_f7xml():
     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'opta')

@@ -1304,7 +1304,9 @@ def determine_type_id(event: pd.DataFrame) -> pd.DataFrame:  # noqa: C901
     str
         A string representing the SciSports action type
     """
-    if event['type_id'] == 8:
+    if event['own_goal']:
+        action_type = 'bad_touch'
+    elif event['type_id'] == 8:
         if event['subtype_id'] == 80:
             action_type = 'cross'
         else:
@@ -1334,7 +1336,7 @@ def determine_type_id(event: pd.DataFrame) -> pd.DataFrame:  # noqa: C901
         action_type = 'keeper_save'
     elif event['subtype_id'] == 71:
         action_type = 'clearance'
-    elif event['subtype_id'] == 72 and (event['not_accurate'] or event['own_goal']):
+    elif event['subtype_id'] == 72 and event['not_accurate']:
         action_type = 'bad_touch'
     elif event['subtype_id'] == 70:
         action_type = 'dribble'

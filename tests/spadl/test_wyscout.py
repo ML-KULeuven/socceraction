@@ -89,8 +89,8 @@ class TestSpadlConvertor:
         data_dir = os.path.join(
             os.path.dirname(__file__), os.pardir, 'data', 'wyscout_public', 'raw'
         )
-        WSL = wy.PublicWyscoutLoader(root=data_dir, download=False)
-        self.events = WSL.events(2058007)
+        self.WSL = wy.PublicWyscoutLoader(root=data_dir, download=False)
+        self.events = self.WSL.events(2058007)
 
     def test_convert_to_actions(self):
         df_actions = wy.convert_to_actions(self.events, 5629)
@@ -121,9 +121,18 @@ class TestSpadlConvertor:
         actions = wy.convert_to_actions(event, 1610)
         assert len(actions) == 2
         assert actions.at[0, 'type_id'] == spadl.actiontypes.index('interception')
-        assert actions.at[1, 'type_id'] == spadl.actiontypes.index('pass')
+        assert actions.at[1, 'type_id'] == spadl.actiontypes.index('bad_touch')
         assert actions.at[0, 'result_id'] == spadl.results.index('success')
         assert actions.at[1, 'result_id'] == spadl.results.index('owngoal')
+
+    def test_convert_own_goal(self):
+        events_morira = self.WSL.events(2057961)
+        own_goal_event = events_morira[events_morira.event_id == 258696133]
+        own_goal_actions = wy.convert_to_actions(own_goal_event, 16216)
+        assert len(own_goal_actions) == 1
+        assert own_goal_actions.iloc[0]['type_id'] == spadl.actiontypes.index('bad_touch')
+        assert own_goal_actions.iloc[0]['result_id'] == spadl.results.index('owngoal')
+        assert own_goal_actions.iloc[0]['bodypart_id'] == spadl.bodyparts.index('foot')
 
     def test_convert_own_goal_touches(self):
         """Own goals resulting from bad touch events in the Wyscout event

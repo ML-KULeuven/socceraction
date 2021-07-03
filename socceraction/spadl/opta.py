@@ -1502,7 +1502,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
         .sort_values(['game_id', 'period_id', 'time_seconds'])
         .reset_index(drop=True)
     )
-    actions = _fix_owngoal_coordinates(actions)
+    actions = _fix_owngoals(actions)
     actions = _fix_direction_of_play(actions, home_team_id)
     actions = _fix_clearances(actions)
     actions['action_id'] = range(len(actions))
@@ -1602,7 +1602,7 @@ def _get_type_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:  # noqa: C901
     return spadlconfig.actiontypes.index(a)
 
 
-def _fix_owngoal_coordinates(actions: pd.DataFrame) -> pd.DataFrame:
+def _fix_owngoals(actions: pd.DataFrame) -> pd.DataFrame:
     owngoals_idx = (actions.result_id == spadlconfig.results.index('owngoal')) & (
         actions.type_id == spadlconfig.actiontypes.index('shot')
     )
@@ -1612,4 +1612,5 @@ def _fix_owngoal_coordinates(actions: pd.DataFrame) -> pd.DataFrame:
     actions.loc[owngoals_idx, 'end_y'] = (
         spadlconfig.field_width - actions[owngoals_idx].end_y.values
     )
+    actions.loc[owngoals_idx, 'type_id'] = spadlconfig.actiontypes.index('bad_touch')
     return actions
