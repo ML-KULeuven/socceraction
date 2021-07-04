@@ -1480,11 +1480,22 @@ class _WhoScoredParser(OptaParser):
         return events
 
 
-_jsonparsers = {'f1': _F1JSONParser, 'f9': _F9JSONParser, 'f24': _F24JSONParser}
+_jsonparsers = {
+    'f1': _F1JSONParser,
+    'f9': _F9JSONParser,
+    'f24': _F24JSONParser,
+    'ma1': _MA1JSONParser,
+    'ma3': _MA3JSONParser,
+}
 
-_xmlparsers = {'f7': _F7XMLParser, 'f24': _F24XMLParser}
+_xmlparsers = {
+    'f7': _F7XMLParser,
+    'f24': _F24XMLParser,
+}
 
-_whoscoredparsers = {'whoscored': _WhoScoredParser}
+_whoscoredparsers = {
+    'whoscored': _WhoScoredParser,
+}
 
 
 def assertget(dictionary: Dict[str, Any], key: str) -> Any:
