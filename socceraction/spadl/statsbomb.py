@@ -46,7 +46,7 @@ class StatsBombGameSchema(GameSchema):
     home_score: Series[int]
     away_score: Series[int]
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[str] = pa.Field(nullable=True)
 
 
 class StatsBombPlayerSchema(PlayerSchema):
@@ -70,7 +70,7 @@ class StatsBombEventSchema(EventSchema):
     minute: Series[int]
     second: Series[int] = pa.Field(ge=0, le=59)
     possession: Series[int]
-    possession_team_id: Series[int]
+    possession_team_id: Series[str]
     possession_team_name: Series[str]
     play_pattern_id: Series[int]
     play_pattern_name: Series[str]
