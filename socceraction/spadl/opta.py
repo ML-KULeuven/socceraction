@@ -49,7 +49,7 @@ class OptaGameSchema(GameSchema):
     """Definition of a dataframe containing a list of games."""
 
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[str] = pa.Field(nullable=True)
     attendance: Series[int] = pa.Field(nullable=True)
     duration: Series[int]
     home_score: Series[int]
