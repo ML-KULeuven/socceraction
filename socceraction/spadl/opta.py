@@ -1508,7 +1508,8 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    for col in [c for c in actions.columns.values if c != 'original_event_id']:
+    excluded_columns = ['game_id', 'original_event_id', 'team_id', 'player_id']
+    for col in [c for c in actions.columns.values if c not in excluded_columns]:
         if '_id' in col:
             actions[col] = actions[col].astype(int)
     return actions
