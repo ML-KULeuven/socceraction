@@ -9,6 +9,7 @@ import warnings
 from abc import ABC
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Type
+from typing import AnyStr
 
 import pandas as pd  # type: ignore
 import pandera as pa
@@ -124,7 +125,7 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
             target[k] = copy.copy(v)
 
 
-def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, str]:
+def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, AnyStr]:
     regex = re.compile(
         '.+?'
         + re.escape(pattern)
@@ -135,8 +136,7 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, str]:
     m = re.match(regex, path)
     if m is None:
         raise ValueError('The filepath {} does not match the format {}.'.format(path, pattern))
-    ids = m.groupdict()
-    return {k: v for k, v in ids.items()}
+    return m.groupdict()
 
 
 class OptaParser(ABC):
