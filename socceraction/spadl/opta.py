@@ -49,7 +49,7 @@ class OptaGameSchema(GameSchema):
     """Definition of a dataframe containing a list of games."""
 
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[str] = pa.Field(nullable=True)
     attendance: Series[int] = pa.Field(nullable=True)
     duration: Series[int]
     home_score: Series[int]
@@ -124,19 +124,18 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
             target[k] = copy.copy(v)
 
 
-def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, int]:
+def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, str]:
     regex = re.compile(
         '.+?'
         + re.escape(pattern)
-        .replace(r'\{competition_id\}', r'(?P<competition_id>\d+)')
-        .replace(r'\{season_id\}', r'(?P<season_id>\d+)')
-        .replace(r'\{game_id\}', r'(?P<game_id>\d+)')
+        .replace(r'\{competition_id\}', r'(?P<competition_id>[a-z0-9]+)')
+        .replace(r'\{season_id\}', r'(?P<season_id>[a-z0-9]+)')
+        .replace(r'\{game_id\}', r'(?P<game_id>[a-z0-9]+)')
     )
     m = re.match(regex, path)
     if m is None:
         raise ValueError('The filepath {} does not match the format {}.'.format(path, pattern))
-    ids = m.groupdict()
-    return {k: int(v) for k, v in ids.items()}
+    return m.groupdict()
 
 
 class OptaParser(ABC):
@@ -750,6 +749,169 @@ class _F24JSONParser(OptaJSONParser):
         return events
 
 
+class _MA1JSONParser(OptaJSONParser):
+    def get_match_info(self) -> Dict[str, Any]:
+        if 'matchInfo' in self.root:
+            return self.root['matchInfo']
+        raise MissingDataError
+
+    def get_live_data(self) -> Dict[str, Any]:
+        if 'liveData' in self.root:
+            return self.root['liveData']
+        raise MissingDataError
+
+    def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
+        match_info = self.get_match_info()
+        tournament_calender = assertget(match_info, 'tournamentCalendar')
+        competition = assertget(match_info, 'competition')
+        season_id = assertget(tournament_calender, 'id')
+        season = dict(
+            season_id=assertget(tournament_calender, 'id'),
+            season_name=assertget(tournament_calender, 'name'),
+            competition_id=assertget(competition, 'id'),
+            competition_name=assertget(competition, 'name'),
+        )
+        return {season_id: season}
+
+    def extract_teams(self) -> Dict[int, Dict[str, Any]]:
+        match_info = self.get_match_info()
+        contestants = assertget(match_info, 'contestant')
+        teams = {}
+        for contestant in contestants:
+            team_id = assertget(contestant, 'id')
+            team = dict(
+                team_id=team_id,
+                team_name=assertget(contestant, 'name'),
+            )
+            teams[team_id] = team
+        return teams
+
+    def extract_players(self) -> Dict[int, Dict[str, Any]]:
+        live_data = self.get_live_data()
+        lineups = assertget(live_data, 'lineUp')
+        players = {}
+        for lineup in lineups:
+            team_id = assertget(lineup, 'contestantId')
+            players_in_lineup = assertget(lineup, 'player')
+            for individual in players_in_lineup:
+                player_id = assertget(individual, 'playerId')
+                player = dict(
+                    team_id=team_id,
+                    player_id=player_id,
+                    firstname=assertget(individual, 'firstName').strip() or None,
+                    lastname=assertget(individual, 'lastName').strip() or None,
+                    nickname=assertget(individual, 'matchName').strip() or None,
+                )
+                for name_field in ['firstname', 'lastname', 'nickname']:
+                    if player[name_field]:
+                        player[name_field] = unidecode.unidecode(player[name_field])
+                players[player_id] = player
+        return players
+
+
+class _MA3JSONParser(OptaJSONParser):
+    def get_match_info(self) -> Dict[str, Any]:
+        if 'matchInfo' in self.root:
+            return self.root['matchInfo']
+        raise MissingDataError
+
+    def get_live_data(self) -> Dict[str, Any]:
+        if 'liveData' in self.root:
+            return self.root['liveData']
+        raise MissingDataError
+
+    def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
+        match_info = self.get_match_info()
+        tournament_calender = assertget(match_info, 'tournamentCalendar')
+        competition = assertget(match_info, 'competition')
+        season_id = assertget(tournament_calender, 'id')
+        season = dict(
+            season_id=assertget(tournament_calender, 'id'),
+            season_name=assertget(tournament_calender, 'name'),
+            competition_id=assertget(competition, 'id'),
+            competition_name=assertget(competition, 'name'),
+        )
+        return {season_id: season}
+
+    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+        match_info = self.get_match_info()
+        tournament_calender = assertget(match_info, 'tournamentCalendar')
+        competition = assertget(match_info, 'competition')
+        contestant = assertget(match_info, 'contestant')
+        game_id = assertget(match_info, 'id')
+        return {
+            game_id: dict(
+                competition_id=assertget(competition, 'id'),
+                game_id=game_id,
+                season_id=assertget(tournament_calender, 'id'),
+                game_day=int(assertget(match_info, 'week')),
+                home_team_id=self._extract_team_id(contestant, 'home'),
+                away_team_id=self._extract_team_id(contestant, 'away'),
+            )
+        }
+
+    def extract_events(self) -> Dict[int, Dict[str, Any]]:
+        match_info = self.get_match_info()
+        live_data = self.get_live_data()
+        game_id = assertget(match_info, 'id')
+
+        events = {}
+        for element in assertget(live_data, 'event'):
+            timestamp_string = assertget(element, 'timeStamp')
+            timestamp = self._convert_timestamp(timestamp_string)
+
+            qualifiers = {
+                int(q['qualifierId']): q.get('value') for q in element.get('qualifier', [])
+            }
+            start_x = float(assertget(element, 'x'))
+            start_y = float(assertget(element, 'y'))
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
+            if end_x is None:
+                end_x = start_x
+            if end_y is None:
+                end_y = start_y
+
+            event_id = int(assertget(element, 'id'))
+            event = dict(
+                game_id=game_id,
+                event_id=event_id,
+                type_id=int(assertget(element, 'typeId')),
+                period_id=int(assertget(element, 'periodId')),
+                minute=int(assertget(element, 'timeMin')),
+                second=int(assertget(element, 'timeSec')),
+                timestamp=timestamp,
+                player_id=element.get('playerId'),
+                team_id=assertget(element, 'contestantId'),
+                outcome=bool(int(element.get('outcome', 1))),
+                start_x=start_x,
+                start_y=start_y,
+                end_x=end_x,
+                end_y=end_y,
+                assist=bool(int(element.get('assist', 0))),
+                keypass=bool(int(element.get('keyPass', 0))),
+                qualifiers=qualifiers,
+            )
+            events[event_id] = event
+        return events
+
+    @staticmethod
+    def _extract_team_id(teams: List[Dict[str, str]], side: str) -> Optional[str]:
+        for team in teams:
+            team_side = assertget(team, 'position')
+            if team_side == side:
+                team_id = assertget(team, 'id')
+                return team_id
+        raise MissingDataError
+
+    @staticmethod
+    def _convert_timestamp(timestamp_string: str) -> datetime:
+        try:
+            return datetime.strptime(timestamp_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except ValueError:
+            return datetime.strptime(timestamp_string, '%Y-%m-%dT%H:%M:%SZ')
+
+
 class _F7XMLParser(OptaXMLParser):
     def get_doc(self) -> Type[objectify.ObjectifiedElement]:
         optadocument = self.root.find('SoccerDocument')
@@ -1318,11 +1480,22 @@ class _WhoScoredParser(OptaParser):
         return events
 
 
-_jsonparsers = {'f1': _F1JSONParser, 'f9': _F9JSONParser, 'f24': _F24JSONParser}
+_jsonparsers = {
+    'f1': _F1JSONParser,
+    'f9': _F9JSONParser,
+    'f24': _F24JSONParser,
+    'ma1': _MA1JSONParser,
+    'ma3': _MA3JSONParser,
+}
 
-_xmlparsers = {'f7': _F7XMLParser, 'f24': _F24XMLParser}
+_xmlparsers = {
+    'f7': _F7XMLParser,
+    'f24': _F24XMLParser,
+}
 
-_whoscoredparsers = {'whoscored': _WhoScoredParser}
+_whoscoredparsers = {
+    'whoscored': _WhoScoredParser,
+}
 
 
 def assertget(dictionary: Dict[str, Any], key: str) -> Any:
@@ -1508,7 +1681,8 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    for col in [c for c in actions.columns.values if c != 'original_event_id']:
+    excluded_columns = ['game_id', 'original_event_id', 'team_id', 'player_id']
+    for col in [c for c in actions.columns.values if c not in excluded_columns]:
         if '_id' in col:
             actions[col] = actions[col].astype(int)
     return actions

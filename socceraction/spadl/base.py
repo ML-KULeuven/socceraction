@@ -29,9 +29,9 @@ class MissingDataError(Exception):
 class CompetitionSchema(pa.SchemaModel):
     """Definition of a dataframe containing a list of competitions and seasons."""
 
-    season_id: Series[int]
+    season_id: Series[str]
     season_name: Series[str]
-    competition_id: Series[int]
+    competition_id: Series[str]
     competition_name: Series[str]
 
     class Config:  # noqa: D106
@@ -41,13 +41,13 @@ class CompetitionSchema(pa.SchemaModel):
 class GameSchema(pa.SchemaModel):
     """Definition of a dataframe containing a list of games."""
 
-    game_id: Series[int]
-    season_id: Series[int]
-    competition_id: Series[int]
+    game_id: Series[str]
+    season_id: Series[str]
+    competition_id: Series[str]
     game_day: Series[int]
     game_date: Series[DateTime]
-    home_team_id: Series[int]
-    away_team_id: Series[int]
+    home_team_id: Series[str]
+    away_team_id: Series[str]
 
     class Config:  # noqa: D106
         strict = True
@@ -56,7 +56,7 @@ class GameSchema(pa.SchemaModel):
 class TeamSchema(pa.SchemaModel):
     """Definition of a dataframe containing the list of teams of a game."""
 
-    team_id: Series[int]
+    team_id: Series[str]
     team_name: Series[str]
 
     class Config:  # noqa: D106
@@ -66,9 +66,9 @@ class TeamSchema(pa.SchemaModel):
 class PlayerSchema(pa.SchemaModel):
     """Definition of a dataframe containing the list of players of a game."""
 
-    game_id: Series[int]
-    team_id: Series[int]
-    player_id: Series[int]
+    game_id: Series[str]
+    team_id: Series[str]
+    player_id: Series[str]
     player_name: Series[str]
     is_starter: Series[bool]
     minutes_played: Series[int]
@@ -81,11 +81,11 @@ class PlayerSchema(pa.SchemaModel):
 class EventSchema(pa.SchemaModel):
     """Definition of a dataframe containing event stream data of a game."""
 
-    game_id: Series[int]
+    game_id: Series[str]
     event_id: Series[int]
     period_id: Series[int]
-    team_id: Series[int] = pa.Field(nullable=True)
-    player_id: Series[int] = pa.Field(nullable=True)
+    team_id: Series[str] = pa.Field(nullable=True)
+    player_id: Series[str] = pa.Field(nullable=True)
     type_id: Series[int]
     type_name: Series[str]
 
@@ -96,13 +96,13 @@ class EventSchema(pa.SchemaModel):
 class SPADLSchema(pa.SchemaModel):
     """Definition of a SPADL dataframe."""
 
-    game_id: Series[int]
+    game_id: Series[str]
     original_event_id: Series[Object] = pa.Field(nullable=True)
     action_id: Series[int] = pa.Field(allow_duplicates=False)
     period_id: Series[int] = pa.Field(ge=1, le=5)
     time_seconds: Series[float] = pa.Field(ge=0, le=60 * 60)  # assuming overtime < 15 min
-    team_id: Series[int]
-    player_id: Series[int]
+    team_id: Series[str]
+    player_id: Series[str]
     start_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)
     start_y: Series[float] = pa.Field(ge=0, le=spadlconfig.field_width)
     end_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)

@@ -24,15 +24,15 @@ from . import labels as lab
 try:
     import xgboost
 except ImportError:
-    xgboost = None
+    xgboost = None  # type: ignore
 try:
     import catboost
 except ImportError:
-    catboost = None
+    catboost = None  # type: ignore
 try:
     import lightgbm
 except ImportError:
-    lightgbm = None
+    lightgbm = None  # type: ignore
 
 
 xfns_default = [
