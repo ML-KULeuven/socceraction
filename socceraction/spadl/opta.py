@@ -960,18 +960,18 @@ class _MA3JSONParser(OptaJSONParser):
         competition = assertget(match_info, 'competition')
         contestant = assertget(match_info, 'contestant')
         game_id = assertget(match_info, 'id')
-        match_details = assertget(live_data, "matchDetails")
-        scores = assertget(match_details, "scores")
-        score_total = assertget(scores, "total")
+        match_details = assertget(live_data, 'matchDetails')
+        scores = assertget(match_details, 'scores')
+        score_total = assertget(scores, 'total')
         home_score = None
         away_score = None
         if isinstance(score_total, dict):
-            home_score = assertget(score_total, "home")
-            away_score = assertget(score_total, "away")
+            home_score = assertget(score_total, 'home')
+            away_score = assertget(score_total, 'away')
 
         game_date = assertget(match_info, 'date')[0:10]
-        game_time = assertget(match_info, "time")[0:8]
-        game_datetime = f"{game_date} {game_time}"
+        game_time = assertget(match_info, 'time')[0:8]
+        game_datetime = f'{game_date} {game_time}'
 
         return {
             game_id: dict(
