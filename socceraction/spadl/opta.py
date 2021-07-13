@@ -346,7 +346,9 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_players())
-        df_players = pd.DataFrame(list(data.values()))
+        df_players = pd.DataFrame.from_dict(data, 'index')
+        df_players = df_players.reset_index()
+        df_players = df_players.rename(columns={"index": "player_id"})
         df_players['game_id'] = game_id
         return df_players
 
@@ -833,20 +835,155 @@ class _MA3JSONParser(OptaJSONParser):
         )
         return {season_id: season}
 
+    def extract_teams(self) -> Dict[int, Dict[str, Any]]:
+        match_info = self.get_match_info()
+        contestants = assertget(match_info, 'contestant')
+        teams = {}
+        for contestant in contestants:
+            team_id = assertget(contestant, 'id')
+            team = dict(
+                team_id=team_id,
+                team_name=assertget(contestant, 'name'),
+            )
+            teams[team_id] = team
+        return teams
+
+    def extract_players(self) -> Dict[int, Dict[str, Any]]:
+        live_data = self.get_live_data()
+        events = assertget(live_data, 'event')
+
+        game_duration = 90
+        players = {}
+
+        players_data = {
+            'position_code': [],
+            'player_id': [],
+            'team_id': [],
+            'position_in_formation': [],
+            'jersey_number': []
+        }
+
+        substitutions = []
+
+        for event in events:
+            event_type = assertget(event, 'typeId')
+            if event_type == 34:
+                team_id = assertget(event, 'contestantId')
+                qualifiers = assertget(event, 'qualifier')
+                for q in qualifiers:
+                    qualifier_id = assertget(event, 'qualifierId')
+                    if qualifier_id == 30:
+                        value = [v for v in assertget(q, 'value').split(', ')]
+                        players_data['player_id'] += value
+                        team = [team_id for _ in range(len(value))]
+                        players_data['team_id'] += team
+                    elif qualifier_id == 44:
+                        value = [int(v) for v in assertget(q, 'value').split(', ')]
+                        players_data['position_code'] += value
+                    elif qualifier_id == 131:
+                        value = [int(v) for v in assertget(q, 'value').split(', ')]
+                        players_data['position_in_formation'] += value
+                    elif qualifier_id == 59:
+                        value = [int(v) for v in assertget(q, 'value').split(', ')]
+                        players_data['jersey_number'] += value
+            elif event_type in (18, 19):
+                substitution_data = {
+                    'player_id': assertget(event, 'playerId'),
+                    'team_id': assertget(event, 'contestantId')
+                }
+                if event_type == 18:
+                    substitution_data['minute_end'] = assertget(event, 'timeMin')
+                else:
+                    substitution_data['minute_start'] = assertget(event, 'timeMin')
+                substitutions.append(substitution_data)
+            elif event_type == 30:
+                # todo: add 1st half time
+                qualifiers = assertget(event, 'qualifier')
+                for q in qualifiers:
+                    qualifier = assertget(q, 'qualifierId')
+                    if qualifier == 209:
+                        new_duration = assertget(event, 'timeMin')
+                        if new_duration > game_duration:
+                            game_duration = new_duration
+
+            player_id = event.get('playerId')
+            if player_id is None:
+                continue
+            player_name = unidecode.unidecode(assertget(event, 'playerName'))
+            if player_id not in players:
+                players[player_id] = player_name
+
+        players_data = pd.DataFrame.from_dict(players_data)
+        players_data['is_starter'] = (players_data['position_in_formation'] > 0).astype(int)
+
+        substitutions = pd.DataFrame(substitutions)
+
+        substitutions = substitutions.groupby(['player_id', 'team_id']).max().reset_index()
+        substitutions['minute_start'] = substitutions['minute_start'].fillna(0)
+        substitutions['minute_end'] = substitutions['minute_end'].fillna(game_duration)
+
+        players_data = players_data.merge(
+            substitutions,
+            on=['team_id', 'player_id'],
+            how='left'
+        )
+
+        players_data.loc[
+            (players_data['is_starter'] == 1) & (players_data['minute_start'].isnull()),
+            'minute_start'
+        ] = 0
+
+        players_data.loc[
+            (players_data['is_starter'] == 1) & (players_data['minute_end'].isnull()),
+            'minute_end'
+        ] = game_duration
+
+        players_data['minutes_played'] = players_data['minute_end'] - players_data['minute_start']
+        players_data['minutes_played'] = players_data['minutes_played'].fillna(0).astype(int)
+
+        players_data = players_data[players_data['minutes_played'] > 0]
+
+        players_data['player_name'] = players_data['player_id'].map(players)
+
+        players_data = players_data.set_index('player_id')
+        players_data = players_data[['player_name', 'team_id', 'position_code', 'minutes_played']]
+
+        players = {}
+        for player_id, player_data in players_data.iterrows():
+            players[player_id] = player_data.to_dict()
+        return players
+
     def extract_games(self) -> Dict[int, Dict[str, Any]]:
         match_info = self.get_match_info()
+        live_data = self.get_live_data()
         tournament_calender = assertget(match_info, 'tournamentCalendar')
         competition = assertget(match_info, 'competition')
         contestant = assertget(match_info, 'contestant')
         game_id = assertget(match_info, 'id')
+        match_details = assertget(live_data, "matchDetails")
+        scores = assertget(match_details, "scores")
+        score_total = assertget(scores, "total")
+        home_score = None
+        away_score = None
+        if isinstance(score_total, dict):
+            home_score = assertget(score_total, "home")
+            away_score = assertget(score_total, "away")
+
+        game_date = assertget(match_info, 'date')[0:10]
+        game_time = assertget(match_info, "time")[0:8]
+        game_datetime = f"{game_date} {game_time}"
+
         return {
             game_id: dict(
                 competition_id=assertget(competition, 'id'),
                 game_id=game_id,
                 season_id=assertget(tournament_calender, 'id'),
                 game_day=int(assertget(match_info, 'week')),
+                game_date=game_datetime,
                 home_team_id=self._extract_team_id(contestant, 'home'),
                 away_team_id=self._extract_team_id(contestant, 'away'),
+                home_score=home_score,
+                away_score=away_score
             )
         }
 
