@@ -238,10 +238,20 @@ def test_extract_ids_from_path():
     assert ids['competition_id'] == 1
     assert ids['season_id'] == 2021
     assert ids['game_id'] == 1234
+    ffp = 'blah/blah/blah/1kldfa78394kdf-2021/1234.json'
+    ids = opta._extract_ids_from_path(ffp, glob_pattern)
+    assert ids['competition_id'] == '1kldfa78394kdf'
+    assert ids['season_id'] == 2021
+    assert ids['game_id'] == 1234
+    ffp = 'blah/blah/blah/EPL-2021/1234.json'
+    ids = opta._extract_ids_from_path(ffp, glob_pattern)
+    assert ids['competition_id'] == 'EPL'
+    assert ids['season_id'] == 2021
+    assert ids['game_id'] == 1234
 
 
 def test_extract_ids_from_path_with_incorrect_pattern():
     glob_pattern = '{competition_id}-{season_id}/{game_id}.json'
-    ffp = 'blah/blah/blah/1-2021/g1234.json'
+    ffp = 'blah/blah/blah/1/2021/g1234.json'
     with pytest.raises(ValueError):
         opta._extract_ids_from_path(ffp, glob_pattern)

@@ -7,9 +7,13 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+Added
+-----
+- Support for Stats Perform's MA1 and MA3 JSON feeds
+
 Changed
 -------
-- Own goals are converted to a "bad_touch" SPADL event with outcome "owngoal". Previously, the action type differed between providers. (`GH26 <https://github.com/ML-KULeuven/socceraction/issues/26>`)
+- Own goals are converted to a "bad_touch" SPADL event with outcome "owngoal". Previously, the action type differed between providers. (`GH26 <https://github.com/ML-KULeuven/socceraction/issues/26>`_)
 
 Fixed
 -----
