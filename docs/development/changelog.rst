@@ -10,6 +10,8 @@ Unreleased_
 Added
 -----
 - Support for Stats Perform's MA1 and MA3 JSON feeds
+- Enhanced tests suite by use of ``@slow`` decorator, which is
+  controlled via a ``--skip-slow`` command line argument.
 
 Changed
 -------

@@ -33,6 +33,7 @@ def vaep_model(sb_worldcup_data):
     return model
 
 
+@pytest.mark.slow
 def test_predict(sb_worldcup_data, vaep_model):
     games = sb_worldcup_data['games']
     game = games.iloc[-1]
@@ -44,6 +45,7 @@ def test_predict(sb_worldcup_data, vaep_model):
     assert set(ratings.columns) == expected_rating_columns
 
 
+@pytest.mark.slow
 def test_predict_with_missing_features(sb_worldcup_data, vaep_model):
     games = sb_worldcup_data['games']
     game = games.iloc[-1]

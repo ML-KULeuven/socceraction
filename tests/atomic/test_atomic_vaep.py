@@ -1,10 +1,12 @@
 import pandas as pd
+import pytest
 
 import socceraction.atomic.spadl as atomicspadl
 from socceraction.atomic.vaep import AtomicVAEP
 from socceraction.atomic.vaep import features as fs
 
 
+@pytest.mark.slow
 def test_predict(sb_worldcup_data):
     # Convert to atomic actions
     games = sb_worldcup_data['games']
