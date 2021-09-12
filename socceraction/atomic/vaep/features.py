@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from pandera.typing import DataFrame
 
-import socceraction.atomic.spadl as atomicspadl
+import socceraction.atomic.spadl.config as atomicspadl
 from socceraction.atomic.spadl import AtomicSPADLSchema
 from socceraction.vaep.features import (
     actiontype,

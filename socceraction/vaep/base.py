@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
-import socceraction.spadl.config as spadlcfg
+import socceraction.spadl as spadlcfg
 
 from . import features as fs
 from . import formula as vaep
@@ -115,8 +115,8 @@ class VAEP:
         return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
 
     def compute_labels(
-        self, game: pd.Series, game_actions: pd.DataFrame
-    ) -> pd.DataFrame:  # pylint: disable=W0613
+        self, game: pd.Series, game_actions: pd.DataFrame  # pylint: disable=W0613
+    ) -> pd.DataFrame:
         """
         Compute the labels for each game state in the given game.
 

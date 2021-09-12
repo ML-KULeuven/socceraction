@@ -3,7 +3,7 @@
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame, Series
 
-from socceraction.spadl.base import SPADLSchema
+from socceraction.spadl.schema import SPADLSchema
 
 
 def _prev(x: pd.Series) -> pd.Series:

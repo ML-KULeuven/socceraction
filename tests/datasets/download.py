@@ -1,7 +1,5 @@
 import os
 import shutil
-
-# optional: if you get a SSL CERTIFICATE_VERIFY_FAILED exception
 import ssl
 import sys
 from io import BytesIO
@@ -16,7 +14,10 @@ from tqdm import tqdm
 import socceraction.spadl as spadl
 import socceraction.spadl.statsbomb as statsbomb
 import socceraction.spadl.wyscout as wyscout
+from socceraction.data.statsbomb import StatsBombLoader
+from socceraction.data.wyscout import PublicWyscoutLoader
 
+# optional: if you get a SSL CERTIFICATE_VERIFY_FAILED exception
 ssl._create_default_https_context = ssl._create_unverified_context
 
 _data_dir = os.path.dirname(__file__)
@@ -60,7 +61,7 @@ def convert_statsbomb_data():
 
     free_open_data_remote = 'https://raw.githubusercontent.com/statsbomb/open-data/master/data/'
 
-    SBL = statsbomb.StatsBombLoader(root=free_open_data_remote, getter='remote')
+    SBL = StatsBombLoader(root=free_open_data_remote, getter='remote')
 
     # View all available competitions
     df_competitions = SBL.competitions()
@@ -146,64 +147,54 @@ def convert_wyscout_data():
     raw_datafolder = os.path.join(_data_dir, 'wyscout_public', 'raw')
     spadl_datafolder = os.path.join(_data_dir, 'wyscout_public')
 
-    # select competitions
-    json_competitions = read_json_file(f'{raw_datafolder}/competitions.json')
-    df_competitions = pd.read_json(json_competitions)
-    # Rename competitions to the names used in the file names
-    df_competitions['name'] = df_competitions.apply(
-        lambda x: x.area['name'] if x.area['name'] != '' else x['name'], axis=1
-    )
+    WYL = PublicWyscoutLoader(root=raw_datafolder)
 
-    df_selected_competitions = df_competitions[df_competitions.wyId.isin(leagues.keys())]
-
-    json_teams = read_json_file(f'{raw_datafolder}/teams.json')
-    df_teams = wyscout.convert_teams(pd.read_json(json_teams))
-
-    json_players = read_json_file(f'{raw_datafolder}/players.json')
-    df_players = wyscout.convert_players(pd.read_json(json_players))
+    # View all available competitions
+    df_competitions = WYL.competitions()
+    df_selected_competitions = df_competitions[
+        df_competitions.competition_id.isin(leagues.keys())
+    ]
 
     for competition in df_selected_competitions.itertuples():
-        json_games = read_json_file(
-            f"{raw_datafolder}/matches_{competition.name.replace(' ', '_')}.json"
-        )
-        df_games = pd.read_json(json_games)
-        competition_id = leagues[competition.wyId]
-        season_id = seasons[df_games.seasonId.unique()[0]]
-        df_games = wyscout.convert_games(df_games)
-        df_games['competition_id'] = competition_id
-        df_games['season_id'] = season_id
+        # Get games from all selected competition
+        games = WYL.games(competition.competition_id, competition.season_id)
 
-        json_events = read_json_file(
-            f"{raw_datafolder}/events_{competition.name.replace(' ', '_')}.json"
-        )
-        df_events = pd.read_json(json_events).groupby('matchId', as_index=False)
+        games_verbose = tqdm(list(games.itertuples()), desc='Loading match data')
+        teams, players = [], []
 
+        competition_id = leagues[competition.competition_id]
+        season_id = seasons[competition.season_id]
         spadl_h5 = os.path.join(spadl_datafolder, f'spadl-{competition_id}-{season_id}.h5')
-
-        # Store all spadl data in h5-file
-        print(f'Converting {competition_id} {season_id}')
         with pd.HDFStore(spadl_h5) as spadlstore:
 
-            spadlstore['actiontypes'] = spadl.actiontypes_df()
-            spadlstore['results'] = spadl.results_df()
-            spadlstore['bodyparts'] = spadl.bodyparts_df()
-            spadlstore['games'] = df_games
+            spadlstore.put('actiontypes', spadl.actiontypes_df(), format='table')
+            spadlstore.put('results', spadl.results_df(), format='table')
+            spadlstore.put('bodyparts', spadl.bodyparts_df(), format='table')
 
-            for game in tqdm(list(df_games.itertuples())):
-                game_id = game.game_id
-                game_events = wyscout.convert_events(df_events.get_group(game_id))
+            for game in games_verbose:
+                # load data
+                teams.append(WYL.teams(game.game_id))
+                players.append(WYL.players(game.game_id))
+                events = WYL.events(game.game_id)
 
-                # convert events to SPADL actions
-                home_team = game.home_team_id
-                df_actions = wyscout.convert_to_actions(game_events, home_team)
-                df_actions['action_id'] = range(len(df_actions))
-                spadlstore[f'actions/game_{game_id}'] = df_actions
+                # convert data
+                spadlstore.put(
+                    f'actions/game_{game.game_id}',
+                    wyscout.convert_to_actions(events, game.home_team_id),
+                    # format='table',
+                )
 
-            spadlstore['players'] = df_players
-            spadlstore['teams'] = df_teams[
-                df_teams.team_id.isin(df_games.home_team_id)
-                | df_teams.team_id.isin(df_games.away_team_id)
-            ]
+            games.season_id = season_id
+            games.competition_id = competition_id
+            spadlstore.put('games', games)
+            spadlstore.put(
+                'teams',
+                pd.concat(teams).drop_duplicates('team_id').reset_index(drop=True),
+            )
+            spadlstore.put(
+                'players',
+                pd.concat(players).drop_duplicates('player_id').reset_index(drop=True),
+            )
 
 
 if __name__ == '__main__':

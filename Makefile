@@ -8,14 +8,14 @@ init:
 	$(BIN)pip install -e .
 	$(BIN)pip install -r requirements_dev.txt
 
-tests/data/statsbomb/spadl-WorldCup-2018.h5:
-	$(BIN)python tests/data/download.py statsbomb
+tests/datasets/statsbomb/spadl-WorldCup-2018.h5:
+	$(BIN)python tests/datasets/download.py statsbomb
 
-tests/data/wyscout_public/spadl-WorldCup-2018.h5:
-	$(BIN)python tests/data/download.py wyscout
+tests/datasets/wyscout_public/spadl-WorldCup-2018.h5:
+	$(BIN)python tests/datasets/download.py wyscout
 
-test: tests/data/statsbomb/spadl-WorldCup-2018.h5 tests/data/wyscout_public/spadl-WorldCup-2018.h5
-	$(BIN)pytest --verbosity=2 --showlocals --strict --log-level=DEBUG $(args)
+test: tests/datasets/statsbomb/spadl-WorldCup-2018.h5 tests/datasets/wyscout_public/spadl-WorldCup-2018.h5
+	$(BIN)pytest --verbosity=2 --showlocals --strict-markers --log-level=DEBUG $(args)
 
 lint:
 	$(BIN)flake8 --jobs 4 --statistics --show-source $(CODE) tests
@@ -48,5 +48,5 @@ bump_patch:
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
-	rm -rf tests/data/wyscout_public
-	rm -rf tests/data/statsbomb
+	rm -rf tests/datasets/wyscout_public
+	rm -rf tests/datasets/statsbomb

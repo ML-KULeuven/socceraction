@@ -9,7 +9,7 @@ from pandera.typing import DataFrame
 
 import socceraction.spadl.config as spadlconfig
 from socceraction.atomic.spadl import AtomicSPADLSchema
-from socceraction.spadl.base import SPADLSchema
+from socceraction.spadl.schema import SPADLSchema
 
 Actions = Type[Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]]
 SPADLActions = Type[DataFrame[SPADLSchema]]

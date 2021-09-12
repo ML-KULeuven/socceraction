@@ -4,11 +4,11 @@ import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
 import socceraction.spadl.config as spadl
-from socceraction.spadl.base import SPADLSchema
+from socceraction.spadl.schema import SPADLSchema
 
 
 def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame:
-    """Determine whether a goal was scored by the team possessing the ball within the next x actions.
+    """Determine whether the team possessing the ball scored a goal within the next x actions.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame:
 
 
 def concedes(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame:
-    """Determine whether a goal was conceded by the team possessing the ball within the next x actions.
+    """Determine whether the team possessing the ball conceded a goal within the next x actions.
 
     Parameters
     ----------

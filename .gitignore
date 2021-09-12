@@ -1,7 +1,8 @@
 # folders to ignore
 data-*/*
 private-notebooks*
-tests/data/*
+experiments/
+tests/datasets/*
 !tests/data/download.py
 
 # Byte-compiled / optimized / DLL files

@@ -3,12 +3,12 @@
 import pandas as pd
 from pandera.typing import DataFrame
 
-import socceraction.atomic.spadl as atomicspadl
+import socceraction.atomic.spadl.config as atomicspadl
 from socceraction.atomic.spadl import AtomicSPADLSchema
 
 
 def scores(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> DataFrame:
-    """Determine whether a goal was scored by the team possessing the ball within the next x actions.
+    """Determine whether the team possessing the ball scored a goal within the next x actions.
 
     Parameters
     ----------
@@ -47,7 +47,7 @@ def scores(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> DataF
 
 
 def concedes(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> DataFrame:
-    """Determine whether a goal was conceded by the team possessing the ball within the next x actions.
+    """Determine whether the team possessing the ball conceded a goal within the next x actions.
 
     Parameters
     ----------

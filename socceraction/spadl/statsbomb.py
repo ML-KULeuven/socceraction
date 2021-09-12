@@ -1,385 +1,11 @@
 # -*- coding: utf-8 -*-
 """StatsBomb event stream data to SPADL converter."""
-import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 import pandas as pd  # type: ignore
-import pandera as pa
-from pandera.typing import DataFrame, DateTime, Series
 
 from . import config as spadlconfig
-from .base import (
-    CompetitionSchema,
-    EventDataLoader,
-    EventSchema,
-    GameSchema,
-    ParseError,
-    PlayerSchema,
-    TeamSchema,
-    _add_dribbles,
-    _fix_clearances,
-    _fix_direction_of_play,
-)
-
-__all__ = [
-    'StatsBombLoader',
-    'convert_to_actions',
-    'StatsBombCompetitionSchema',
-    'StatsBombGameSchema',
-    'StatsBombPlayerSchema',
-    'StatsBombTeamSchema',
-    'StatsBombEventSchema',
-]
-
-
-class StatsBombCompetitionSchema(CompetitionSchema):
-    """Definition of a dataframe containing a list of competitions and seasons."""
-
-    country_name: Series[str]
-    competition_gender: Series[str]
-
-
-class StatsBombGameSchema(GameSchema):
-    """Definition of a dataframe containing a list of games."""
-
-    competition_stage: Series[str]
-    home_score: Series[int]
-    away_score: Series[int]
-    venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
-
-
-class StatsBombPlayerSchema(PlayerSchema):
-    """Definition of a dataframe containing the list of teams of a game."""
-
-    nickname: Series[str] = pa.Field(nullable=True)
-    starting_position_id: Series[int]
-    starting_position_name: Series[str]
-
-
-class StatsBombTeamSchema(TeamSchema):
-    """Definition of a dataframe containing the list of players of a game."""
-
-
-class StatsBombEventSchema(EventSchema):
-    """Definition of a dataframe containing event stream data of a game."""
-
-    event_id: Series[object]
-    index: Series[int]
-    timestamp: Series[DateTime]
-    minute: Series[int]
-    second: Series[int] = pa.Field(ge=0, le=59)
-    possession: Series[int]
-    possession_team_id: Series[int]
-    possession_team_name: Series[str]
-    play_pattern_id: Series[int]
-    play_pattern_name: Series[str]
-    team_name: Series[str]
-    duration: Series[float] = pa.Field(nullable=True)
-    extra: Series[object]
-    related_events: Series[object]
-    player_name: Series[str] = pa.Field(nullable=True)
-    position_id: Series[int] = pa.Field(nullable=True)
-    position_name: Series[str] = pa.Field(nullable=True)
-    location: Series[object] = pa.Field(nullable=True)
-    under_pressure: Series[bool] = pa.Field(nullable=True)
-    counterpress: Series[bool] = pa.Field(nullable=True)
-
-
-class StatsBombLoader(EventDataLoader):
-    """Load Statsbomb data either from a remote location or from a local folder.
-
-    This is a temporary class until `statsbombpy <https://github.com/statsbomb/statsbombpy>`__
-    becomes compatible with socceraction
-
-    Parameters
-    ----------
-    root : str
-        Root-path of the data. Defaults to the open source data at
-        "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
-    getter : str
-        "remote" or "local"
-
-    """
-
-    _free_open_data: str = 'https://raw.githubusercontent.com/statsbomb/open-data/master/data/'
-
-    def __init__(self, root: str = _free_open_data, getter: str = 'remote'):
-        super().__init__(root, getter)
-
-    def competitions(self) -> DataFrame[StatsBombCompetitionSchema]:
-        """Return a dataframe with all available competitions and seasons.
-
-        Returns
-        -------
-        pd.DataFrame
-            A dataframe containing all available competitions and seasons. See
-            :class:`~socceraction.spadl.statsbomb.StatsBombCompetitionSchema` for the schema.
-        """
-        path = os.path.join(self.root, 'competitions.json')
-        obj = self.get(path)
-        if not isinstance(obj, list):
-            raise ParseError('{} should contain a list of competitions'.format(path))
-        return pd.DataFrame(obj)[
-            [
-                'season_id',
-                'competition_id',
-                'competition_name',
-                'country_name',
-                'competition_gender',
-                'season_name',
-            ]
-        ]
-
-    def games(self, competition_id: int, season_id: int) -> DataFrame[StatsBombGameSchema]:
-        """Return a dataframe with all available games in a season.
-
-        Parameters
-        ----------
-        competition_id : int
-            The ID of the competition.
-        season_id : int
-            The ID of the season.
-
-        Returns
-        -------
-        pd.DataFrame
-            A dataframe containing all available games. See
-            :class:`~socceraction.spadl.statsbomb.StatsBombGameSchema` for the schema.
-        """
-        cols = [
-            'game_id',
-            'season_id',
-            'competition_id',
-            'competition_stage',
-            'game_day',
-            'game_date',
-            'home_team_id',
-            'away_team_id',
-            'home_score',
-            'away_score',
-            'venue',
-            'referee_id',
-        ]
-        path = os.path.join(self.root, f'matches/{competition_id}/{season_id}.json')
-        obj = self.get(path)
-        if not isinstance(obj, list):
-            raise ParseError('{} should contain a list of games'.format(path))
-        if not len(obj):
-            return pd.DataFrame(columns=cols)
-        gamesdf = pd.DataFrame(_flatten(m) for m in obj)
-        gamesdf['kick_off'] = gamesdf['kick_off'].fillna('12:00:00.000')
-        gamesdf['match_date'] = pd.to_datetime(
-            gamesdf[['match_date', 'kick_off']].agg(' '.join, axis=1)
-        )
-        gamesdf.rename(
-            columns={
-                'match_id': 'game_id',
-                'match_date': 'game_date',
-                'match_week': 'game_day',
-                'stadium_name': 'venue',
-                'competition_stage_name': 'competition_stage',
-            },
-            inplace=True,
-        )
-        if 'venue' not in gamesdf:
-            gamesdf['venue'] = None
-        if 'referee_id' not in gamesdf:
-            gamesdf['referee_id'] = None
-        return gamesdf[cols]
-
-    def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
-        path = os.path.join(self.root, f'lineups/{game_id}.json')
-        obj = self.get(path)
-        if not isinstance(obj, list):
-            raise ParseError('{} should contain a list of teams'.format(path))
-        return obj
-
-    def teams(self, game_id: int) -> DataFrame[StatsBombTeamSchema]:
-        """Return a dataframe with both teams that participated in a game.
-
-        Parameters
-        ----------
-        game_id : int
-            The ID of the game.
-
-        Returns
-        -------
-        pd.DataFrame
-            A dataframe containing both teams. See
-            :class:`~socceraction.spadl.statsbomb.StatsBombTeamSchema` for the schema.
-        """
-        return pd.DataFrame(self._lineups(game_id))[['team_id', 'team_name']]
-
-    def players(self, game_id: int) -> DataFrame[StatsBombPlayerSchema]:
-        """Return a dataframe with all players that participated in a game.
-
-        Parameters
-        ----------
-        game_id : int
-            The ID of the game.
-
-        Returns
-        -------
-        pd.DataFrame
-            A dataframe containing all players. See
-            :class:`~socceraction.spadl.statsbomb.StatsBombPlayerSchema` for the schema.
-        """
-        playersdf = pd.DataFrame(
-            _flatten_id(p) for lineup in self._lineups(game_id) for p in lineup['lineup']
-        )
-        playergamesdf = extract_player_games(self.events(game_id))
-        playersdf = pd.merge(
-            playersdf,
-            playergamesdf[
-                ['player_id', 'team_id', 'position_id', 'position_name', 'minutes_played']
-            ],
-            on='player_id',
-        )
-        playersdf['game_id'] = game_id
-        playersdf['position_name'] = playersdf['position_name'].replace(0, 'Substitute')
-        playersdf['is_starter'] = playersdf['position_id'] != 0
-        playersdf.rename(
-            columns={
-                'player_nickname': 'nickname',
-                'country_name': 'country',
-                'position_id': 'starting_position_id',
-                'position_name': 'starting_position_name',
-            },
-            inplace=True,
-        )
-        return playersdf[
-            [
-                'game_id',
-                'team_id',
-                'player_id',
-                'player_name',
-                'nickname',
-                'jersey_number',
-                'is_starter',
-                'starting_position_id',
-                'starting_position_name',
-                'minutes_played',
-            ]
-        ]
-
-    def events(self, game_id: int) -> DataFrame[StatsBombEventSchema]:
-        """Return a dataframe with the event stream of a game.
-
-        Parameters
-        ----------
-        game_id : int
-            The ID of the game.
-
-        Returns
-        -------
-        pd.DataFrame
-            A dataframe containing the event stream. See
-            :class:`~socceraction.spadl.statsbomb.StatsBombEventSchema` for the schema.
-        """
-        path = os.path.join(self.root, f'events/{game_id}.json')
-        obj = self.get(path)
-        if not isinstance(obj, list):
-            raise ParseError('{} should contain a list of events'.format(path))
-        eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
-        eventsdf['game_id'] = game_id
-        eventsdf['timestamp'] = pd.to_datetime(eventsdf['timestamp'], format='%H:%M:%S.%f')
-        eventsdf['related_events'] = eventsdf['related_events'].apply(
-            lambda d: d if isinstance(d, list) else []
-        )
-        eventsdf['under_pressure'] = eventsdf['under_pressure'].fillna(False).astype(bool)
-        eventsdf['counterpress'] = eventsdf['counterpress'].fillna(False).astype(bool)
-        eventsdf.rename(
-            columns={
-                'id': 'event_id',
-                'period': 'period_id',
-            },
-            inplace=True,
-        )
-        return eventsdf
-
-
-def _flatten_id(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    newd = {}
-    extra = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            if 'id' in v and 'name' in v:
-                newd[k + '_id'] = v['id']
-                newd[k + '_name'] = v['name']
-            else:
-                extra[k] = v
-        else:
-            newd[k] = v
-    newd['extra'] = extra
-    return newd
-
-
-def _flatten(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    newd = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            if 'id' in v and 'name' in v:
-                newd[k + '_id'] = v['id']
-                newd[k + '_name'] = v['name']
-                newd[k + '_extra'] = {l: w for (l, w) in v.items() if l in ('id', 'name')}
-            else:
-                newd = {**newd, **_flatten(v)}
-        else:
-            newd[k] = v
-    return newd
-
-
-def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
-    """
-    Extract player games [player_id, game_id, minutes_played] from statsbomb match events.
-
-    Parameters
-    ----------
-    events : pd.DataFrame
-        DataFrame containing StatsBomb events of a single game.
-
-    Returns
-    -------
-    player_games : pd.DataFrame
-        A DataFrame with the number of minutes played by each player during the game.
-    """
-    game_minutes = max(events[events.type_name == 'Half End'].minute)
-
-    game_id = events.game_id.mode().values[0]
-    players = {}
-    for startxi in events[events.type_name == 'Starting XI'].itertuples():
-        team_id, team_name = startxi.team_id, startxi.team_name
-        for player in startxi.extra['tactics']['lineup']:
-            player = _flatten_id(player)
-            player = {
-                **player,
-                **{
-                    'game_id': game_id,
-                    'team_id': team_id,
-                    'team_name': team_name,
-                    'minutes_played': game_minutes,
-                },
-            }
-            players[player['player_id']] = player
-    for substitution in events[events.type_name == 'Substitution'].itertuples():
-        replacement = substitution.extra['substitution']['replacement']
-        replacement = {
-            'player_id': replacement['id'],
-            'player_name': replacement['name'],
-            'minutes_played': game_minutes - substitution.minute,
-            'team_id': substitution.team_id,
-            'game_id': game_id,
-            'team_name': substitution.team_name,
-        }
-        players[replacement['player_id']] = replacement
-        # minutes_played = substitution.minute
-        players[substitution.player_id]['minutes_played'] = substitution.minute
-    pg = pd.DataFrame(players.values()).fillna(0)
-    for col in pg.columns:
-        if '_id' in col:
-            pg[col] = pg[col].astype(int)
-    return pg
+from .base import _add_dribbles, _fix_clearances, _fix_direction_of_play
 
 
 def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
@@ -486,7 +112,7 @@ def _parse_event(q: Tuple[str, Dict[str, Any]]) -> Tuple[int, int, int]:
     return actiontype, result, bodypart
 
 
-def _parse_event_as_non_action(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_event_as_non_action(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'non_action'
     r = 'success'
     b = 'foot'
@@ -556,7 +182,7 @@ def _parse_dribble_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_carry_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_carry_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'dribble'
     r = 'success'
     b = 'foot'
@@ -638,7 +264,7 @@ def _parse_shot_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_own_goal_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_own_goal_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'bad_touch'
     r = 'owngoal'
     b = 'foot'
@@ -684,15 +310,120 @@ def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # n
     return a, r, b
 
 
-def _parse_clearance_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_clearance_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'clearance'
     r = 'success'
     b = 'foot'
     return a, r, b
 
 
-def _parse_miscontrol_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_miscontrol_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'bad_touch'
     r = 'fail'
     b = 'foot'
     return a, r, b
+
+
+def StatsBombLoader(*args, **kwargs):  # type: ignore
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import StatsBombLoader
+
+    warn(
+        """socceraction.spadl.statsbomb.StatsBombLoader is depecated,
+        use socceraction.data.statsbomb.StatsBombLoader instead""",
+        DeprecationWarning,
+    )
+    return StatsBombLoader(*args, **kwargs)
+
+
+def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import extract_player_games
+
+    warn(
+        """socceraction.spadl.statsbomb.extract_player_games is depecated,
+        use socceraction.data.statsbomb.extract_player_games instead""",
+        DeprecationWarning,
+    )
+    return extract_player_games(events)
+
+
+def StatsBombCompetitionSchema(*args, **kwargs):  # type: ignore
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import StatsBombCompetitionSchema
+
+    warn(
+        """socceraction.spadl.statsbomb.StatsBombCompetitionSchema is depecated,
+        use socceraction.data.statsbomb.StatsBombCompetitionSchema instead""",
+        DeprecationWarning,
+    )
+    return StatsBombCompetitionSchema(*args, **kwargs)
+
+
+def StatsBombGameSchema(*args, **kwargs):  # type: ignore
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import StatsBombGameSchema
+
+    warn(
+        """socceraction.spadl.statsbomb.StatsBombGameSchema is depecated,
+        use socceraction.data.statsbomb.StatsBombGameSchema instead""",
+        DeprecationWarning,
+    )
+    return StatsBombGameSchema(*args, **kwargs)
+
+
+def StatsBombPlayerSchema(*args, **kwargs):  # type: ignore
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import StatsBombPlayerSchema
+
+    warn(
+        """socceraction.spadl.statsbomb.StatsBombPlayerSchema is depecated,
+        use socceraction.data.statsbomb.StatsBombPlayerSchema instead""",
+        DeprecationWarning,
+    )
+    return StatsBombPlayerSchema(*args, **kwargs)
+
+
+def StatsBombTeamSchema(*args, **kwargs):  # type: ignore
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import StatsBombTeamSchema
+
+    warn(
+        """socceraction.spadl.statsbomb.StatsBombTeamSchema is depecated,
+        use socceraction.data.statsbomb.StatsBombTeamSchema instead""",
+        DeprecationWarning,
+    )
+    return StatsBombTeamSchema(*args, **kwargs)
+
+
+def StatsBombEventSchema(*args, **kwargs):  # type: ignore
+    # noqa
+    # pylint: disable=W0621,C0415
+    from warnings import warn
+
+    from socceraction.data.statsbomb import StatsBombEventSchema
+
+    warn(
+        """socceraction.spadl.statsbomb.StatsBombEventSchema is depecated,
+        use socceraction.data.statsbomb.StatsBombEventSchema instead""",
+        DeprecationWarning,
+    )
+    return StatsBombEventSchema(*args, **kwargs)

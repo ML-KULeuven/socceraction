@@ -2,67 +2,21 @@ import os
 
 import pytest
 
+from socceraction.data.statsbomb import StatsBombLoader
+from socceraction.spadl import SPADLSchema
 from socceraction.spadl import config as spadl
 from socceraction.spadl import statsbomb as sb
-from socceraction.spadl.base import SPADLSchema
-from socceraction.spadl.statsbomb import (
-    StatsBombCompetitionSchema,
-    StatsBombEventSchema,
-    StatsBombGameSchema,
-    StatsBombPlayerSchema,
-    StatsBombTeamSchema,
-)
-
-
-class TestStatsBombLoader:
-    def setup_method(self):
-        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'statsbomb', 'raw')
-        self.SBL = sb.StatsBombLoader(root=data_dir, getter='local')
-
-    def test_default_remote(self):
-        SBL = sb.StatsBombLoader()
-        assert SBL.root == sb.StatsBombLoader._free_open_data
-
-    def test_competitions(self):
-        df_competitions = self.SBL.competitions()
-        assert len(df_competitions) > 0
-        StatsBombCompetitionSchema.validate(df_competitions)
-
-    def test_games(self):
-        df_games = self.SBL.games(43, 3)  # World Cup, 2018
-        assert len(df_games) == 64
-        StatsBombGameSchema.validate(df_games)
-
-    def test_teams(self):
-        df_teams = self.SBL.teams(7584)
-        assert len(df_teams) == 2
-        StatsBombTeamSchema.validate(df_teams)
-
-    def test_players(self):
-        df_players = self.SBL.players(7584)
-        assert len(df_players) == 26
-        StatsBombPlayerSchema.validate(df_players)
-
-    def test_events(self):
-        df_events = self.SBL.events(7584)
-        assert len(df_events) > 0
-        StatsBombEventSchema.validate(df_events)
 
 
 class TestSpadlConvertor:
     def setup_method(self):
-        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'statsbomb', 'raw')
-        self.SBL = sb.StatsBombLoader(root=data_dir, getter='local')
+        data_dir = os.path.join(
+            os.path.dirname(__file__), os.pardir, 'datasets', 'statsbomb', 'raw'
+        )
+        self.SBL = StatsBombLoader(root=data_dir, getter='local')
         # https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/7584.json
         self.id_bel = 782
         self.events_japbel = self.SBL.events(7584)
-
-    def test_extract_player_games(self):
-        df_player_games = sb.extract_player_games(self.events_japbel)
-        assert len(df_player_games) == 26
-        assert len(df_player_games.player_name.unique()) == 26
-        assert set(df_player_games.team_name) == {'Belgium', 'Japan'}
-        assert df_player_games.minutes_played.sum() == 22 * 95
 
     def test_convert_to_actions(self):
         df_actions = sb.convert_to_actions(self.events_japbel, 782)
