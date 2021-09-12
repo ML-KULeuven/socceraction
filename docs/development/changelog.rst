@@ -12,11 +12,13 @@ Added
 - Support for Stats Perform's MA1 and MA3 JSON feeds
 - Enhanced tests suite by use of ``@slow`` decorator, which is controlled via a ``--skip-slow`` command line argument.
 - A `play_left_to_right()` function to `socceraction.spadl` and `socceraction.atomic.spadl` which changes the start and end location of each action such that all actions are performed as if the team plays from left to right.
+- A `load_model()` function to `socceraction.xthreat` to load a precomputed xT grid
 
 Changed
 -------
 - Own goals are converted to a "bad_touch" SPADL event with outcome "owngoal". Previously, the action type differed between providers. (`GH26 <https://github.com/ML-KULeuven/socceraction/issues/26>`_)
 - All event data loaders are moved from `socceraction.spadl` to `socceraction.data`
+- `socceraction.xthreat.ExpectedThreat.predict` is depracated and replaced by `socceraction.xthreat.ExpectedThreat.rate` to be compatible with the VAEP api
 
 Fixed
 -----

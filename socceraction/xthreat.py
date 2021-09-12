@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 """Implements the xT framework."""
+import json
+import os
+import warnings
 from typing import Callable, List, Tuple
 
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame, Series
+from sklearn.exceptions import NotFittedError
 
 import socceraction.spadl.config as spadlconfig
-from socceraction.spadl.base import SPADLSchema
+from socceraction.spadl.schema import SPADLSchema
 
 try:
     from scipy.interpolate import interp2d  # type: ignore
@@ -18,23 +22,20 @@ M: int = 12
 N: int = 16
 
 
-def _get_cell_indexes(x: Series, y: Series, l: int = N, w: int = M) -> Tuple[Series, Series]:
-    xmin = 0
-    ymin = 0
-
-    xi = (x - xmin) / spadlconfig.field_length * l
-    yj = (y - ymin) / spadlconfig.field_width * w
-    xi = xi.astype(int).clip(0, l - 1)
-    yj = yj.astype(int).clip(0, w - 1)
+def _get_cell_indexes(
+    x: Series[float], y: Series[float], l: int = N, w: int = M
+) -> Tuple[Series[int], Series[int]]:
+    xi = x.divide(spadlconfig.field_length * l).astype(int).clip(0, l - 1)
+    yj = y.divide(spadlconfig.field_width * w).astype(int).clip(0, w - 1)
     return xi, yj
 
 
-def _get_flat_indexes(x: Series, y: Series, l: int = N, w: int = M) -> Series:
+def _get_flat_indexes(x: Series[float], y: Series[float], l: int = N, w: int = M) -> Series[int]:
     xi, yj = _get_cell_indexes(x, y, l, w)
     return l * (w - 1 - yj) + xi
 
 
-def _count(x: Series, y: Series, l: int = N, w: int = M) -> np.ndarray:
+def _count(x: Series[float], y: Series[float], l: int = N, w: int = M) -> np.ndarray:
     """Count the number of actions occurring in each cell of the grid.
 
     Parameters
@@ -85,8 +86,8 @@ def scoring_prob(actions: DataFrame[SPADLSchema], l: int = N, w: int = M) -> np.
     np.ndarray
         A matrix, denoting the probability of scoring for each cell.
     """
-    shot_actions = actions[(actions.type_name == 'shot')]
-    goals = shot_actions[(shot_actions.result_name == 'success')]
+    shot_actions = actions[(actions.type_id == spadlconfig.actiontypes.index('shot'))]
+    goals = shot_actions[(shot_actions.result_id == spadlconfig.results.index('success'))]
 
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
     goalmatrix = _count(goals.start_x, goals.start_y, l, w)
@@ -111,9 +112,9 @@ def get_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
         All ball-progressing actions in the input dataframe.
     """
     return actions[
-        (actions.type_name == 'pass')
-        | (actions.type_name == 'dribble')
-        | (actions.type_name == 'cross')
+        (actions.type_id == spadlconfig.actiontypes.index('pass'))
+        | (actions.type_id == spadlconfig.actiontypes.index('dribble'))
+        | (actions.type_id == spadlconfig.actiontypes.index('cross'))
     ]
 
 
@@ -133,7 +134,7 @@ def get_successful_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SP
         All ball-progressing actions in the input dataframe.
     """
     move_actions = get_move_actions(actions)
-    return move_actions[move_actions.result_name == 'success']
+    return move_actions[(move_actions.result_id == spadlconfig.results.index('success'))]
 
 
 def action_prob(
@@ -160,7 +161,7 @@ def action_prob(
         For each cell the probability of choosing to move.
     """
     move_actions = get_move_actions(actions)
-    shot_actions = actions[(actions.type_name == 'shot')]
+    shot_actions = actions[(actions.type_id == spadlconfig.actiontypes.index('shot'))]
 
     movematrix = _count(move_actions.start_x, move_actions.start_y, l, w)
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
@@ -194,7 +195,7 @@ def move_transition_matrix(actions: DataFrame[SPADLSchema], l: int = N, w: int =
     X = pd.DataFrame()
     X['start_cell'] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
     X['end_cell'] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
-    X['result_name'] = move_actions.result_name
+    X['result_id'] = move_actions.result_id
 
     vc = X.start_cell.value_counts(sort=False)
     start_counts = np.zeros(w * l)
@@ -203,9 +204,9 @@ def move_transition_matrix(actions: DataFrame[SPADLSchema], l: int = N, w: int =
     transition_matrix = np.zeros((w * l, w * l))
 
     for i in range(0, w * l):
-        vc2 = X[((X.start_cell == i) & (X.result_name == 'success'))].end_cell.value_counts(
-            sort=False
-        )
+        vc2 = X[
+            ((X.start_cell == i) & (X.result_id == spadlconfig.results.index('success')))
+        ].end_cell.value_counts(sort=False)
         transition_matrix[i, vc2.index] = vc2 / start_counts[i]
 
     return transition_matrix
@@ -256,11 +257,11 @@ class ExpectedThreat:
         self.w = w
         self.eps = eps
         self.heatmaps: List[np.ndarray] = []
-        self.xT: np.ndarray = np.zeros((w, l))
-        self.scoring_prob_matrix: np.ndarray = np.zeros((w, l))
-        self.shot_prob_matrix: np.ndarray = np.zeros((w, l))
-        self.move_prob_matrix: np.ndarray = np.zeros((w, l))
-        self.transition_matrix: np.ndarray = np.zeros((w * l, w * l))
+        self.xT: np.ndarray = None
+        self.scoring_prob_matrix: np.ndarray = None
+        self.shot_prob_matrix: np.ndarray = None
+        self.move_prob_matrix: np.ndarray = None
+        self.transition_matrix: np.ndarray = None
 
     def __solve(
         self,
@@ -322,6 +323,7 @@ class ExpectedThreat:
         self.scoring_prob_matrix = scoring_prob(actions, self.l, self.w)
         self.shot_prob_matrix, self.move_prob_matrix = action_prob(actions, self.l, self.w)
         self.transition_matrix = move_transition_matrix(actions, self.l, self.w)
+        self.xT = np.zeros((self.w, self.l))
         self.__solve(
             self.scoring_prob_matrix,
             self.shot_prob_matrix,
@@ -359,7 +361,37 @@ class ExpectedThreat:
     def predict(
         self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False
     ) -> np.ndarray:
-        """Predicts the xT values for the given actions.
+        """Compute the xT values for the given actions.
+
+        xT should only be used to value actions that move the ball and also
+        keep the current team in possession of the ball.
+
+        Parameters
+        ----------
+        actions : pd.DataFrame
+            Actions, in SPADL format.
+        use_interpolation : bool
+            Indicates whether to use bilinear interpolation when inferring xT
+            values. Note that this requires Scipy to be installed (pip install
+            scipy).
+
+        Returns
+        -------
+        np.ndarray
+            The xT value for each action.
+
+        .. deprecated:: 1.0.3
+               Use :func:`socceraction.xthreat.ExpectedThreat.rate` instead.
+        """
+        warnings.warn('predict is deprecated, use rate instead', DeprecationWarning)
+        return self.rate(actions, use_interpolation)
+
+    def rate(self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False) -> np.ndarray:
+        """Compute the xT values for the given actions.
+
+        xT should only be used to value actions that move the ball and also
+        keep the current team in possession of the ball. All other actions in
+        the given dataframe receive a `NaN` rating.
 
         Parameters
         ----------
@@ -375,6 +407,9 @@ class ExpectedThreat:
         np.ndarray
             The xT value for each action.
         """
+        if self.xT is None:
+            raise NotFittedError()
+
         if not use_interpolation:
             l = self.l
             w = self.w
@@ -389,10 +424,72 @@ class ExpectedThreat:
             ys = np.linspace(0, spadlconfig.field_width, w)
             grid = interp(xs, ys)
 
-        startxc, startyc = _get_cell_indexes(actions.start_x, actions.start_y, l, w)
-        endxc, endyc = _get_cell_indexes(actions.end_x, actions.end_y, l, w)
+        ratings = np.empty(len(actions))
+        ratings[:] = np.NaN
+
+        move_actions = get_successful_move_actions(actions.reset_index())
+
+        startxc, startyc = _get_cell_indexes(move_actions.start_x, move_actions.start_y, l, w)
+        endxc, endyc = _get_cell_indexes(move_actions.end_x, move_actions.end_y, l, w)
 
         xT_start = grid[w - 1 - startyc, startxc]
         xT_end = grid[w - 1 - endyc, endxc]
 
-        return xT_end - xT_start
+        ratings[move_actions.index] = xT_end - xT_start
+        return ratings
+
+    def save(self, filepath: str, overwrite: bool = True) -> None:
+        """Save the xT value surface in JSON format.
+
+        This stores only the xT value surface, which is all you need to compute
+        xT values for new data. The value surface can be loaded back with the
+        :meth:`socceraction.xthreat.load_model` function.
+
+        Pickle the `ExpectedThreat` instance to store the entire model and to
+        retain the transition, shot probability, move probability and scoring
+        probability matrices.
+
+        Parameters
+        ----------
+        filepath : String or PathLike
+            Path to the file to save the value surface to.
+        overwrite :
+            Whether to silently overwrite any existing file at the target
+            location.
+        """
+        if not self.xT:
+            raise NotFittedError()
+
+        # If file exists and should not be overwritten:
+        if not overwrite and os.path.isfile(filepath):
+            raise ValueError(
+                'save_xt got overwrite="False", but a file '
+                f'({filepath}) exists already. No data was saved.'
+            )
+        with open(filepath, 'w') as f:
+            json.dump(self.xT.tolist(), f)
+
+
+def load_model(path_or_buf: str) -> ExpectedThreat:
+    """Create a model from a pre-computed xT value surface.
+
+    The value surface should be provided as a JSON file containing a 2D
+    matrix. Karun Singh provides such a grid at the follwing url:
+    https://karun.in/blog/data/open_xt_12x8_v1.json
+
+    Parameters
+    ----------
+    path_or_buf : a valid JSON str, path object or file-like object
+        Any valid string path is acceptable. The string could be a URL. Valid
+        URL schemes include http, ftp, s3, and file.
+
+    Returns
+    -------
+    ExpectedThreat
+        An xT model that uses the given value surface to value actions.
+    """
+    grid = pd.read_json(path_or_buf)
+    model = ExpectedThreat()
+    model.xT = grid.values
+    model.w, model.l = model.xT.shape
+    return model
