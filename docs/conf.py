@@ -38,6 +38,7 @@ extensions = [
         "sphinx_rtd_theme",
         ]
 autodoc_member_order = 'bysource'
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -53,11 +54,22 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
-html_logo = "_static/logo.png"
+html_theme = 'furo'
+pygments_style = "friendly"
+
+html_logo = "_static/logo_white.png"
 html_theme_options = {
-    "collapse_navigation": False,
-    "logo_only": True,
+    "sidebar_hide_name": True,
+    "light_css_variables": {
+        "color-brand-primary": "#26b079",
+        "color-brand-content": "#26b079",
+        "color-api-highlight-on-target": "#e5fff5",
+    },
+    # always use light theme, taken from:
+    # https://github.com/pradyunsg/furo/blob/main/src/furo/assets/styles/variables/_index.scss
+    "dark_css_variables": {
+        "color-api-highlight-on-target": "#e5fff5",
+    },
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
