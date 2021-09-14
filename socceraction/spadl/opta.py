@@ -914,12 +914,7 @@ class _MA3JSONParser(OptaJSONParser):
                 qualifiers = assertget(event, 'qualifier')
                 for q in qualifiers:
                     qualifier_id = assertget(q, 'qualifierId')
-                    value = q.get('value')
-                    # value = assertget(q, 'value')
-                    if value is None:
-                        print(q)
-                        print("qualifier_id", qualifier_id)
-                        continue
+                    value = assertget(q, 'value')
                     value = value.split(', ')
                     if qualifier_id == 30:
                         players_data['player_id'] += value
