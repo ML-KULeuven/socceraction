@@ -4,6 +4,7 @@ private-notebooks*
 experiments/
 tests/datasets/*
 !tests/data/download.py
+docs/modules/generated/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

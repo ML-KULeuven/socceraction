@@ -10,7 +10,7 @@ General idea
 ------------
 
 When considering event stream data, a soccer match can be viewed as a sequence
-of n consecutive on-the-ball actions :math:`\left[a_1, a_2, \ldots, a_n\right]` (e.g., [*pass*,
+of :math:`n` consecutive on-the-ball actions :math:`\left[a_1, a_2, \ldots, a_n\right]` (e.g., [*pass*,
 *dribble*,..., *interception*]). Action-valuing frameworks aim to assign
 a numeric value to each of these individual actions that quantifies how much
 the action contributed towards winning the game. This value should reflect

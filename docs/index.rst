@@ -12,6 +12,7 @@ contains the following components:
 
 .. image:: actions_bra-bel.png
   :width: 600
+  :align: center
 
 
 .. toctree::
@@ -28,11 +29,11 @@ contains the following components:
    :hidden:
    :caption: API reference
 
+   modules/data
    modules/spadl
-   modules/atomic
    modules/xthreat
    modules/vaep
-
+   modules/atomic_vaep
 
 .. toctree::
    :hidden:
@@ -47,7 +48,7 @@ First steps
 
 Are you new to socceraction? Check out the :doc:`Quickstart guide <documentation/intro>`
 or watch Lotte Bransen's and Jan Van Haaren's  `series of tutorials
-<https://github.com/SciSports-Labs/fot-valuing-actions>`_ on how to use
+<https://github.com/SciSports-Labs/fot-valuing-actions>`__ on how to use
 socceraction:
 
 - Introduction in Friends of Tracking (`video <https://www.youtube.com/watch?v=w0LX-2UgyXU>`__)
@@ -107,7 +108,7 @@ Having trouble? We'd like to help!
 Contributing
 ============
 
-Learn about the development process itself and about how you can contribute: :doc:`How to get involved <development/developer_guide>`
+Learn about the development process itself and about how you can contribute in our :doc:`developer guide <development/developer_guide>`.
 
 
 Research

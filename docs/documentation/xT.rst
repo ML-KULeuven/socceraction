@@ -9,9 +9,11 @@ scoring, and (2) the chance of scoring can be adequately captured by only
 considering the location of the ball.
 
 Point (2) means that xT represents a game state solely by using the current
-location of the ball. Therefore, xT overlays a M×N grid on the pitch in order
-to divide it into M⋅N zones. Each zone z is then assigned a value xT(z) that
-reflects how threatening teams are at that location, in terms of scoring:
+location of the ball. Therefore, xT overlays a :math:`M \times N` grid on the pitch in order
+to divide it into zones. Each zone :math:`z` is then assigned a value :math:`xT(z)` that
+reflects how threatening teams are at that location, in terms of scoring.
+These xT values are illustrated in the figure below. Cells with a darker blue
+color have a higher xT value.
 
 .. figure:: xT_heatmap_grid.png
    :width: 300
@@ -26,6 +28,7 @@ intuitive explanation of how this works, we refer to `Karun's blog post
 .. code-block:: python
 
     import socceraction.xthreat as xthreat
+    import socceraction.vaep.features as fs
 
     # 1. Convert direction of play
     [actions] = fs.play_left_to_right([actions], game.home_team_id)

@@ -1,44 +1,21 @@
-socceraction.spadl
-====================
+.. _api-spadl:
 
-socceraction.spadl.config
---------------------------
+SPADL
+=====
 
-.. automodule:: socceraction.spadl.config
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Implementation of the SPADL language.
 
-socceraction.spadl.base
---------------------------
+.. list-table::
+   :widths: 30 70
 
-.. automodule:: socceraction.spadl.base
-   :members:
-   :undoc-members:
-   :exclude-members: Config
+   * - :ref:`SPADL <api-spadl-regular>`
+     - Module for converting event stream data to SPADL actions
+   * - :ref:`Atomic-SPADL <api-spadl-atomic>`
+     - Module for converting SPADL actions to atomic actions
+ 
+ 
+.. toctree::
+  :hidden:
 
-socceraction.spadl.statsbomb
------------------------------
-
-.. automodule:: socceraction.spadl.statsbomb
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-socceraction.spadl.opta
------------------------
-
-.. automodule:: socceraction.spadl.opta
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-socceraction.spadl.wyscout
---------------------------
-
-.. automodule:: socceraction.spadl.wyscout
-   :members:
-   :undoc-members:
-   :show-inheritance:
+  spadl_regular
+  spadl_atomic

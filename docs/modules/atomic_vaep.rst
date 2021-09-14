@@ -1,9 +1,9 @@
-.. _api-vaep:
+.. _api-atomic-vaep:
 
-VAEP
-====
+Atomic-VAEP
+===========
 
-.. automodule:: socceraction.vaep
+.. automodule:: socceraction.atomic.vaep
 
 Model
 -----
@@ -13,7 +13,7 @@ Model
   :nosignatures:
   :template: class.rst
 
-  socceraction.vaep.VAEP
+  socceraction.atomic.vaep.AtomicVAEP
 
 Utility functions
 -----------------
@@ -24,6 +24,7 @@ Utility functions
   :template: module.rst
   :recursive:
 
-  socceraction.vaep.features
-  socceraction.vaep.labels
-  socceraction.vaep.formula
+  socceraction.atomic.vaep.features
+  socceraction.atomic.vaep.labels
+  socceraction.atomic.vaep.formula
+
