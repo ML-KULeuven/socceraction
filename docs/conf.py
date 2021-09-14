@@ -58,6 +58,7 @@ html_theme = 'furo'
 pygments_style = "friendly"
 
 html_logo = "_static/logo_white.png"
+html_favicon = "_static/favicon.png"
 html_theme_options = {
     "sidebar_hide_name": True,
     "light_css_variables": {
@@ -65,9 +66,9 @@ html_theme_options = {
         "color-brand-content": "#26b079",
         "color-api-highlight-on-target": "#e5fff5",
     },
-    # always use light theme, taken from:
-    # https://github.com/pradyunsg/furo/blob/main/src/furo/assets/styles/variables/_index.scss
     "dark_css_variables": {
+        "color-brand-primary": "#26b079",
+        "color-brand-content": "#26b079",
         "color-api-highlight-on-target": "#e5fff5",
     },
 }
