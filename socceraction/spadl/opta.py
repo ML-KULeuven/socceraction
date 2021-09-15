@@ -896,7 +896,7 @@ class _MA3JSONParser(OptaJSONParser):
         players = {}
 
         players_data = {
-            'position_code': [],
+            'starting_position_id': [],
             'player_id': [],
             'team_id': [],
             'position_in_formation': [],
@@ -920,7 +920,7 @@ class _MA3JSONParser(OptaJSONParser):
                         players_data['team_id'] += team
                     elif qualifier_id == 44:
                         value = [int(v) for v in value]
-                        players_data['position_code'] += value
+                        players_data['starting_position_id'] += value
                     elif qualifier_id == 131:
                         value = [int(v) for v in value]
                         players_data['position_in_formation'] += value
@@ -991,7 +991,7 @@ class _MA3JSONParser(OptaJSONParser):
         players_data['player_name'] = players_data['player_id'].map(players)
 
         players_data = players_data.set_index('player_id')
-        players_data = players_data[['player_name', 'team_id', 'position_code', 'minutes_played']]
+        players_data = players_data[['player_name', 'team_id', 'starting_position_id', 'minutes_played']]
 
         players = {}
         for player_id, player_data in players_data.iterrows():
