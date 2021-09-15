@@ -387,9 +387,7 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_players())
-        df_players = pd.DataFrame.from_dict(data, 'index')
-        df_players = df_players.reset_index()
-        df_players = df_players.rename(columns={'index': 'player_id'})
+        df_players = pd.DataFrame(list(data.values()))
         df_players['game_id'] = game_id
 
         return df_players
@@ -997,7 +995,9 @@ class _MA3JSONParser(OptaJSONParser):
 
         players = {}
         for player_id, player_data in players_data.iterrows():
-            players[player_id] = player_data.to_dict()
+            player_data = player_data.to_dict()
+            player_data["player_id"] = player_id
+            players[player_id] = players_data
         return players
 
     def extract_games(self) -> Dict[int, Dict[str, Any]]:
