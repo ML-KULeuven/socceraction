@@ -22,6 +22,7 @@ Utility functions
   :toctree: generated
   :nosignatures:
 
+  socceraction.xthreat.load_model
   socceraction.xthreat.get_move_actions
   socceraction.xthreat.get_successful_move_actions
   socceraction.xthreat.scoring_prob

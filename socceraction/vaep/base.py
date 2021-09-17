@@ -319,7 +319,7 @@ class VAEP:
         y_hat = self._estimate_probabilities(game_states)
         p_scores, p_concedes = y_hat.scores, y_hat.concedes
         vaep_values = self._vaep.value(game_actions_with_names, p_scores, p_concedes)
-        return pd.concat([game_actions, vaep_values], axis=1)
+        return vaep_values
 
     def score(self, X: pd.DataFrame, y: pd.DataFrame) -> Dict[str, Dict[str, float]]:
         """Evaluate the fit of the model on the given test data and labels.

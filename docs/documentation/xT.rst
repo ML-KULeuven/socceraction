@@ -1,5 +1,5 @@
-xT
----
+Expected threat
+---------------
 
 The expected threat or xT model is a possession-based model. That is, it
 divides matches into possessions, which are periods of the game where the same
@@ -12,35 +12,41 @@ Point (2) means that xT represents a game state solely by using the current
 location of the ball. Therefore, xT overlays a :math:`M \times N` grid on the pitch in order
 to divide it into zones. Each zone :math:`z` is then assigned a value :math:`xT(z)` that
 reflects how threatening teams are at that location, in terms of scoring.
-These xT values are illustrated in the figure below. Cells with a darker blue
-color have a higher xT value.
+These xT values are illustrated in the figure below.
 
-.. figure:: xT_heatmap_grid.png
-   :width: 300
+.. image:: default_xt_grid.png
+   :width: 600
    :align: center
-   :alt: 
 
-
-The value of each zone can be learned with a Markov decision process. For an
-intuitive explanation of how this works, we refer to `Karun's blog post
-<https://karun.in/blog/expected-threat.html>`_.
+The value of each zone can be learned with a Markov decision process. The
+corresponding code is shown below. For an intuitive explanation of how this
+works, we refer to `Karun's blog post <https://karun.in/blog/expected-threat.html>`_.
 
 .. code-block:: python
 
     import socceraction.xthreat as xthreat
-    import socceraction.vaep.features as fs
+    import socceraction.spadl as spadl
 
-    # 1. Convert direction of play
-    [actions] = fs.play_left_to_right([actions], game.home_team_id)
+    # 1. Load a set of actions to train the model on
+    actions = {
+      1234: pd.DataFrame(...),
+      ...
+    }
 
-    # 2. Train xT model
+    # 2. Convert direction of play
+    actions_ltr = pd.concat([
+      spadl.play_left_to_right(actions[game_id], game.home_team_id)
+      for game_id, game in df_games.iterrows()
+    ])
+
+    # 3. Train xT model
     xTModel = xthreat.ExpectedThreat(l=16, w=12)
-    xTModel.fit(actions)
+    xTModel.fit(actions_ltr)
 
-    # 3. Rate ball-progressing actions
+    # 4. Rate ball-progressing actions
     # xT should only be used to value actions that move the ball
     # and that keep the current team in possession of the ball
-    mov_actions = xthreat.get_successful_move_actions(actions)
+    mov_actions = xthreat.get_successful_move_actions(actions_ltr)
     mov_actions["xT_value"] = xTModel.predict(mov_actions)
 
 

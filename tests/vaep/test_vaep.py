@@ -39,9 +39,7 @@ def test_predict(sb_worldcup_data, vaep_model):
     game = games.iloc[-1]
     actions = sb_worldcup_data[f'actions/game_{game.game_id}']
     ratings = vaep_model.rate(game, actions)
-    expected_rating_columns = set(
-        list(actions.columns) + ['offensive_value', 'defensive_value', 'vaep_value']
-    )
+    expected_rating_columns = {'offensive_value', 'defensive_value', 'vaep_value'}
     assert set(ratings.columns) == expected_rating_columns
 
 

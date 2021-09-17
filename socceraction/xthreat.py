@@ -25,8 +25,10 @@ N: int = 16
 def _get_cell_indexes(
     x: Series[float], y: Series[float], l: int = N, w: int = M
 ) -> Tuple[Series[int], Series[int]]:
-    xi = x.divide(spadlconfig.field_length * l).astype(int).clip(0, l - 1)
-    yj = y.divide(spadlconfig.field_width * w).astype(int).clip(0, w - 1)
+    xi = x / spadlconfig.field_length * l
+    yj = y / spadlconfig.field_width * w
+    xi = xi.astype(int).clip(0, l - 1)
+    yj = yj.astype(int).clip(0, w - 1)
     return xi, yj
 
 
@@ -434,11 +436,12 @@ class ExpectedThreat:
 
         xT_start = grid[w - 1 - startyc, startxc]
         xT_end = grid[w - 1 - endyc, endxc]
+        print(xT_start)
 
         ratings[move_actions.index] = xT_end - xT_start
         return ratings
 
-    def save(self, filepath: str, overwrite: bool = True) -> None:
+    def save_model(self, filepath: str, overwrite: bool = True) -> None:
         """Save the xT value surface in JSON format.
 
         This stores only the xT value surface, which is all you need to compute

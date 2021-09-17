@@ -42,7 +42,5 @@ def test_predict(sb_worldcup_data):
     game = games.iloc[-1]
     actions = atomic_actions[game.game_id]
     ratings = model.rate(game, actions)
-    expected_rating_columns = set(
-        list(actions.columns) + ['offensive_value', 'defensive_value', 'vaep_value']
-    )
+    expected_rating_columns = {'offensive_value', 'defensive_value', 'vaep_value'}
     assert set(ratings.columns) == expected_rating_columns

@@ -97,7 +97,8 @@ actions:
     )
 
 .. figure:: ../eden_hazard_goal.png
-   :alt: 
+   :align: center
+
 
 Valuing actions
 ---------------
@@ -109,17 +110,18 @@ Socceraction implements two frameworks for doing this: xT and VAEP.
 Valuing actions with xT
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The expected threat or xT model is a possession-based model. That is, it
-divides a game into possessions or phases, which are sequences of consecutive
-on-the-ball actions where the same team possesses the ball. A Markov model is
-used to model how progressing the ball in these possession sequences changes
-a team's chances of producing a goal-scoring attempt. Therefore, xT overlays
-a :math:`M \times N` grid on the pitch in order to divide it into zones, each
-corresponding to a transient state in the Markov model. Each zone :math:`z` is
+The expected threat or xT model overlays a :math:`M \times N` grid on the
+pitch in order to divide it into zones. Each zone :math:`z` is
 then assigned a value :math:`xT(z)` that reflects how threatening teams are at
-that location, in terms of scoring. The code below allows you to load
-league-wide xT values from the 2017-18 Premier League season (12x8 grid).
-Instructions on how to train your own model can be found in the 
+that location, in terms of scoring. An example grid is visualized below.
+
+.. image:: default_xt_grid.png
+   :width: 600
+   :align: center
+
+The code below allows you to load
+league-wide xT values from the 2017-18 Premier League season (the 12x8 grid
+shown above). Instructions on how to train your own model can be found in the 
 :doc:`detailed documentation about xT <xT>`.
 
 .. code-block:: python
@@ -130,14 +132,20 @@ Instructions on how to train your own model can be found in the
     xT_model = xthreat.load_model(url_grid)
 
 
+
 Subsequently, the model can be used to value actions that successfully move
 the ball between two zones by computing the difference between the threat
-value on the start and end location of each action:
+value on the start and end location of each action. The xT framework does not
+assign a value to failed actions, shots and defensive actions such as tackles.
 
 .. code-block:: python
 
     df_actions_ltr = spadl.play_left_to_right(df_actions, home_team_id)
     df_actions["xT_value"] = xT_model.rate(df_actions_ltr)
+
+
+.. image:: eden_hazard_goal_xt.png
+   :align: center
 
 
 
@@ -146,7 +154,7 @@ Valuing actions with VAEP
 
 VAEP goes beyond the possession-based approach of xT by trying to value
 a broader set of actions and by taking the action and game context into
-account. Therfore, VAEP frames the problem of quantifying a soccer player’s
+account. Therefore, VAEP frames the problem of quantifying a soccer player’s
 contributions within a game as a binary classification task and rates each
 action by estimating its effect on the short-term probabilities that a team
 will both score or concede. That is, VAEP quanitifies the effect of an action :math:`a_i`
@@ -166,16 +174,28 @@ next :math:`k` actions from the current game state (:math:`P_{concedes}`).
 
 .. code-block:: python
 
-    from socceraction.vaep import VAEP
+  from socceraction.vaep import VAEP
+  from tqdm import tqdm
 
-    VAEP_model = VAEP()
-    # compute features and labels
-    features = pd.concat([VAEP_model.compute_features(game, actions[game_id]) 
-                          for game_id, game in games.iterrows()])
-    labels = pd.concat([VAEP_model.compute_labels(game, actions[game_id]) 
-                          for game_id, game in games.iterrows()])
-    # fit the model
-    VAEP_model.fit(features, labels)
+  VAEP_model = VAEP(nb_prev_actions=1)
+
+  # compute features and labels for each game
+  all_features, all_labels = [], []
+  for game_id, game in tqdm(list(df_games.iterrows())):
+      # load the game's events
+      game_events = SBL.events(game_id)
+      # convert the events to actions
+      game_home_team_id = df_games.at[game_id, "home_team_id"]
+      game_actions = spadl.statsbomb.convert_to_actions(game_events, game_home_team_id)
+      # compute features and labels
+      all_features.append(VAEP_model.compute_features(game, game_actions))
+      all_labels.append(VAEP_model.compute_labels(game, game_actions))
+  # combine all features and labels in a single dataframe
+  all_features = pd.concat(all_features)
+  all_labels = pd.concat(all_labels)
+
+  # fit the model
+  VAEP_model.fit(all_features, all_labels)
 
 Given these probabilites, VAEP estimates the risk-reward trade-off of an
 action as the sum of the offensive value :math:`\Delta
@@ -189,6 +209,10 @@ much did the action decrease the probability of conceding) of the action:
 
     # rate a game
     ratings = VAEP_model.rate(games.loc[game_id], actions)
+
+
+.. image:: eden_hazard_goal_vaep.png
+   :align: center
 
 
 -----------------------

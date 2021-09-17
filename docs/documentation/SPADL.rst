@@ -151,9 +151,8 @@ second goal.
 
 Here is the same phase visualized using the ``matplotsoccer`` package
 
-.. figure:: ../eden_hazard_goal.png
-   :alt: 
-
+.. image:: eden_hazard_goal_spadl.png
+   :align: center
 
 .. seealso:: 
 
@@ -254,6 +253,10 @@ in the 2018 FIFA world cup looks like in the Atomic-SPADL format.
 +---------+-----------+--------------+---------+-----------+-------+------+------+-------+------------+---------------+
 | 8657    | 2         | 2187         | Belgium | Hazard    | 105.0 | 37.4 | 0.0  | 0.0   | goal       | foot          |
 +---------+-----------+--------------+---------+-----------+-------+------+------+-------+------------+---------------+
+
+.. image:: eden_hazard_goal_atomicspadl.png
+   :align: center
+
 
 .. seealso:: 
 
