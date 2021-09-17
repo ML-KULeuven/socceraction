@@ -23,7 +23,7 @@ version: 1.0.2
 date-released: 2021-04-03
 url: "https://github.com/ML-KULeuven/socceraction"
 preferred-citation:
-  type: conference
+  type: conference-paper
   title: "Actions Speak Louder Than Goals: Valuing Player Actions in Soccer"
   authors:
   - family-names: "Decroos"
