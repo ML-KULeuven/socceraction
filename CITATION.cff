@@ -1,0 +1,62 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Decroos"
+  given-names: "Tom"
+  orcid: "https://orcid.org/0000-0003-4397-8829"
+- family-names: "Robberechts"
+  given-names: "Pieter"
+  orcid: "https://orcid.org/0000-0002-3734-0047"
+- family-names: "Van Haaren"
+  given-names: "Jan"
+  orcid: "https://orcid.org/0000-0001-7737-5490"
+- family-names: "Davis"
+  given-names: "Jesse"
+  orcid: "https://orcid.org/0000-0002-3748-9263"
+- family-names: "Bransen"
+  given-names: "Lotte"
+- family-names: "Van Roy"
+  given-names: "Maaike"
+  orcid: "https://orcid.org/0000-0001-8959-3575"
+title: "SoccerAction"
+version: 1.0.2
+date-released: 2021-04-03
+url: "https://github.com/ML-KULeuven/socceraction"
+preferred-citation:
+  type: conference
+  title: "Actions Speak Louder Than Goals: Valuing Player Actions in Soccer"
+  authors:
+  - family-names: "Decroos"
+    given-names: "Tom"
+    orcid: "https://orcid.org/0000-0003-4397-8829"
+  - family-names: "Bransen"
+    given-names: "Lotte"
+  - family-names: "Van Haaren"
+    given-names: "Jan"
+    orcid: "https://orcid.org/0000-0001-7737-5490"
+  - family-names: "Davis"
+    given-names: "Jesse"
+    orcid: "https://orcid.org/0000-0002-3748-9263"
+  collection-doi: 10.1145/3292500
+  collection-title: "Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining"
+  collection-type: proceedings
+  conference:
+    name: "KDD '19"
+    city: "Anchorage, AK"
+    country: "USA"
+  publisher:
+    name: "ACM"
+    city: "New York, NY"
+    country: "USA"
+  doi: "10.1145/3292500.3330758"
+  isbn: "978-1-4503-6201-6"
+  url: "http://doi.acm.org/10.1145/3292500.3330758"
+  start: 1851
+  end: 1861
+  year: 2019
+  keywords:
+  - "event stream data"
+  - "probabilistic classification"
+  - "soccer match data"
+  - "sports analytics"
+  - "valuing actions"
