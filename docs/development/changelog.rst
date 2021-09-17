@@ -7,9 +7,12 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.1.0_ - 2021-09-17
+====================
+
 Added
 -----
-- Support for Stats Perform's MA1 and MA3 JSON feeds
+- Support for Stats Perform's MA1 and MA3 JSON feeds by `@JanVanHaaren <https://github.com/JanVanHaaren>`__ and `@denisov-vlad <https://github.com/denisov-vlad>`__
 - Enhanced tests suite by use of ``@slow`` decorator, which is controlled via a ``--skip-slow`` command line argument.
 - A `play_left_to_right()` function to `socceraction.spadl` and `socceraction.atomic.spadl` which changes the start and end location of each action such that all actions are performed as if the team plays from left to right.
 - A `load_model()` function to `socceraction.xthreat` to load a precomputed xT grid
@@ -203,7 +206,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.0.2...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.0...HEAD
+.. _1.1.0: https://github.com/ML-KULeuven/socceraction/compare/v1.0.2...v1.1.0
 .. _1.0.2: https://github.com/ML-KULeuven/socceraction/compare/v1.0.1...v1.0.2
 .. _1.0.1: https://github.com/ML-KULeuven/socceraction/compare/v1.0.0...v1.0.1
 .. _1.0.0: https://github.com/ML-KULeuven/socceraction/compare/v0.2.1...v1.0.0
