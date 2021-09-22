@@ -329,7 +329,7 @@ def StatsBombLoader(*args, **kwargs):  # type: ignore
     # pylint: disable=W0621,C0415
     from warnings import warn
 
-    from socceraction.data.statsbomb import StatsBombLoader
+    from socceraction.data.statsbomb import StatsBombLoader  # type: ignore
 
     warn(
         """socceraction.spadl.statsbomb.StatsBombLoader is depecated,

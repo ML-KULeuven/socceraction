@@ -7,6 +7,19 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+Fixed
+-----
+- Bugs in the StatsPerform MA3 parser affecting `extract_players()`.
+
+Changed
+-------
+- Drop support for Python 3.6
+
+Added
+-----
+- Use Poetry for depency management.
+- Use Tox for testing multiple Python versions.
+
 1.1.1_ - 2021-09-22
 ====================
 

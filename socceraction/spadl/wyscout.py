@@ -841,7 +841,7 @@ def WyscoutLoader(*args, **kwargs):  # type: ignore
     # pylint: disable=W0621,C0415
     from warnings import warn
 
-    from socceraction.data.wyscout import WyscoutLoader
+    from socceraction.data.wyscout import WyscoutLoader  # type: ignore
 
     warn(
         """socceraction.spadl.wyscout.WyscoutLoader is depecated,
@@ -856,7 +856,7 @@ def PublicWyscoutLoader(*args, **kwargs):  # type: ignore
     # pylint: disable=W0621,C0415
     from warnings import warn
 
-    from socceraction.data.wyscout import PublicWyscoutLoader
+    from socceraction.data.wyscout import PublicWyscoutLoader  # type: ignore
 
     warn(
         """socceraction.spadl.wyscout.PublicWyscoutLoader is depecated,

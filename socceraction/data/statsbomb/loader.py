@@ -277,7 +277,7 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     pg = pd.DataFrame(players.values()).fillna(0)
     for col in pg.columns:
         if '_id' in col:
-            pg[col] = pg[col].astype(int)
+            pg[col] = pg[col].astype(int)  # pylint: disable=E1136,E1137
     return pg
 
 

@@ -174,7 +174,7 @@ def OptaLoader(*args, **kwargs):  # type: ignore
     # pylint: disable=W0621,C0415
     from warnings import warn
 
-    from socceraction.data.opta import OptaLoader
+    from socceraction.data.opta import OptaLoader  # type: ignore
 
     warn(
         """socceraction.spadl.opta.OptaLoader is depecated,
