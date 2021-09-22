@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.1.1_ - 2021-09-22
+====================
+
+Fixed
+-----
+- Add missing `data` module to pip release.
+
+
 1.1.0_ - 2021-09-17
 ====================
 
@@ -206,7 +214,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.0...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.1...HEAD
+.. _1.1.1: https://github.com/ML-KULeuven/socceraction/compare/v1.1.0...v1.1.1
 .. _1.1.0: https://github.com/ML-KULeuven/socceraction/compare/v1.0.2...v1.1.0
 .. _1.0.2: https://github.com/ML-KULeuven/socceraction/compare/v1.0.1...v1.0.2
 .. _1.0.1: https://github.com/ML-KULeuven/socceraction/compare/v1.0.0...v1.0.1
