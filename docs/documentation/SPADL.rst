@@ -78,7 +78,8 @@ Action Type
   corner`, `short corner`, `take-on`, `foul`, `tackle`, `interception`,
   `shot`, `penalty shot`, `free kick` `shot`, `keeper save`, `keeper claim`,
   `keeper punch`, `keeper pick-up`, `clearance`, `bad touch`, `dribble` and
-  `goal kick`.
+  `goal kick`. A detailed definition of each action type is available
+  :doc:`here <SPADL_definitions>`.
 Result
   The result attribute can either have the value `success`, to indicate that
   an action achieved it’s intended result; or the value `fail`, if this was

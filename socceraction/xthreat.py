@@ -3,9 +3,10 @@
 import json
 import os
 import warnings
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np  # type: ignore
+import numpy.typing as npt
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame, Series
 from sklearn.exceptions import NotFittedError
@@ -25,8 +26,8 @@ N: int = 16
 def _get_cell_indexes(
     x: Series[float], y: Series[float], l: int = N, w: int = M
 ) -> Tuple[Series[int], Series[int]]:
-    xi = x / spadlconfig.field_length * l
-    yj = y / spadlconfig.field_width * w
+    xi = x.divide(spadlconfig.field_length).multiply(l)
+    yj = y.divide(spadlconfig.field_width).multiply(w)
     xi = xi.astype(int).clip(0, l - 1)
     yj = yj.astype(int).clip(0, w - 1)
     return xi, yj
@@ -34,10 +35,10 @@ def _get_cell_indexes(
 
 def _get_flat_indexes(x: Series[float], y: Series[float], l: int = N, w: int = M) -> Series[int]:
     xi, yj = _get_cell_indexes(x, y, l, w)
-    return l * (w - 1 - yj) + xi
+    return yj.rsub(w - 1).mul(l).add(xi)
 
 
-def _count(x: Series[float], y: Series[float], l: int = N, w: int = M) -> np.ndarray:
+def _count(x: Series[float], y: Series[float], l: int = N, w: int = M) -> npt.NDArray[np.int_]:
     """Count the number of actions occurring in each cell of the grid.
 
     Parameters
@@ -67,11 +68,13 @@ def _count(x: Series[float], y: Series[float], l: int = N, w: int = M) -> np.nda
     return vector.reshape((w, l))
 
 
-def _safe_divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def _safe_divide(a: npt.ArrayLike, b: npt.ArrayLike) -> npt.NDArray[np.float64]:
     return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
 
-def scoring_prob(actions: DataFrame[SPADLSchema], l: int = N, w: int = M) -> np.ndarray:
+def scoring_prob(
+    actions: DataFrame[SPADLSchema], l: int = N, w: int = M
+) -> npt.NDArray[np.float64]:
     """Compute the probability of scoring when taking a shot for each cell.
 
     Parameters
@@ -141,7 +144,7 @@ def get_successful_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SP
 
 def action_prob(
     actions: DataFrame[SPADLSchema], l: int = N, w: int = M
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """Compute the probability of taking an action in each cell of the grid.
 
     The options are: shooting or moving.
@@ -172,7 +175,9 @@ def action_prob(
     return _safe_divide(shotmatrix, totalmatrix), _safe_divide(movematrix, totalmatrix)
 
 
-def move_transition_matrix(actions: DataFrame[SPADLSchema], l: int = N, w: int = M) -> np.ndarray:
+def move_transition_matrix(
+    actions: DataFrame[SPADLSchema], l: int = N, w: int = M
+) -> npt.NDArray[np.float64]:
     """Compute the move transition matrix from the given actions.
 
     This is, when a player chooses to move, the probability that he will
@@ -215,7 +220,12 @@ def move_transition_matrix(actions: DataFrame[SPADLSchema], l: int = N, w: int =
 
 
 class ExpectedThreat:
-    """An implementation of the Expected Threat (xT) model [Singh2019]_.
+    """An implementation of the Expected Threat (xT) model.
+
+    The xT model [1]_ can be used to value actions that successfully move
+    the ball between two locations on the pitch by computing the difference
+    between the long-term probability of scoring on the start and end location
+    of an action.
 
     Parameters
     ----------
@@ -249,8 +259,9 @@ class ExpectedThreat:
     transition_matrix : np.ndarray, shape(M*N,M*N)
         When moving, the probability of moving to each of the other zones.
 
-
-    .. [Singh2019] Singh, Karun. "Introducing Expected Threat (xT)." 15 February, 2019.
+    References
+    ----------
+    .. [1] Singh, Karun. "Introducing Expected Threat (xT)." 15 February, 2019.
         https://karun.in/blog/expected-threat.html
     """
 
@@ -258,19 +269,19 @@ class ExpectedThreat:
         self.l = l
         self.w = w
         self.eps = eps
-        self.heatmaps: List[np.ndarray] = []
-        self.xT: np.ndarray = None
-        self.scoring_prob_matrix: np.ndarray = None
-        self.shot_prob_matrix: np.ndarray = None
-        self.move_prob_matrix: np.ndarray = None
-        self.transition_matrix: np.ndarray = None
+        self.heatmaps: List[npt.NDArray[np.float64]] = []
+        self.xT: npt.NDArray[np.float64] = np.zeros((self.w, self.l))
+        self.scoring_prob_matrix: Optional[npt.NDArray[np.float64]] = None
+        self.shot_prob_matrix: Optional[npt.NDArray[np.float64]] = None
+        self.move_prob_matrix: Optional[npt.NDArray[np.float64]] = None
+        self.transition_matrix: Optional[npt.NDArray[np.float64]] = None
 
     def __solve(
         self,
-        p_scoring: np.ndarray,
-        p_shot: np.ndarray,
-        p_move: np.ndarray,
-        transition_matrix: np.ndarray,
+        p_scoring: npt.NDArray[np.float64],
+        p_shot: npt.NDArray[np.float64],
+        p_move: npt.NDArray[np.float64],
+        transition_matrix: npt.NDArray[np.float64],
     ) -> None:
         """Solves the expected threat equation with dynamic programming.
 
@@ -334,7 +345,9 @@ class ExpectedThreat:
         )
         return self
 
-    def interpolator(self, kind: str = 'linear') -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+    def interpolator(
+        self, kind: str = 'linear'
+    ) -> Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], npt.NDArray[np.float64]]:
         """Interpolate over the pitch.
 
         This is a wrapper around :func:`scipy.interpolate.interp2d`.
@@ -362,7 +375,7 @@ class ExpectedThreat:
 
     def predict(
         self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False
-    ) -> np.ndarray:
+    ) -> npt.NDArray[np.float64]:
         """Compute the xT values for the given actions.
 
         xT should only be used to value actions that move the ball and also
@@ -388,7 +401,9 @@ class ExpectedThreat:
         warnings.warn('predict is deprecated, use rate instead', DeprecationWarning)
         return self.rate(actions, use_interpolation)
 
-    def rate(self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False) -> np.ndarray:
+    def rate(
+        self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False
+    ) -> npt.NDArray[np.float64]:
         """Compute the xT values for the given actions.
 
         xT should only be used to value actions that move the ball and also
@@ -409,7 +424,7 @@ class ExpectedThreat:
         np.ndarray
             The xT value for each action.
         """
-        if self.xT is None:
+        if not np.any(self.xT):
             raise NotFittedError()
 
         if not use_interpolation:
@@ -434,9 +449,8 @@ class ExpectedThreat:
         startxc, startyc = _get_cell_indexes(move_actions.start_x, move_actions.start_y, l, w)
         endxc, endyc = _get_cell_indexes(move_actions.end_x, move_actions.end_y, l, w)
 
-        xT_start = grid[w - 1 - startyc, startxc]
-        xT_end = grid[w - 1 - endyc, endxc]
-        print(xT_start)
+        xT_start = grid[startyc.rsub(w - 1), startxc]
+        xT_end = grid[endyc.rsub(w - 1), endxc]
 
         ratings[move_actions.index] = xT_end - xT_start
         return ratings
@@ -446,7 +460,7 @@ class ExpectedThreat:
 
         This stores only the xT value surface, which is all you need to compute
         xT values for new data. The value surface can be loaded back with the
-        :meth:`socceraction.xthreat.load_model` function.
+        :func:`socceraction.xthreat.load_model` function.
 
         Pickle the `ExpectedThreat` instance to store the entire model and to
         retain the transition, shot probability, move probability and scoring
@@ -460,7 +474,7 @@ class ExpectedThreat:
             Whether to silently overwrite any existing file at the target
             location.
         """
-        if not self.xT:
+        if not np.any(self.xT):
             raise NotFittedError()
 
         # If file exists and should not be overwritten:

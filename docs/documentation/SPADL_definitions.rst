@@ -1,3 +1,11 @@
+:orphan:
+
+*****************************
+SPADL action type definitions
+*****************************
+
+This documented provides a detailed definition of all action types used in
+SPADL.
 
 +--------------------+--------------------------------------------------+-------------------------+---------------------+
 | Action type        | Description                                      | Success?                | Special result      |
@@ -69,7 +77,3 @@ that capture the outcome of an action.
 +--------------------+----------------------------------------------------+
 | Red card           | A red card                                         |
 +--------------------+----------------------------------------------------+
-
-Furthermore, a `Corner` type is introduced to replace the `Crossed corner` and
-`Short corner` action types. A `Free-kick` action type replaces the
-`Crossed free-kick`, `Short free-kick` and `Free-kick shot` action types.

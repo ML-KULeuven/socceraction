@@ -7,7 +7,7 @@ import socceraction.atomic.spadl.config as atomicspadl
 from socceraction.atomic.spadl import AtomicSPADLSchema
 
 
-def scores(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> DataFrame:
+def scores(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> pd.DataFrame:
     """Determine whether the team possessing the ball scored a goal within the next x actions.
 
     Parameters
@@ -46,7 +46,7 @@ def scores(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> DataF
     return pd.DataFrame(res, columns=['scores'])
 
 
-def concedes(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> DataFrame:
+def concedes(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> pd.DataFrame:
     """Determine whether the team possessing the ball conceded a goal within the next x actions.
 
     Parameters
@@ -85,7 +85,7 @@ def concedes(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> Dat
     return pd.DataFrame(res, columns=['concedes'])
 
 
-def goal_from_shot(actions: DataFrame[AtomicSPADLSchema]) -> DataFrame:
+def goal_from_shot(actions: DataFrame[AtomicSPADLSchema]) -> pd.DataFrame:
     """Determine whether a goal was scored from the current action.
 
     This label can be use to train an xG model.

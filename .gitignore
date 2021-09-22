@@ -6,6 +6,8 @@ tests/datasets/*
 !tests/data/download.py
 docs/modules/generated/
 
+.python-version
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

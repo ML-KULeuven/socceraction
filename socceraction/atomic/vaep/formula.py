@@ -6,15 +6,15 @@ from pandera.typing import DataFrame, Series
 from socceraction.atomic.spadl import AtomicSPADLSchema
 
 
-def _prev(x: Series) -> Series:
+def _prev(x: pd.Series) -> pd.Series:
     prev_x = x.shift(1)
     prev_x[:1] = x.values[0]
     return prev_x
 
 
 def offensive_value(
-    actions: DataFrame[AtomicSPADLSchema], scores: Series, concedes: Series
-) -> Series:
+    actions: DataFrame[AtomicSPADLSchema], scores: Series[float], concedes: Series[float]
+) -> Series[float]:
     r"""Compute the offensive value of each action.
 
     VAEP defines the *offensive value* of an action as the change in scoring
@@ -59,8 +59,8 @@ def offensive_value(
 
 
 def defensive_value(
-    actions: DataFrame[AtomicSPADLSchema], scores: Series, concedes: Series
-) -> Series:
+    actions: DataFrame[AtomicSPADLSchema], scores: Series[float], concedes: Series[float]
+) -> Series[float]:
     r"""Compute the defensive value of each action.
 
     VAEP defines the *defensive value* of an action as the change in conceding
@@ -104,7 +104,9 @@ def defensive_value(
     return -(concedes - prev_concedes)
 
 
-def value(actions: DataFrame[AtomicSPADLSchema], Pscores: Series, Pconcedes: Series) -> DataFrame:
+def value(
+    actions: DataFrame[AtomicSPADLSchema], Pscores: Series[float], Pconcedes: Series[float]
+) -> pd.DataFrame:
     r"""Compute the offensive, defensive and VAEP value of each action.
 
     The total VAEP value of an action is the difference between that action's

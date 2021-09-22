@@ -2,7 +2,7 @@
 from typing import Optional
 
 import pandera as pa
-from pandera.typing import DateTime, Series
+from pandera.typing import DateTime, Object, Series
 
 from socceraction.data.schema import (
     CompetitionSchema,
@@ -58,7 +58,7 @@ class OptaEventSchema(EventSchema):
     end_y: Series[float] = pa.Field(nullable=True)
     assist: Series[bool] = pa.Field(nullable=True)
     keypass: Series[bool] = pa.Field(nullable=True)
-    qualifiers: Series[object]
+    qualifiers: Series[Object]
 
 
 class StatsPerformCompetitionSchema(OptaCompetitionSchema):

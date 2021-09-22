@@ -34,7 +34,7 @@ def convert_to_atomic(actions: DataFrame[SPADLSchema]) -> DataFrame[AtomicSPADLS
     return actions
 
 
-def _extra_from_passes(actions: DataFrame) -> DataFrame:
+def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
     same_team = actions.team_id == next_actions.team_id
 
@@ -109,7 +109,7 @@ def _extra_from_passes(actions: DataFrame) -> DataFrame:
     return actions
 
 
-def _extra_from_shots(actions: DataFrame) -> DataFrame:
+def _extra_from_shots(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
 
     shotlike = ['shot', 'shot_freekick', 'shot_penalty']
@@ -162,7 +162,7 @@ def _extra_from_shots(actions: DataFrame) -> DataFrame:
     return actions
 
 
-def _extra_from_fouls(actions: DataFrame) -> DataFrame:
+def _extra_from_fouls(actions: pd.DataFrame) -> pd.DataFrame:
     yellow = actions.result_id == _spadl.results.index('yellow_card')
     red = actions.result_id == _spadl.results.index('red_card')
 
@@ -193,7 +193,7 @@ def _extra_from_fouls(actions: DataFrame) -> DataFrame:
     return actions
 
 
-def _convert_columns(actions: DataFrame) -> DataFrame:
+def _convert_columns(actions: pd.DataFrame) -> pd.DataFrame:
     actions['x'] = actions.start_x
     actions['y'] = actions.start_y
     actions['dx'] = actions.end_x - actions.start_x
@@ -217,7 +217,7 @@ def _convert_columns(actions: DataFrame) -> DataFrame:
     ]
 
 
-def _simplify(actions: DataFrame) -> DataFrame:
+def _simplify(actions: pd.DataFrame) -> pd.DataFrame:
     a = actions
     ar = _atomicspadl.actiontypes
 

@@ -11,11 +11,11 @@ import socceraction.spadl.config as spadlconfig
 from socceraction.atomic.spadl import AtomicSPADLSchema
 from socceraction.spadl.schema import SPADLSchema
 
-Actions = Type[Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]]
-SPADLActions = Type[DataFrame[SPADLSchema]]
+Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]
+SPADLActions = DataFrame[SPADLSchema]
 GameStates = List[SPADLActions]
-Features = Type[DataFrame]
-FeatureTransfomer = Callable[[GameStates], Features]  # type: ignore
+Features = Type[pd.DataFrame]
+FeatureTransfomer = Callable[[GameStates], Features]
 
 
 def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) -> List[str]:

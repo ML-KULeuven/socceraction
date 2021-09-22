@@ -5,8 +5,7 @@ CODE = socceraction
 
 init:
 	python3 -m venv .venv
-	$(BIN)pip install -e .
-	$(BIN)pip install -r requirements_dev.txt
+	poetry install
 
 tests/datasets/statsbomb/spadl-WorldCup-2018.h5:
 	$(BIN)python tests/datasets/download.py statsbomb
@@ -21,7 +20,7 @@ lint:
 	$(BIN)flake8 --jobs 4 --statistics --show-source $(CODE) tests
 	$(BIN)pylint --rcfile=setup.cfg --exit-zero $(CODE)
 	$(BIN)pydocstyle socceraction
-	$(BIN)mypy $(CODE) tests
+	$(BIN)mypy $(CODE)
 	$(BIN)black --target-version py36 --skip-string-normalization --line-length=99 --check $(CODE) tests
 
 pretty:

@@ -34,11 +34,12 @@ xfns_default = [
 
 class AtomicVAEP(VAEP):
     """
-    An implementation of the VAEP framework [Decroos19]_ for atomic actions.
+    An implementation of the VAEP framework for atomic actions.
 
-    In contrast to the original VAEP framework this extension distinguishes
-    the contribution of the player who initiates the action (e.g., gives the
-    pass) and the player who completes the action (e.g., receives the pass).
+    In contrast to the original VAEP framework [1]_ this extension
+    distinguishes the contribution of the player who initiates the action
+    (e.g., gives the pass) and the player who completes the action (e.g.,
+    receives the pass) [2]_.
 
     Parameters
     ----------
@@ -53,11 +54,17 @@ class AtomicVAEP(VAEP):
     --------
     :class:`socceraction.vaep.VAEP` : Implementation of the original VAEP framework.
 
-
-    .. [Decroos19] Decroos, Tom, Lotte Bransen, Jan Van Haaren, and Jesse Davis.
+    References
+    ----------
+    .. [1] Tom Decroos, Lotte Bransen, Jan Van Haaren, and Jesse Davis.
         "Actions speak louder than goals: Valuing player actions in soccer." In
         Proceedings of the 25th ACM SIGKDD International Conference on Knowledge
         Discovery & Data Mining, pp. 1851-1861. 2019.
+    .. [2] Tom Decroos, Pieter Robberechts and Jesse Davis.
+        "Introducing Atomic-SPADL: A New Way to Represent Event Stream Data".
+        DTAI Sports Analytics Blog.
+        https://dtai.cs.kuleuven.be/sports/blog/introducing-atomic-spadl:-a-new-way-to-represent-event-stream-data
+        May 2020.
     """
 
     _spadlcfg = spadlcfg

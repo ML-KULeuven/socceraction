@@ -10,7 +10,6 @@ from urllib.request import urlopen, urlretrieve
 from zipfile import ZipFile, is_zipfile
 
 import pandas as pd  # type: ignore
-import tqdm  # type: ignore
 from pandera.typing import DataFrame
 
 from ..base import EventDataLoader, MissingDataError, ParseError
@@ -25,7 +24,13 @@ from .schema import (
 
 class PublicWyscoutLoader(EventDataLoader):
     """
-    Load the public Wyscout dataset [1]_.
+    Load the public Wyscout dataset.
+
+    This dataset is a public release of event stream data, collected by Wyscout
+    (https://wyscout.com/) containing all matches of the 2017/18 season of the
+    top-5 European leagues (La Liga, Serie A, Bundesliga, Premier League, Ligue
+    1), the FIFA World Cup 2018, and UEFA Euro Cup 2016. For a detailed
+    description, see Pappalardo et al. [1]_.
 
     Parameters
     ----------
@@ -35,7 +40,8 @@ class PublicWyscoutLoader(EventDataLoader):
     download : bool
         Whether to force a redownload of the data.
 
-
+    References
+    ----------
     .. [1] Pappalardo, L., Cintia, P., Rossi, A. et al. A public data set of
         spatio-temporal match events in soccer competitions. Sci Data 6, 236
         (2019). https://doi.org/10.1038/s41597-019-0247-7
@@ -114,7 +120,7 @@ class PublicWyscoutLoader(EventDataLoader):
             events='https://ndownloader.figshare.com/files/14464685',
         )
         # download and unzip Wyscout open data
-        for url in tqdm.tqdm(dataset_urls.values(), desc='Downloading data'):
+        for url in dataset_urls.values():
             url_obj = urlopen(url).geturl()
             path = Path(urlparse(url_obj).path)
             file_name = os.path.join(self.root, path.name)
@@ -123,7 +129,7 @@ class PublicWyscoutLoader(EventDataLoader):
                 with ZipFile(file_local) as zip_file:
                     zip_file.extractall(self.root)
 
-    def _create_match_index(self) -> DataFrame:
+    def _create_match_index(self) -> pd.DataFrame:
         df_matches = pd.concat(
             [pd.DataFrame(self.get(path)) for path in glob.iglob(f'{self.root}/matches_*.json')]
         )

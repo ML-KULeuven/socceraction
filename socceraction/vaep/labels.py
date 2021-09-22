@@ -7,7 +7,7 @@ import socceraction.spadl.config as spadl
 from socceraction.spadl.schema import SPADLSchema
 
 
-def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame:
+def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> pd.DataFrame:
     """Determine whether the team possessing the ball scored a goal within the next x actions.
 
     Parameters
@@ -51,7 +51,7 @@ def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame:
     return pd.DataFrame(res, columns=['scores'])
 
 
-def concedes(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame:
+def concedes(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> pd.DataFrame:
     """Determine whether the team possessing the ball conceded a goal within the next x actions.
 
     Parameters
@@ -94,7 +94,7 @@ def concedes(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> DataFrame
     return pd.DataFrame(res, columns=['concedes'])
 
 
-def goal_from_shot(actions: DataFrame[SPADLSchema]) -> DataFrame:
+def goal_from_shot(actions: DataFrame[SPADLSchema]) -> pd.DataFrame:
     """Determine whether a goal was scored from the current action.
 
     This label can be use to train an xG model.

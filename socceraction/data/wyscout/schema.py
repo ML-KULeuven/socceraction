@@ -1,6 +1,6 @@
 """SPADL schema for Wyscout data."""
 import pandera as pa
-from pandera.typing import DateTime, Series
+from pandera.typing import DateTime, Object, Series
 
 from socceraction.data.schema import (
     CompetitionSchema,
@@ -43,5 +43,5 @@ class WyscoutEventSchema(EventSchema):
     milliseconds: Series[float]
     subtype_id: Series[int]
     subtype_name: Series[str]
-    positions: Series[object]
-    tags: Series[object]
+    positions: Series[Object]
+    tags: Series[Object]

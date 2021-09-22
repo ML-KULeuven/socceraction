@@ -15,7 +15,9 @@ def _prev(x: pd.Series) -> pd.Series:
 _samephase_nb: int = 10
 
 
-def offensive_value(actions: DataFrame[SPADLSchema], scores: Series, concedes: Series) -> Series:
+def offensive_value(
+    actions: DataFrame[SPADLSchema], scores: Series[float], concedes: Series[float]
+) -> Series[float]:
     r"""Compute the offensive value of each action.
 
     VAEP defines the *offensive value* of an action as the change in scoring
@@ -67,7 +69,9 @@ def offensive_value(actions: DataFrame[SPADLSchema], scores: Series, concedes: S
     return scores - prev_scores
 
 
-def defensive_value(actions: DataFrame[SPADLSchema], scores: Series, concedes: Series) -> Series:
+def defensive_value(
+    actions: DataFrame[SPADLSchema], scores: Series[float], concedes: Series[float]
+) -> Series[float]:
     r"""Compute the defensive value of each action.
 
     VAEP defines the *defensive value* of an action as the change in conceding
@@ -110,7 +114,9 @@ def defensive_value(actions: DataFrame[SPADLSchema], scores: Series, concedes: S
     return -(concedes - prev_concedes)
 
 
-def value(actions: DataFrame[SPADLSchema], Pscores: Series, Pconcedes: Series) -> DataFrame:
+def value(
+    actions: DataFrame[SPADLSchema], Pscores: Series[float], Pconcedes: Series[float]
+) -> pd.DataFrame:
     r"""Compute the offensive, defensive and VAEP value of each action.
 
     The total VAEP value of an action is the difference between that action's

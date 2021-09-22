@@ -22,6 +22,9 @@ class OptaParser(ABC):
         Path of the data file.
     """
 
+    def __init__(self, path: str, **kwargs: Any):
+        raise NotImplementedError
+
     def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
         """Return a dictionary with all available competitions.
 

@@ -24,15 +24,15 @@ from . import labels as lab
 try:
     import xgboost
 except ImportError:
-    xgboost = None
+    xgboost = None  # type: ignore
 try:
     import catboost
 except ImportError:
-    catboost = None
+    catboost = None  # type: ignore
 try:
     import lightgbm
 except ImportError:
-    lightgbm = None
+    lightgbm = None  # type: ignore
 
 
 xfns_default = [
@@ -55,12 +55,12 @@ xfns_default = [
 
 class VAEP:
     """
-    An implementation of the VAEP framework [Decroos19]_.
+    An implementation of the VAEP framework.
 
-    VAEP (Valuing Actions by Estimating Probabilities) defines the problem of
-    valuing a soccer player's contributions within a match as a binary
-    classification problem and rates actions by estimating its effect on the
-    short-term probablities that a team will both score and concede.
+    VAEP (Valuing Actions by Estimating Probabilities) [1]_ defines the
+    problem of valuing a soccer player's contributions within a match as
+    a binary classification problem and rates actions by estimating its effect
+    on the short-term probablities that a team will both score and concede.
 
     Parameters
     ----------
@@ -72,7 +72,9 @@ class VAEP:
         Number of previous actions used to decscribe the game state.
 
 
-    .. [Decroos19] Decroos, Tom, Lotte Bransen, Jan Van Haaren, and Jesse Davis.
+    References
+    ----------
+    .. [1] Tom Decroos, Lotte Bransen, Jan Van Haaren, and Jesse Davis.
         "Actions speak louder than goals: Valuing player actions in soccer." In
         Proceedings of the 25th ACM SIGKDD International Conference on Knowledge
         Discovery & Data Mining, pp. 1851-1861. 2019.

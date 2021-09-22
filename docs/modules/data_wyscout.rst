@@ -16,7 +16,6 @@ Serializers
   socceraction.data.wyscout.WyscoutLoader
   socceraction.data.wyscout.PublicWyscoutLoader
 
-
 Schema
 ------
 

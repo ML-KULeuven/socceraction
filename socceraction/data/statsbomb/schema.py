@@ -1,6 +1,6 @@
 """SPADL schema for StatsBomb data."""
 import pandera as pa
-from pandera.typing import DateTime, Series
+from pandera.typing import DateTime, Object, Series
 
 from socceraction.data.schema import (
     CompetitionSchema,
@@ -25,7 +25,7 @@ class StatsBombGameSchema(GameSchema):
     home_score: Series[int]
     away_score: Series[int]
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[float] = pa.Field(nullable=True)
 
 
 class StatsBombPlayerSchema(PlayerSchema):
@@ -43,7 +43,7 @@ class StatsBombTeamSchema(TeamSchema):
 class StatsBombEventSchema(EventSchema):
     """Definition of a dataframe containing event stream data of a game."""
 
-    event_id: Series[object]
+    event_id: Series[Object]
     index: Series[int]
     timestamp: Series[DateTime]
     minute: Series[int]
@@ -55,11 +55,11 @@ class StatsBombEventSchema(EventSchema):
     play_pattern_name: Series[str]
     team_name: Series[str]
     duration: Series[float] = pa.Field(nullable=True)
-    extra: Series[object]
-    related_events: Series[object]
+    extra: Series[Object]
+    related_events: Series[Object]
     player_name: Series[str] = pa.Field(nullable=True)
-    position_id: Series[int] = pa.Field(nullable=True)
+    position_id: Series[float] = pa.Field(nullable=True)
     position_name: Series[str] = pa.Field(nullable=True)
-    location: Series[object] = pa.Field(nullable=True)
+    location: Series[Object] = pa.Field(nullable=True)
     under_pressure: Series[bool] = pa.Field(nullable=True)
     counterpress: Series[bool] = pa.Field(nullable=True)

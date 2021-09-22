@@ -124,9 +124,9 @@ class MA3JSONParser(OptaJSONParser):
         events = assertget(live_data, 'event')
 
         game_duration = self._extract_duration()
-        players = {}
+        playerid_to_name = {}
 
-        players_data = {
+        players_data: Dict[str, List[Any]] = {
             'starting_position_id': [],
             'player_id': [],
             'team_id': [],
@@ -161,45 +161,45 @@ class MA3JSONParser(OptaJSONParser):
             if player_id is None:
                 continue
             player_name = unidecode.unidecode(assertget(event, 'playerName'))
-            if player_id not in players:
-                players[player_id] = player_name
+            if player_id not in playerid_to_name:
+                playerid_to_name[player_id] = player_name
 
-        players_data = pd.DataFrame.from_dict(players_data)
+        df_players_data = pd.DataFrame.from_dict(players_data)
 
-        substitutions = list(self.extract_substitutions().values)
+        substitutions = list(self.extract_substitutions().values())
         substitutions_columns = ['player_id', 'team_id', 'minute_start', 'minute_end']
-        substitutions = pd.DataFrame(substitutions, columns=substitutions_columns)
-        substitutions = substitutions.groupby(['player_id', 'team_id']).max().reset_index()
-        substitutions['minute_start'] = substitutions['minute_start'].fillna(0)
-        substitutions['minute_end'] = substitutions['minute_end'].fillna(game_duration)
+        df_substitutions = pd.DataFrame(substitutions, columns=substitutions_columns)
+        df_substitutions = df_substitutions.groupby(['player_id', 'team_id']).max().reset_index()
+        df_substitutions['minute_start'] = df_substitutions['minute_start'].fillna(0)
+        df_substitutions['minute_end'] = df_substitutions['minute_end'].fillna(game_duration)
 
-        if substitutions.empty:
-            players_data['minute_start'] = 0
-            players_data['minute_end'] = game_duration
+        if df_substitutions.empty:
+            df_players_data['minute_start'] = 0
+            df_players_data['minute_end'] = game_duration
         else:
-            players_data = players_data.merge(
-                substitutions, on=['team_id', 'player_id'], how='left'
+            df_players_data = df_players_data.merge(
+                df_substitutions, on=['team_id', 'player_id'], how='left'
             )
 
-        players_data['is_starter'] = players_data['position_in_formation'] > 0
-        players_data.loc[
-            players_data['is_starter'] & players_data['minute_start'].isnull(),
+        df_players_data['is_starter'] = df_players_data['position_in_formation'] > 0
+        df_players_data.loc[
+            df_players_data['is_starter'] & df_players_data['minute_start'].isnull(),
             'minute_start',
         ] = 0
-        players_data.loc[
-            players_data['is_starter'] & players_data['minute_end'].isnull(), 'minute_end'
+        df_players_data.loc[
+            df_players_data['is_starter'] & df_players_data['minute_end'].isnull(), 'minute_end'
         ] = game_duration
 
-        players_data['minutes_played'] = (
-            (players_data['minute_end'] - players_data['minute_start']).fillna(0).astype(int)
+        df_players_data['minutes_played'] = (
+            (df_players_data['minute_end'] - df_players_data['minute_start']).fillna(0).astype(int)
         )
 
         players = {}
-        for player_data in players_data.itertuples():
+        for player_data in df_players_data.itertuples():
             if player_data.minutes_played > 0:
                 players[player_data.player_id] = {
                     'player_id': player_data.player_id,
-                    'player_name': players[player_data.player_id],
+                    'player_name': playerid_to_name[player_data.player_id],
                     'team_id': player_data.team_id,
                     'starting_position_id': player_data.starting_position_id,
                     'minutes_played': player_data.minutes_played,

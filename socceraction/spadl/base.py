@@ -6,12 +6,11 @@ SPADL format.
 
 """
 import pandas as pd  # type: ignore
-from pandera.typing import DataFrame
 
 from . import config as spadlconfig
 
 
-def _fix_clearances(actions: DataFrame) -> DataFrame:
+def _fix_clearances(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
     next_actions[-1:] = actions[-1:]
     clearance_idx = actions.type_id == spadlconfig.actiontypes.index('clearance')
@@ -21,7 +20,7 @@ def _fix_clearances(actions: DataFrame) -> DataFrame:
     return actions
 
 
-def _fix_direction_of_play(actions: DataFrame, home_team_id: int) -> DataFrame:
+def _fix_direction_of_play(actions: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     away_idx = (actions.team_id != home_team_id).values
     for col in ['start_x', 'end_x']:
         actions.loc[away_idx, col] = spadlconfig.field_length - actions[away_idx][col].values
@@ -36,7 +35,7 @@ max_dribble_length: float = 60.0
 max_dribble_duration: float = 10.0
 
 
-def _add_dribbles(actions: DataFrame) -> DataFrame:
+def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1, fill_value=0)
 
     same_team = actions.team_id == next_actions.team_id

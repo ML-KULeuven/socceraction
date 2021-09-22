@@ -35,7 +35,6 @@ extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.autosummary',
         'sphinx.ext.intersphinx',
-        "sphinx_rtd_theme",
         ]
 autodoc_member_order = 'bysource'
 autosummary_generate = True

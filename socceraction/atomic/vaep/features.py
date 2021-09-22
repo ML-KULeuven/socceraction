@@ -37,9 +37,9 @@ __all__ = [
     'goalscore',
 ]
 
-Actions = Type[DataFrame[AtomicSPADLSchema]]
+Actions = DataFrame[AtomicSPADLSchema]
 GameStates = List[Actions]
-Features = Type[DataFrame]
+Features = Type[pd.DataFrame]
 FeatureTransfomer = Callable[[GameStates], Features]
 
 

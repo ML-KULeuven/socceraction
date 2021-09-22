@@ -14,7 +14,6 @@ actiontypes : list(str)
 
 """
 import pandas as pd
-from pandera.typing import DataFrame
 
 import socceraction.spadl.config as _spadl
 
@@ -38,7 +37,7 @@ actiontypes = _spadl.actiontypes + [
 ]
 
 
-def actiontypes_df() -> DataFrame:
+def actiontypes_df() -> pd.DataFrame:
     """Return a dataframe with the type id and type name of each Atomic-SPADL action type.
 
     Returns
