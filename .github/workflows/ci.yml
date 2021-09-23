@@ -1,0 +1,71 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+    steps:        
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - uses: abatilo/actions-poetry@v2.1.3
+    - name: Install Dependencies
+      run: |
+        poetry install -v      
+    - name: Test with Pytest
+      run: poetry run pytest
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7  # Should match version in .readthedocs.yml
+    - uses: abatilo/actions-poetry@v2.1.3
+    - name: Install Dependencies
+      run: poetry install
+    - name: Build docs
+      working-directory: docs
+      run: poetry run make html
+      
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        linter:
+          - name: Flake8
+            run: flake8 --jobs 4 --statistics --show-source socceraction tests
+          - name: Pylint
+            run: pylint --rcfile=setup.cfg --exit-zero 
+          - name: Pydocstyle
+            run: pydocstyle socceraction
+          - name: MyPy
+            run: mypy socceraction
+          - name: Black
+            run: black --target-version py38 --skip-string-normalization --line-length=99 --check socceraction tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - uses: abatilo/actions-poetry@v2.1.3
+    - name: Install Dependencies
+      run: poetry install
+    - name: ${{ matrix.linter.name }}
+      run: poetry run ${{ matrix.linter.run }}
