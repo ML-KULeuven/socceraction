@@ -25,9 +25,9 @@ jobs:
       run: |
         poetry install -v     
     - name: Download StatsBomb test data
-      run: python tests/datasets/download.py statsbomb
+      run: poetry run python tests/datasets/download.py statsbomb
     - name: Download Wyscout test data
-      run: python tests/datasets/download.py wyscout
+      run: poetry run python tests/datasets/download.py wyscout
     - name: Test with Pytest
       run: poetry run pytest
 
