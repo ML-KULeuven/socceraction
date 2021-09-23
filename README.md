@@ -8,9 +8,9 @@
 </div>
 
 [![pypi](https://badge.fury.io/py/socceraction.svg)](https://pypi.org/project/socceraction)
-[![Python: 3.6+](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://pypi.org/project/socceraction)
+[![Python: 3.6+](https://img.shields.io/badge/Python-3.7.1+-blue.svg)](https://pypi.org/project/socceraction)
 [![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
-[![Build Status](https://travis-ci.org/ML-KULeuven/socceraction.svg?branch=master)](https://travis-ci.org/ML-KULeuven/socceraction)
+[![Build Status](https://img.shields.io/github/workflow/status/ML-KULeuven/socceraction/CI?label=build&logo=github&style=flat-square)](https://github.com/ML-KULeuven/socceraction/actions)
 [![Code coverage](https://codecov.io/gh/ML-KULeuven/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/ML-KULeuven/socceraction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
@@ -34,7 +34,7 @@ The recommended way to install `socceraction` is to simply use pip:
 $ pip install socceraction
 ```
 
-`socceraction` officially supports Python 3.7--3.9.
+`socceraction` officially supports Python 3.7.1--3.9.
 
 The folder [`public-notebooks`](public-notebooks) provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings. More detailed installation/usage instructions can be found in [the documentation](https://socceraction.readthedocs.io/en/latest/).
 
