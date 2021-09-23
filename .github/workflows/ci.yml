@@ -22,7 +22,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - uses: abatilo/actions-poetry@v2.1.3
     - name: Install PyTables dependencies
-      run: sudo apt-get install libhdf5-dev python-numpy python-numexpr python-six python-mock
+      run: sudo apt-get install libhdf5-dev python-numpy python3-numexpr python-six python-mock
     - name: Install dependencies
       run: poetry install -v     
     - name: Download StatsBomb test data
