@@ -37,6 +37,7 @@ xgboost = "^1.4.2"
 tables = "^3.6.1"
 Sphinx = "^4.2.0"
 furo = "^2021.9.22"
+tqdm = "^4.62.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
