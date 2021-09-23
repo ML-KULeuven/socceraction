@@ -25,9 +25,9 @@ jobs:
       run: |
         poetry install -v     
     - name: Download StatsBomb test data
-      run: make tests/datasets/statsbomb/spadl-WorldCup-2018.h5
+      run: python tests/datasets/download.py statsbomb
     - name: Download Wyscout test data
-      run: make tests/datasets/wyscout_public/spadl-WorldCup-2018.h5
+      run: python tests/datasets/download.py wyscout
     - name: Test with Pytest
       run: poetry run pytest
 
