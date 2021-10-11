@@ -9,7 +9,7 @@
 [![Python Version: 3.7.1+](https://img.shields.io/badge/Python-3.7.1+-blue.svg)](https://pypi.org/project/socceraction)
 [![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
-	
+
 [![Build Status](https://img.shields.io/github/workflow/status/ML-KULeuven/socceraction/CI?label=build&logo=github)](https://github.com/ML-KULeuven/socceraction/actions?workflow=CI)
 [![Read the Docs](https://img.shields.io/readthedocs/socceraction/latest.svg?label=Read%20the%20Docs)](https://socceraction.readthedocs.io)
 [![Code coverage](https://codecov.io/gh/ML-KULeuven/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/ML-KULeuven/socceraction)
@@ -18,16 +18,13 @@
 <br/>
 </div>
 
-
 Socceraction is a Python package for objectively quantifying the impact of the individual actions performed by soccer players using event stream data. The general idea is to assign a value to each on-the-ball action based on the action's impact on the game outcome, while accounting for the context in which the action happened. The video below gives a quick two-minute introduction to action values.
 
-
-<div align="center">		
+<div align="center">
 
 https://user-images.githubusercontent.com/2175271/136857714-1d2c8706-7f2f-449d-818f-0e67fbb75400.mp4
 
 </div>
-
 
 ## Features
 
