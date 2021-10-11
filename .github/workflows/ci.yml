@@ -48,10 +48,15 @@ jobs:
           pip install --constraint=.github/workflows/constraints.txt nox nox-poetry
           nox --version
 
+      - name: Install PyTables dependencies
+        run: sudo apt-get install libhdf5-dev python-numpy python-numexpr python-six python-mock
+        
       - name: Install dependencies
         run: poetry install -v
+        
       - name: Download StatsBomb test data
         run: poetry run python tests/datasets/download.py statsbomb
+        
       - name: Download Wyscout test data
         run: poetry run python tests/datasets/download.py wyscout
 
