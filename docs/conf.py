@@ -1,8 +1,4 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Configuration file for the Sphinx documentation builder."""
 
 # -- Path setup --------------------------------------------------------------
 
@@ -12,6 +8,7 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 
 
@@ -31,11 +28,12 @@ release = '1.1.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-        'sphinx.ext.napoleon',
-        'sphinx.ext.autodoc',
-        'sphinx.ext.autosummary',
-        'sphinx.ext.intersphinx',
-        ]
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
+    "sphinx_autodoc_typehints",
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+]
 autodoc_member_order = 'bysource'
 autosummary_generate = True
 
@@ -54,21 +52,21 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'furo'
-pygments_style = "friendly"
+pygments_style = 'friendly'
 
-html_logo = "_static/logo_white.png"
-html_favicon = "_static/favicon.png"
+html_logo = '_static/logo_white.png'
+html_favicon = '_static/favicon.png'
 html_theme_options = {
-    "sidebar_hide_name": True,
-    "light_css_variables": {
-        "color-brand-primary": "#26b079",
-        "color-brand-content": "#26b079",
-        "color-api-highlight-on-target": "#e5fff5",
+    'sidebar_hide_name': True,
+    'light_css_variables': {
+        'color-brand-primary': '#26b079',
+        'color-brand-content': '#26b079',
+        'color-api-highlight-on-target': '#e5fff5',
     },
-    "dark_css_variables": {
-        "color-brand-primary": "#26b079",
-        "color-brand-content": "#26b079",
-        "color-api-highlight-on-target": "#e5fff5",
+    'dark_css_variables': {
+        'color-brand-primary': '#26b079',
+        'color-brand-content': '#26b079',
+        'color-api-highlight-on-target': '#e5fff5',
     },
 }
 
@@ -76,7 +74,4 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_css_files = ["custom.css"]
-
-# mock imported packages
-autodoc_mock_imports = []
+html_css_files = ['custom.css']

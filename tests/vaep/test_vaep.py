@@ -6,7 +6,7 @@ from socceraction.vaep import features as fs
 
 
 @pytest.fixture(scope='session')
-def vaep_model(sb_worldcup_data):
+def vaep_model(sb_worldcup_data: pd.HDFStore) -> VAEP:
     # Test the vAEP framework on the StatsBomb World Cup data
     model = VAEP(nb_prev_actions=1)
     # comppute features and labels
@@ -34,7 +34,7 @@ def vaep_model(sb_worldcup_data):
 
 
 @pytest.mark.slow
-def test_predict(sb_worldcup_data, vaep_model):
+def test_predict(sb_worldcup_data: pd.HDFStore, vaep_model: VAEP) -> None:
     games = sb_worldcup_data['games']
     game = games.iloc[-1]
     actions = sb_worldcup_data[f'actions/game_{game.game_id}']
@@ -44,7 +44,7 @@ def test_predict(sb_worldcup_data, vaep_model):
 
 
 @pytest.mark.slow
-def test_predict_with_missing_features(sb_worldcup_data, vaep_model):
+def test_predict_with_missing_features(sb_worldcup_data: pd.HDFStore, vaep_model: VAEP) -> None:
     games = sb_worldcup_data['games']
     game = games.iloc[-1]
     actions = sb_worldcup_data[f'actions/game_{game.game_id}']

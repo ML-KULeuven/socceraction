@@ -68,7 +68,7 @@ class VAEP:
         List of feature transformers (see :mod:`socceraction.vaep.features`)
         used to describe the game states. Uses :attr:`~socceraction.vaep.base.xfns_default`
         if None.
-    nb_prev_actions : int, default=3
+    nb_prev_actions : int, default=3  # noqa: DAR103
         Number of previous actions used to decscribe the game state.
 
 
@@ -89,7 +89,7 @@ class VAEP:
         self,
         xfns: Optional[List[Callable[[List[pd.DataFrame]], pd.DataFrame]]] = None,
         nb_prev_actions: int = 3,
-    ):
+    ) -> None:
         self.__models: Dict[str, Any] = {}
         self.xfns = xfns_default if xfns is None else xfns
         self.yfns = [self._lab.scores, self._lab.concedes]
@@ -155,16 +155,21 @@ class VAEP:
             Feature representation of the game states.
         y : pd.DataFrame
             Scoring and conceding labels for each game state.
-        learner : string, default='xgboost'
+        learner : string, default='xgboost'  # noqa: DAR103
             Gradient boosting implementation which should be used to learn the
             model. The supported learners are 'xgboost', 'catboost' and 'lightgbm'.
-        val_size : float, default=0.25
+        val_size : float, default=0.25  # noqa: DAR103
             Percentage of the dataset that will be used as the validation set
             for early stopping. When zero, no validation data will be used.
         tree_params : dict
             Parameters passed to the constructor of the learner.
         fit_params : dict
             Parameters passed to the fit method of the learner.
+
+        Raises
+        ------
+        ValueError
+            If one of the features is missing in the provided dataframe.
 
         Returns
         -------
@@ -305,6 +310,11 @@ class VAEP:
             DataFrame with the game state representation of each action. If
             `None`, these will be computed on-th-fly.
 
+        Raises
+        ------
+        NotFittedError
+            If the model is not fitted yet.
+
         Returns
         -------
         ratings : pd.DataFrame
@@ -332,6 +342,11 @@ class VAEP:
             Feature representation of the game states.
         y : pd.DataFrame
             Scoring and conceding labels for each game state.
+
+        Raises
+        ------
+        NotFittedError
+            If the model is not fitted yet.
 
         Returns
         -------

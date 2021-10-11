@@ -151,6 +151,11 @@ class F9JSONParser(OptaJSONParser):
     def extract_lineups(self) -> Dict[int, Dict[str, Any]]:
         """Return a dictionary with the lineup of each team.
 
+        Raises
+        ------
+        MissingDataError
+            If teams data is not available in the stream.
+
         Returns
         -------
         dict
@@ -207,6 +212,11 @@ class F9JSONParser(OptaJSONParser):
     def extract_referee(self) -> Dict[int, Dict[str, Any]]:
         """Return a dictionary with all referees.
 
+        Raises
+        ------
+        MissingDataError
+            If referee data is not available in the stream.
+
         Returns
         -------
         dict
@@ -235,6 +245,11 @@ class F9JSONParser(OptaJSONParser):
 
     def extract_teamgamestats(self) -> List[Dict[str, Any]]:
         """Return some aggregated statistics of each team.
+
+        Raises
+        ------
+        MissingDataError
+            If teams data is not available in the stream.
 
         Returns
         -------

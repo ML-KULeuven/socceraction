@@ -50,7 +50,7 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
     ----------
     fs : list(callable)
         A list of feature transformers.
-    nb_prev_actions : int (default = 3)
+    nb_prev_actions : int, default=3  # noqa: DAR103
         The number of previous actions included in the game state.
 
     Returns
@@ -90,7 +90,7 @@ def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
 
     Parameters
     ----------
-    gamestates : list(pd.DataFrame)
+    gamestates : GameStates
         The game states of a game.
     home_team_id : int
         The ID of the home team.
@@ -116,12 +116,12 @@ def actiontype_onehot(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A one-hot encoding of each action's type.
     """
     X = pd.DataFrame()
@@ -137,12 +137,12 @@ def location(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'x' and 'y' location of each action.
     """
     return actions[['x', 'y']]
@@ -160,12 +160,12 @@ def polar(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'dist_to_goal' and 'angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
@@ -183,12 +183,12 @@ def movement_polar(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The distance covered ('mov_d') and direction ('mov_angle') of each action.
     """
     mov = pd.DataFrame()
@@ -205,12 +205,12 @@ def direction(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The x-component ('dx') and y-compoment ('mov_angle') of the unit
         vector of each action.
     """
@@ -230,12 +230,12 @@ def goalscore(gamestates: GameStates) -> Features:
 
     Parameters
     ----------
-    gamestates : pd.DataFrame
+    gamestates : GameStates
         The gamestates of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The number of goals scored by the team performing the last action of the
         game state ('goalscore_team'), by the opponent ('goalscore_opponent'),
         and the goal difference between both teams ('goalscore_diff').

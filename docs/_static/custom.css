@@ -2,7 +2,8 @@ a {
   color: #26b079;
 }
 
-.toctree-l1 a:active, .toctree-l1 a:hover {
+.toctree-l1 a:active,
+.toctree-l1 a:hover {
   background-color: #676767;
 }
 
@@ -23,7 +24,6 @@ li.toctree-l2 {
   font-size: 80%;
 }
 
-
 @media (max-width: 67em) {
   .sidebar-drawer {
     width: 22em;
@@ -38,6 +38,7 @@ li.toctree-l2 {
 }
 
 /* autosummary table text */
-article .align-center, article .align-default {
+article .align-center,
+article .align-default {
   text-align: left;
 }

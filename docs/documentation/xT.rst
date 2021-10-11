@@ -50,10 +50,9 @@ works, we refer to `Karun's blog post <https://karun.in/blog/expected-threat.htm
     mov_actions["xT_value"] = xTModel.predict(mov_actions)
 
 
-.. seealso:: 
+.. seealso::
 
   This `notebook`__ gives an example of the complete pipeline to train and
   apply an xT model.
 
 __ https://github.com/ML-KULeuven/socceraction/blob/master/public-notebooks/EXTRA-run-xT.ipynb
-

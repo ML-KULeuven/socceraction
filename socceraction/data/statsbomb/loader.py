@@ -34,11 +34,16 @@ class StatsBombLoader(EventDataLoader):
 
     _free_open_data: str = 'https://raw.githubusercontent.com/statsbomb/open-data/master/data/'
 
-    def __init__(self, root: str = _free_open_data, getter: str = 'remote'):
+    def __init__(self, root: str = _free_open_data, getter: str = 'remote') -> None:
         super().__init__(root, getter)
 
     def competitions(self) -> DataFrame[StatsBombCompetitionSchema]:
         """Return a dataframe with all available competitions and seasons.
+
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------
@@ -70,6 +75,11 @@ class StatsBombLoader(EventDataLoader):
             The ID of the competition.
         season_id : int
             The ID of the season.
+
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------
@@ -133,6 +143,11 @@ class StatsBombLoader(EventDataLoader):
         game_id : int
             The ID of the game.
 
+        Raises
+        ------
+        ParseError  # noqa: DAR402
+            When the raw data does not adhere to the expected format.
+
         Returns
         -------
         pd.DataFrame
@@ -148,6 +163,11 @@ class StatsBombLoader(EventDataLoader):
         ----------
         game_id : int
             The ID of the game.
+
+        Raises
+        ------
+        ParseError  # noqa: DAR402
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------
@@ -200,6 +220,11 @@ class StatsBombLoader(EventDataLoader):
         ----------
         game_id : int
             The ID of the game.
+
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------

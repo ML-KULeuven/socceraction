@@ -139,6 +139,13 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
     src[k]. If v is a set, target[k] is updated with v, If v is a dict,
     recursively deep-update it.
 
+    Parameters
+    ----------
+    target: dict
+        The original dictionary which is updated.
+    src: dict
+        The dictionary with which `target` is updated.
+
     Examples
     --------
     >>> t = {'name': 'Ferry', 'hobbies': ['programming', 'sci-fi']}
@@ -218,9 +225,15 @@ class OptaLoader(EventDataLoader):
         :class:`~socceraction.spadl.opta.OptaParser` and 'feed1_name' and
         'feed2_name' correspond to the keys in 'feeds'.
 
+    Raises
+    ------
+    ValueError
+        If an invalid parser is provided.
     """
 
-    def __init__(self, root: str, feeds: Dict[str, str], parser: Mapping[str, Type[OptaParser]]):
+    def __init__(
+        self, root: str, feeds: Dict[str, str], parser: Union[str, Mapping[str, Type[OptaParser]]]
+    ) -> None:
         self.root = root
         if parser == 'json':
             self.parsers = self._get_parsers_for_feeds(_jsonparsers, feeds)
@@ -228,8 +241,10 @@ class OptaLoader(EventDataLoader):
             self.parsers = self._get_parsers_for_feeds(_xmlparsers, feeds)
         elif parser == 'whoscored':
             self.parsers = self._get_parsers_for_feeds(_whoscoredparsers, feeds)
-        else:
+        elif isinstance(parser, dict):
             self.parsers = self._get_parsers_for_feeds(parser, feeds)
+        else:
+            raise ValueError('Invalid parser provided.')
         self.feeds = feeds
 
     def _get_parsers_for_feeds(

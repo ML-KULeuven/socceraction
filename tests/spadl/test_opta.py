@@ -12,7 +12,7 @@ from socceraction.spadl import opta as opta
 
 
 class TestSpadlConvertor:
-    def setup_method(self):
+    def setup_method(self) -> None:
         data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
 
         loader = OptaLoader(
@@ -26,14 +26,14 @@ class TestSpadlConvertor:
 
         self.events = loader.events(1009316)
 
-    def test_convert_to_actions(self):
+    def test_convert_to_actions(self) -> None:
         df_actions = opta.convert_to_actions(self.events, 174)
         assert len(df_actions) > 0
         SPADLSchema.validate(df_actions)
         assert (df_actions.game_id == 1009316).all()
         assert ((df_actions.team_id == 174) | (df_actions.team_id == 957)).all()
 
-    def test_convert_goalkick(self):
+    def test_convert_goalkick(self) -> None:
         event = pd.DataFrame(
             [
                 {
@@ -61,7 +61,7 @@ class TestSpadlConvertor:
         action = opta.convert_to_actions(event, 0).iloc[0]
         assert action['type_id'] == spadlcfg.actiontypes.index('goalkick')
 
-    def test_convert_own_goal(self):
+    def test_convert_own_goal(self) -> None:
         event = pd.DataFrame(
             [
                 {
@@ -91,7 +91,7 @@ class TestSpadlConvertor:
         assert action['result_id'] == spadlcfg.results.index('owngoal')
 
 
-def test_extract_lineups_f7xml():
+def test_extract_lineups_f7xml() -> None:
     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
     parser = optaparsers.F7XMLParser(os.path.join(data_dir, 'f7-23-2018-1009316-matchresults.xml'))
     lineups = parser.extract_lineups()
@@ -102,7 +102,7 @@ def test_extract_lineups_f7xml():
         assert sum([p['minutes_played'] for p in lineup['players'].values()]) == 11 * 96
 
 
-def test_extract_lineups_f9json():
+def test_extract_lineups_f9json() -> None:
     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
     parser = optaparsers.F9JSONParser(os.path.join(data_dir, 'match-2017-8-918893.json'))
     lineups = parser.extract_lineups()
@@ -114,7 +114,7 @@ def test_extract_lineups_f9json():
         assert sum([p['minutes_played'] for p in lineup['players'].values()]) == 11 * 96
 
 
-def test_extract_ids_from_path():
+def test_extract_ids_from_path() -> None:
     glob_pattern = '{competition_id}-{season_id}/{game_id}.json'
     ffp = 'blah/blah/blah/1-2021/1234.json'
     ids = _extract_ids_from_path(ffp, glob_pattern)
@@ -133,7 +133,7 @@ def test_extract_ids_from_path():
     assert ids['game_id'] == 1234
 
 
-def test_extract_ids_from_path_with_incorrect_pattern():
+def test_extract_ids_from_path_with_incorrect_pattern() -> None:
     glob_pattern = '{competition_id}-{season_id}/{game_id}.json'
     ffp = 'blah/blah/blah/1/2021/g1234.json'
     with pytest.raises(ValueError):

@@ -47,7 +47,7 @@ class PublicWyscoutLoader(EventDataLoader):
         (2019). https://doi.org/10.1038/s41597-019-0247-7
     """
 
-    def __init__(self, root: Optional[str] = None, download: bool = False):
+    def __init__(self, root: Optional[str] = None, download: bool = False) -> None:
         if root is None:
             root = os.path.join(os.getcwd(), 'wyscout_data')
             os.makedirs(root, exist_ok=True)
@@ -342,7 +342,7 @@ class WyscoutLoader(EventDataLoader):
         root: str = _wyscout_api,
         getter: str = 'remote',
         feeds: Optional[Dict[str, str]] = None,
-    ):
+    ) -> None:
         super().__init__(root, getter)
         if feeds is not None:
             self.feeds = feeds
@@ -383,6 +383,11 @@ class WyscoutLoader(EventDataLoader):
 
     def competitions(self) -> DataFrame[WyscoutCompetitionSchema]:
         """Return a dataframe with all available competitions and seasons.
+
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------
@@ -433,6 +438,11 @@ class WyscoutLoader(EventDataLoader):
         season_id : int
             The ID of the season.
 
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
+
         Returns
         -------
         pd.DataFrame
@@ -482,6 +492,11 @@ class WyscoutLoader(EventDataLoader):
         game_id : int
             The ID of the game.
 
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
+
         Returns
         -------
         pd.DataFrame
@@ -504,6 +519,11 @@ class WyscoutLoader(EventDataLoader):
         ----------
         game_id : int
             The ID of the game.
+
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------
@@ -540,6 +560,11 @@ class WyscoutLoader(EventDataLoader):
         ----------
         game_id : int
             The ID of the game.
+
+        Raises
+        ------
+        ParseError
+            When the raw data does not adhere to the expected format.
 
         Returns
         -------

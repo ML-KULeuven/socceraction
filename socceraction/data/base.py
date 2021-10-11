@@ -51,7 +51,7 @@ class EventDataLoader(ABC):
         "remote" or "local"
     """
 
-    def __init__(self, root: str, getter: str):
+    def __init__(self, root: str, getter: str) -> None:
         self.root = root
 
         if getter == 'remote':

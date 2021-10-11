@@ -1,76 +1,141 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-
 name: CI
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
+  - push
+  - pull_request
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  tests:
+    name: ${{ matrix.session }} ${{ matrix.python-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-    steps:        
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - uses: abatilo/actions-poetry@v2.1.3
-    - name: Install PyTables dependencies
-      run: sudo apt-get install libhdf5-dev python-numpy python3-numexpr python-six python-mock
-    - name: Install dependencies
-      run: poetry install -v     
-    - name: Download StatsBomb test data
-      run: poetry run python tests/datasets/download.py statsbomb
-    - name: Download Wyscout test data
-      run: poetry run python tests/datasets/download.py wyscout
-    - name: Test with Pytest
-      run: poetry run pytest
+        include:
+          - { python-version: 3.9, os: ubuntu-latest, session: "pre-commit" }
+          - { python-version: 3.9, os: ubuntu-latest, session: "mypy" }
+          - { python-version: 3.8, os: ubuntu-latest, session: "mypy" }
+          - { python-version: 3.7, os: ubuntu-latest, session: "mypy" }
+          - { python-version: 3.9, os: ubuntu-latest, session: "tests" }
+          - { python-version: 3.8, os: ubuntu-latest, session: "tests" }
+          - { python-version: 3.7, os: ubuntu-latest, session: "tests" }
+          - { python-version: 3.9, os: ubuntu-latest, session: "docs-build" }
 
-  docs:
-    runs-on: ubuntu-latest
+    env:
+      NOXSESSION: ${{ matrix.session }}
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.7  # Should match version in .readthedocs.yml
-    - uses: abatilo/actions-poetry@v2.1.3
-    - name: Install Dependencies
-      run: poetry install
-    - name: Build docs
-      working-directory: docs
-      run: poetry run sphinx-build -W -b html -d _build/doctrees . _build/html
-      
-  lint:
-    strategy:
-      fail-fast: false
-      matrix:
-        linter:
-          - name: Flake8
-            run: flake8 --jobs 4 --statistics --show-source socceraction tests
-          - name: Pylint
-            run: pylint --rcfile=setup.cfg --exit-zero socceraction
-          - name: Pydocstyle
-            run: pydocstyle socceraction
-          - name: MyPy
-            run: mypy socceraction
-          - name: Black
-            run: black --target-version py38 --skip-string-normalization --line-length=99 --check socceraction tests
+      - name: Check out the repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt pip
+          pip --version
+
+      - name: Install Poetry
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt poetry
+          poetry --version
+
+      - name: Install Nox
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt nox nox-poetry
+          nox --version
+
+      - name: Install dependencies
+        run: poetry install -v
+      - name: Download StatsBomb test data
+        run: poetry run python tests/datasets/download.py statsbomb
+      - name: Download Wyscout test data
+        run: poetry run python tests/datasets/download.py wyscout
+
+      - name: Compute pre-commit cache key
+        if: matrix.session == 'pre-commit'
+        id: pre-commit-cache
+        shell: python
+        run: |
+          import hashlib
+          import sys
+
+          python = "py{}.{}".format(*sys.version_info[:2])
+          payload = sys.version.encode() + sys.executable.encode()
+          digest = hashlib.sha256(payload).hexdigest()
+          result = "${{ runner.os }}-{}-{}-pre-commit".format(python, digest[:8])
+
+          print("::set-output name=result::{}".format(result))
+
+      - name: Restore pre-commit cache
+        uses: actions/cache@v2.1.6
+        if: matrix.session == 'pre-commit'
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ steps.pre-commit-cache.outputs.result }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ steps.pre-commit-cache.outputs.result }}-
+
+      - name: Run Nox
+        run: |
+          nox --force-color --python=${{ matrix.python-version }}
+
+      - name: Upload coverage data
+        if: always() && matrix.session == 'tests'
+        uses: "actions/upload-artifact@v2.2.4"
+        with:
+          name: coverage-data
+          path: ".coverage.*"
+
+      - name: Upload documentation
+        if: matrix.session == 'docs-build'
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: docs
+          path: docs/_build
+
+  coverage:
     runs-on: ubuntu-latest
+    needs: tests
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - uses: abatilo/actions-poetry@v2.1.3
-    - name: Install Dependencies
-      run: poetry install
-    - name: ${{ matrix.linter.name }}
-      run: poetry run ${{ matrix.linter.run }}
+      - name: Check out the repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: 3.8
+
+      - name: Upgrade pip
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt pip
+          pip --version
+
+      - name: Install Poetry
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt poetry
+          poetry --version
+
+      - name: Install Nox
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt nox nox-poetry
+          nox --version
+
+      - name: Download coverage data
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: coverage-data
+
+      - name: Combine coverage data and display human readable report
+        run: |
+          nox --force-color --session=coverage
+
+      - name: Create coverage report
+        run: |
+          nox --force-color --session=coverage -- xml
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1.5.2

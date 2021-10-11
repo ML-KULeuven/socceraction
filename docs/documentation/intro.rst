@@ -20,7 +20,7 @@ Data
 
 First of all, you will need some data. Luckily, both `StatsBomb <https://github.com/statsbomb/open-data>`_ and
 `Wyscout <https://www.nature.com/articles/s41597-019-0247-7>`_ provide a small freely available dataset.
-The :ref:`data module<api-data>` of socceraction makes it trivial to load these datasets as 
+The :ref:`data module<api-data>` of socceraction makes it trivial to load these datasets as
 `Pandas dataframes <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`__.
 In this short introduction, we will work with Statsbomb's dataset of the 2018 World Cup.
 
@@ -37,9 +37,9 @@ In this short introduction, we will work with Statsbomb's dataset of the 2018 Wo
 
    # Create a dataframe with all games from the 2018 World Cup
    df_games = SBL.games(competition_id=43, season_id=3).set_index("game_id")
- 
 
-.. note:: 
+
+.. note::
   Keep in mind that by using the public StatsBomb data you are agreeing to their `user agreement <https://github.com/statsbomb/open-data/blob/master/LICENSE.pdf>`__.
 
 For each game, you can then retrieve a dataframe containing the teams, all
@@ -105,7 +105,7 @@ Valuing actions
 
 We can now assign a numeric value to each of these individual actions that
 quantifies how much the action contributed towards winning the game.
-Socceraction implements two frameworks for doing this: xT and VAEP. 
+Socceraction implements two frameworks for doing this: xT and VAEP.
 
 Valuing actions with xT
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,7 +121,7 @@ that location, in terms of scoring. An example grid is visualized below.
 
 The code below allows you to load
 league-wide xT values from the 2017-18 Premier League season (the 12x8 grid
-shown above). Instructions on how to train your own model can be found in the 
+shown above). Instructions on how to train your own model can be found in the
 :doc:`detailed documentation about xT <xT>`.
 
 .. code-block:: python
@@ -158,13 +158,13 @@ account. Therefore, VAEP frames the problem of quantifying a soccer player’s
 contributions within a game as a binary classification task and rates each
 action by estimating its effect on the short-term probabilities that a team
 will both score or concede. That is, VAEP quanitifies the effect of an action :math:`a_i`
-that moves the game from state :math:`S_{i−1} = \{a_{i-n}, \ldots, a_{i−1}\}` to state 
+that moves the game from state :math:`S_{i−1} = \{a_{i-n}, \ldots, a_{i−1}\}` to state
 :math:`S_i = \{a_{i-n+1}, . . . , a_{i−1}, a_i\}`, where each game state is
 represented by the :math:`n` previous actions. Then each game state is
 represented using a set of features and assigned two labels. A first label
 that defines whether the team  in possession scored a goal in the next
 :math:`k` actions; a second label that defines whether the team  in possession
-conceded a goal in the next :math:`k` actions. 
+conceded a goal in the next :math:`k` actions.
 
 This allows to train two
 classifiers: one that predicts the probability that a team will score in the
@@ -217,6 +217,5 @@ much did the action decrease the probability of conceding) of the action:
 
 -----------------------
 
-Ready for more? Check out the detailed documentation about the 
+Ready for more? Check out the detailed documentation about the
 :doc:`data representation <SPADL>` and :doc:`action value frameworks <valuing_actions>`.
-

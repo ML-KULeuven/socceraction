@@ -169,9 +169,7 @@ def _fix_owngoals(actions: pd.DataFrame) -> pd.DataFrame:
     return actions
 
 
-def OptaLoader(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def OptaLoader(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.opta import OptaLoader  # type: ignore
@@ -184,9 +182,7 @@ def OptaLoader(*args, **kwargs):  # type: ignore
     return OptaLoader(*args, **kwargs)
 
 
-def OptaCompetitionSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def OptaCompetitionSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.opta import OptaCompetitionSchema
@@ -199,9 +195,7 @@ def OptaCompetitionSchema(*args, **kwargs):  # type: ignore
     return OptaCompetitionSchema(*args, **kwargs)
 
 
-def OptaGameSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def OptaGameSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.opta import OptaGameSchema
@@ -214,9 +208,7 @@ def OptaGameSchema(*args, **kwargs):  # type: ignore
     return OptaGameSchema(*args, **kwargs)
 
 
-def OptaPlayerSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def OptaPlayerSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.opta import OptaPlayerSchema
@@ -229,9 +221,7 @@ def OptaPlayerSchema(*args, **kwargs):  # type: ignore
     return OptaPlayerSchema(*args, **kwargs)
 
 
-def OptaTeamSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def OptaTeamSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.opta import OptaTeamSchema
@@ -244,9 +234,7 @@ def OptaTeamSchema(*args, **kwargs):  # type: ignore
     return OptaTeamSchema(*args, **kwargs)
 
 
-def OptaEventSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def OptaEventSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.opta import OptaEventSchema

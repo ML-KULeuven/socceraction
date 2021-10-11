@@ -59,7 +59,7 @@ action is a tuple of the same twelve attributes:
     -  the player's body part used for the action
 
 
-Start and End Locations 
+Start and End Locations
   SPADL uses a standardized coordinate system with the origin on the bottom
   left of the pitch, and a uniform field of 105m x 68m. The direction of play
   corresponds to the direction in the original event stream data, but can be
@@ -72,7 +72,7 @@ Start and End Locations
   :align: center
 
 
-Action Type 
+Action Type
   The action type attribute can have 22 possible values. These are `pass`,
   `cross`, `throw-in`, `crossed free kick`, `short free kick`, `crossed
   corner`, `short corner`, `take-on`, `foul`, `tackle`, `interception`,
@@ -88,7 +88,7 @@ Result
   the sideline. Some action types can have special results. These are
   `offside` (for passes, corners and free-kicks), `own goal` (for shots), and
   `yellow card` and `red card` (for fouls).
-Body Part 
+Body Part
   The body part attribute can have 4 possible values. These are `foot`, `head`,
   `other` and `none`. For Wyscout, which does not distinguish between the
   head and other body parts a special body part `head/other` is used.
@@ -98,10 +98,10 @@ Example
 -------
 
 Socceraction currently supports converters for `Opta <https://www.optasports.com>`__,
-`Wyscout <https://www.wyscout.com>`__, and `StatsBomb <https://www.statsbomb.com>`__ event stream data. 
+`Wyscout <https://www.wyscout.com>`__, and `StatsBomb <https://www.statsbomb.com>`__ event stream data.
 The Opta converter is also compatible with derived formats, such as the ones
 used by WhoScored and Stats Perform. We'll use StatsBomb data to illustrate
-the API, but the API of the other converters is identical. 
+the API, but the API of the other converters is identical.
 
 First, we load the event stream data of the third
 place play-off in the 2018 FIFA World Cup between Belgium and England.
@@ -155,7 +155,7 @@ Here is the same phase visualized using the ``matplotsoccer`` package
 .. image:: eden_hazard_goal_spadl.png
    :align: center
 
-.. seealso:: 
+.. seealso::
 
   This `notebook`__ gives an example of the complete pipeline to download public
   StatsBomb data and convert it to the SPADL format.
@@ -259,7 +259,7 @@ in the 2018 FIFA world cup looks like in the Atomic-SPADL format.
    :align: center
 
 
-.. seealso:: 
+.. seealso::
 
   This `notebook`__ gives an example of the complete pipeline to download public
   StatsBomb data and convert it to the Atommic-SPADL format.

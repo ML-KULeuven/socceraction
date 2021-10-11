@@ -62,8 +62,7 @@ class AtomicVAEP(VAEP):
         Discovery & Data Mining, pp. 1851-1861. 2019.
     .. [2] Tom Decroos, Pieter Robberechts and Jesse Davis.
         "Introducing Atomic-SPADL: A New Way to Represent Event Stream Data".
-        DTAI Sports Analytics Blog.
-        https://dtai.cs.kuleuven.be/sports/blog/introducing-atomic-spadl:-a-new-way-to-represent-event-stream-data
+        DTAI Sports Analytics Blog. https://dtai.cs.kuleuven.be/sports/blog/introducing-atomic-spadl:-a-new-way-to-represent-event-stream-data  # noqa
         May 2020.
     """
 
@@ -76,6 +75,6 @@ class AtomicVAEP(VAEP):
         self,
         xfns: Optional[List[fs.FeatureTransfomer]] = None,
         nb_prev_actions: int = 3,
-    ):
+    ) -> None:
         xfns = xfns_default if xfns is None else xfns
         super().__init__(xfns, nb_prev_actions)

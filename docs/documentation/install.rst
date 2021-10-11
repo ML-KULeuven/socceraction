@@ -9,7 +9,7 @@ the introduction.
 Install Python
 ==============
 
-Being a Python library, socceraction requires Python. 
+Being a Python library, socceraction requires Python.
 Currently, socceraction supports Python version 3.5 -- 3.8.
 Get the latest version of Python at https://www.python.org/downloads/ or with
 your operating system's package manager.
@@ -39,7 +39,7 @@ This is the recommended way to install socceraction. Simply run this simple comm
 		 $ python -m pip install socceraction
 
 
-You might have to install pip first. The easiest method is to use the `standalone pip installer`_.  
+You might have to install pip first. The easiest method is to use the `standalone pip installer`_.
 
 .. _pip: https://pip.pypa.io/
 .. _standalone pip installer: https://pip.pypa.io/en/latest/installing/#installing-with-get-pip-py

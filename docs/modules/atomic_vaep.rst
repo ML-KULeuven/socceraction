@@ -8,7 +8,7 @@ Atomic-VAEP
 Model
 -----
 
-.. autosummary:: 
+.. autosummary::
   :toctree: generated
   :nosignatures:
   :template: class.rst
@@ -18,7 +18,7 @@ Model
 Utility functions
 -----------------
 
-.. autosummary:: 
+.. autosummary::
   :toctree: generated
   :nosignatures:
   :template: module.rst
@@ -27,4 +27,3 @@ Utility functions
   socceraction.atomic.vaep.features
   socceraction.atomic.vaep.labels
   socceraction.atomic.vaep.formula
-

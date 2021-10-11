@@ -1,367 +1,367 @@
 [
-    {
-        "url": "http://omo.akamai.opta.net/competition.php?feed_type=f1_packed&competition=8&season_id=2017",
-        "data": {
-            "bin_ver": 8,
-            "OptaFeed": {
-                "OptaDocument": {
-                    "@attributes": {
-                        "competition_id": 8,
-                        "season_id": 2017,
-                        "fixture_count": 380,
-                        "competition_name": "English Premier League",
-                        "compObj": {
-                            "type": "COMP",
-                            "full": "English Premier League",
-                            "short": "Premier League",
-                            "abbr": "EPL"
-                        }
-                    },
-                    "MatchData": [
-                        {
-                            "@attributes": {
-                                "uID": "g918893"
-                            },
-                            "MatchInfo": {
-                                "@attributes": {
-                                    "MatchDay": "1",
-                                    "Period": "FullTime",
-                                    "GroupName": "",
-                                    "RoundNumber": "0",
-                                    "RoundType": 0,
-                                    "Venue_id": "3250",
-                                    "match_type_id": 1,
-                                    "MatchType": "Regular",
-                                    "Leg": 0,
-                                    "FirstLegId": 0,
-                                    "LegWinner": 0,
-                                    "MatchWinner": 3,
-                                    "NextMatch": 0,
-                                    "NextMatchLoser": 0,
-                                    "NextMatchPosition": "",
-                                    "game_state": ""
-                                },
-                                "Date": "2017-08-11 19:45:00",
-                                "dateObj": {
-                                    "locale": "2017-08-11T19:45:00.000Z",
-                                    "utc": "2017-08-11T19:45:00.000Z"
-                                },
-                                "TZ": "BST",
-                                "TBC": 0
-                            },
-                            "TeamData": [
-                                {
-                                    "@attributes": {
-                                        "TeamRef": "t3",
-                                        "Score": "4",
-                                        "Side": "Home",
-                                        "HalfScore": 2,
-                                        "NinetyScore": null,
-                                        "ExtraScore": null,
-                                        "PenaltyScore": null
-                                    },
-                                    "Goal": [
-                                        {
-                                            "@attributes": {
-                                                "Period": "FirstHalf",
-                                                "PlayerRef": "p50175",
-                                                "Type": "Goal"
-                                            }
-                                        },
-                                        {
-                                            "@attributes": {
-                                                "Period": "FirstHalf",
-                                                "PlayerRef": "p59966",
-                                                "Type": "Goal"
-                                            }
-                                        },
-                                        {
-                                            "@attributes": {
-                                                "Period": "SecondHalf",
-                                                "PlayerRef": "p44346",
-                                                "Type": "Goal"
-                                            }
-                                        },
-                                        {
-                                            "@attributes": {
-                                                "Period": "SecondHalf",
-                                                "PlayerRef": "p41792",
-                                                "Type": "Goal"
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "@attributes": {
-                                        "TeamRef": "t13",
-                                        "Score": "3",
-                                        "Side": "Away",
-                                        "HalfScore": 2,
-                                        "NinetyScore": null,
-                                        "ExtraScore": null,
-                                        "PenaltyScore": null
-                                    },
-                                    "Goal": [
-                                        {
-                                            "@attributes": {
-                                                "Period": "FirstHalf",
-                                                "PlayerRef": "p101668",
-                                                "Type": "Goal"
-                                            }
-                                        },
-                                        {
-                                            "@attributes": {
-                                                "Period": "FirstHalf",
-                                                "PlayerRef": "p78412",
-                                                "Type": "Goal"
-                                            }
-                                        },
-                                        {
-                                            "@attributes": {
-                                                "Period": "SecondHalf",
-                                                "PlayerRef": "p101668",
-                                                "Type": "Goal"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ],
-                            "Stat": [
-                                {
-                                    "@value": 3250,
-                                    "@attributes": {
-                                        "Type": "Venue"
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    "Team": [
-                        {
-                            "@attributes": {
-                                "uID": "t1"
-                            },
-                            "Name": "Manchester United",
-                            "nameObj": {
-                                "name": "Manchester United",
-                                "short": "Man Utd",
-                                "abbr": "MNU"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t3"
-                            },
-                            "Name": "Arsenal",
-                            "nameObj": {
-                                "name": "Arsenal",
-                                "short": "Arsenal",
-                                "abbr": "ARS"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t4"
-                            },
-                            "Name": "Newcastle United",
-                            "nameObj": {
-                                "name": "Newcastle United",
-                                "short": "Newcastle",
-                                "abbr": "NEW"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t6"
-                            },
-                            "Name": "Tottenham Hotspur",
-                            "nameObj": {
-                                "name": "Tottenham Hotspur",
-                                "short": "Tottenham",
-                                "abbr": "TOT"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t8"
-                            },
-                            "Name": "Chelsea",
-                            "nameObj": {
-                                "name": "Chelsea",
-                                "short": "Chelsea",
-                                "abbr": "CHL"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t11"
-                            },
-                            "Name": "Everton",
-                            "nameObj": {
-                                "name": "Everton",
-                                "short": "Everton",
-                                "abbr": "EVT"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t13"
-                            },
-                            "Name": "Leicester City",
-                            "nameObj": {
-                                "name": "Leicester City",
-                                "short": "Leicester",
-                                "abbr": "LCR"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t14"
-                            },
-                            "Name": "Liverpool",
-                            "nameObj": {
-                                "name": "Liverpool",
-                                "short": "Liverpool",
-                                "abbr": "LIV"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t20"
-                            },
-                            "Name": "Southampton",
-                            "nameObj": {
-                                "name": "Southampton",
-                                "short": "Southampton",
-                                "abbr": "STN"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t21"
-                            },
-                            "Name": "West Ham United",
-                            "nameObj": {
-                                "name": "West Ham United",
-                                "short": "West Ham",
-                                "abbr": "WHU"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t31"
-                            },
-                            "Name": "Crystal Palace",
-                            "nameObj": {
-                                "name": "Crystal Palace",
-                                "short": "Crystal Palace",
-                                "abbr": "CPL"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t35"
-                            },
-                            "Name": "West Bromwich Albion",
-                            "nameObj": {
-                                "name": "West Bromwich Albion",
-                                "short": "West Brom",
-                                "abbr": "WBA"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t36"
-                            },
-                            "Name": "Brighton and Hove Albion",
-                            "nameObj": {
-                                "name": "Brighton and Hove Albion",
-                                "short": "Brighton",
-                                "abbr": "BHA"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t38"
-                            },
-                            "Name": "Huddersfield Town",
-                            "nameObj": {
-                                "name": "Huddersfield Town",
-                                "short": "Huddersfield",
-                                "abbr": "HUD"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t43"
-                            },
-                            "Name": "Manchester City",
-                            "nameObj": {
-                                "name": "Manchester City",
-                                "short": "Man City",
-                                "abbr": "MNC"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t57"
-                            },
-                            "Name": "Watford",
-                            "nameObj": {
-                                "name": "Watford",
-                                "short": "Watford",
-                                "abbr": "WAT"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t80"
-                            },
-                            "Name": "Swansea City",
-                            "nameObj": {
-                                "name": "Swansea City",
-                                "short": "Swansea",
-                                "abbr": "SWA"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t90"
-                            },
-                            "Name": "Burnley",
-                            "nameObj": {
-                                "name": "Burnley",
-                                "short": "Burnley",
-                                "abbr": "BNY"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t91"
-                            },
-                            "Name": "Bournemouth",
-                            "nameObj": {
-                                "name": "Bournemouth",
-                                "short": "Bournemouth",
-                                "abbr": "AFC"
-                            }
-                        },
-                        {
-                            "@attributes": {
-                                "uID": "t110"
-                            },
-                            "Name": "Stoke City",
-                            "nameObj": {
-                                "name": "Stoke City",
-                                "short": "Stoke",
-                                "abbr": "STO"
-                            }
-                        }
-                    ]
-                }
+  {
+    "url": "http://omo.akamai.opta.net/competition.php?feed_type=f1_packed&competition=8&season_id=2017",
+    "data": {
+      "bin_ver": 8,
+      "OptaFeed": {
+        "OptaDocument": {
+          "@attributes": {
+            "competition_id": 8,
+            "season_id": 2017,
+            "fixture_count": 380,
+            "competition_name": "English Premier League",
+            "compObj": {
+              "type": "COMP",
+              "full": "English Premier League",
+              "short": "Premier League",
+              "abbr": "EPL"
             }
-        },
-        "last_updated": 1516394038616,
-        "last_request": 1516394038616
-    }
+          },
+          "MatchData": [
+            {
+              "@attributes": {
+                "uID": "g918893"
+              },
+              "MatchInfo": {
+                "@attributes": {
+                  "MatchDay": "1",
+                  "Period": "FullTime",
+                  "GroupName": "",
+                  "RoundNumber": "0",
+                  "RoundType": 0,
+                  "Venue_id": "3250",
+                  "match_type_id": 1,
+                  "MatchType": "Regular",
+                  "Leg": 0,
+                  "FirstLegId": 0,
+                  "LegWinner": 0,
+                  "MatchWinner": 3,
+                  "NextMatch": 0,
+                  "NextMatchLoser": 0,
+                  "NextMatchPosition": "",
+                  "game_state": ""
+                },
+                "Date": "2017-08-11 19:45:00",
+                "dateObj": {
+                  "locale": "2017-08-11T19:45:00.000Z",
+                  "utc": "2017-08-11T19:45:00.000Z"
+                },
+                "TZ": "BST",
+                "TBC": 0
+              },
+              "TeamData": [
+                {
+                  "@attributes": {
+                    "TeamRef": "t3",
+                    "Score": "4",
+                    "Side": "Home",
+                    "HalfScore": 2,
+                    "NinetyScore": null,
+                    "ExtraScore": null,
+                    "PenaltyScore": null
+                  },
+                  "Goal": [
+                    {
+                      "@attributes": {
+                        "Period": "FirstHalf",
+                        "PlayerRef": "p50175",
+                        "Type": "Goal"
+                      }
+                    },
+                    {
+                      "@attributes": {
+                        "Period": "FirstHalf",
+                        "PlayerRef": "p59966",
+                        "Type": "Goal"
+                      }
+                    },
+                    {
+                      "@attributes": {
+                        "Period": "SecondHalf",
+                        "PlayerRef": "p44346",
+                        "Type": "Goal"
+                      }
+                    },
+                    {
+                      "@attributes": {
+                        "Period": "SecondHalf",
+                        "PlayerRef": "p41792",
+                        "Type": "Goal"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@attributes": {
+                    "TeamRef": "t13",
+                    "Score": "3",
+                    "Side": "Away",
+                    "HalfScore": 2,
+                    "NinetyScore": null,
+                    "ExtraScore": null,
+                    "PenaltyScore": null
+                  },
+                  "Goal": [
+                    {
+                      "@attributes": {
+                        "Period": "FirstHalf",
+                        "PlayerRef": "p101668",
+                        "Type": "Goal"
+                      }
+                    },
+                    {
+                      "@attributes": {
+                        "Period": "FirstHalf",
+                        "PlayerRef": "p78412",
+                        "Type": "Goal"
+                      }
+                    },
+                    {
+                      "@attributes": {
+                        "Period": "SecondHalf",
+                        "PlayerRef": "p101668",
+                        "Type": "Goal"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "Stat": [
+                {
+                  "@value": 3250,
+                  "@attributes": {
+                    "Type": "Venue"
+                  }
+                }
+              ]
+            }
+          ],
+          "Team": [
+            {
+              "@attributes": {
+                "uID": "t1"
+              },
+              "Name": "Manchester United",
+              "nameObj": {
+                "name": "Manchester United",
+                "short": "Man Utd",
+                "abbr": "MNU"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t3"
+              },
+              "Name": "Arsenal",
+              "nameObj": {
+                "name": "Arsenal",
+                "short": "Arsenal",
+                "abbr": "ARS"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t4"
+              },
+              "Name": "Newcastle United",
+              "nameObj": {
+                "name": "Newcastle United",
+                "short": "Newcastle",
+                "abbr": "NEW"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t6"
+              },
+              "Name": "Tottenham Hotspur",
+              "nameObj": {
+                "name": "Tottenham Hotspur",
+                "short": "Tottenham",
+                "abbr": "TOT"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t8"
+              },
+              "Name": "Chelsea",
+              "nameObj": {
+                "name": "Chelsea",
+                "short": "Chelsea",
+                "abbr": "CHL"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t11"
+              },
+              "Name": "Everton",
+              "nameObj": {
+                "name": "Everton",
+                "short": "Everton",
+                "abbr": "EVT"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t13"
+              },
+              "Name": "Leicester City",
+              "nameObj": {
+                "name": "Leicester City",
+                "short": "Leicester",
+                "abbr": "LCR"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t14"
+              },
+              "Name": "Liverpool",
+              "nameObj": {
+                "name": "Liverpool",
+                "short": "Liverpool",
+                "abbr": "LIV"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t20"
+              },
+              "Name": "Southampton",
+              "nameObj": {
+                "name": "Southampton",
+                "short": "Southampton",
+                "abbr": "STN"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t21"
+              },
+              "Name": "West Ham United",
+              "nameObj": {
+                "name": "West Ham United",
+                "short": "West Ham",
+                "abbr": "WHU"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t31"
+              },
+              "Name": "Crystal Palace",
+              "nameObj": {
+                "name": "Crystal Palace",
+                "short": "Crystal Palace",
+                "abbr": "CPL"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t35"
+              },
+              "Name": "West Bromwich Albion",
+              "nameObj": {
+                "name": "West Bromwich Albion",
+                "short": "West Brom",
+                "abbr": "WBA"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t36"
+              },
+              "Name": "Brighton and Hove Albion",
+              "nameObj": {
+                "name": "Brighton and Hove Albion",
+                "short": "Brighton",
+                "abbr": "BHA"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t38"
+              },
+              "Name": "Huddersfield Town",
+              "nameObj": {
+                "name": "Huddersfield Town",
+                "short": "Huddersfield",
+                "abbr": "HUD"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t43"
+              },
+              "Name": "Manchester City",
+              "nameObj": {
+                "name": "Manchester City",
+                "short": "Man City",
+                "abbr": "MNC"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t57"
+              },
+              "Name": "Watford",
+              "nameObj": {
+                "name": "Watford",
+                "short": "Watford",
+                "abbr": "WAT"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t80"
+              },
+              "Name": "Swansea City",
+              "nameObj": {
+                "name": "Swansea City",
+                "short": "Swansea",
+                "abbr": "SWA"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t90"
+              },
+              "Name": "Burnley",
+              "nameObj": {
+                "name": "Burnley",
+                "short": "Burnley",
+                "abbr": "BNY"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t91"
+              },
+              "Name": "Bournemouth",
+              "nameObj": {
+                "name": "Bournemouth",
+                "short": "Bournemouth",
+                "abbr": "AFC"
+              }
+            },
+            {
+              "@attributes": {
+                "uID": "t110"
+              },
+              "Name": "Stoke City",
+              "nameObj": {
+                "name": "Stoke City",
+                "short": "Stoke",
+                "abbr": "STO"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "last_updated": 1516394038616,
+    "last_request": 1516394038616
+  }
 ]

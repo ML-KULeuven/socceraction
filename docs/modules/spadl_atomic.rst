@@ -45,4 +45,3 @@ Utility functions
   socceraction.atomic.spadl.add_names
   socceraction.atomic.spadl.actiontypes_df
   socceraction.atomic.spadl.bodyparts_df
-

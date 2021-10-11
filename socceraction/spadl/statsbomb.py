@@ -324,9 +324,7 @@ def _parse_miscontrol_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def StatsBombLoader(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def StatsBombLoader(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import StatsBombLoader  # type: ignore
@@ -339,9 +337,7 @@ def StatsBombLoader(*args, **kwargs):  # type: ignore
     return StatsBombLoader(*args, **kwargs)
 
 
-def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
-    # noqa
-    # pylint: disable=W0621,C0415
+def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:  # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import extract_player_games
@@ -354,9 +350,7 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     return extract_player_games(events)
 
 
-def StatsBombCompetitionSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def StatsBombCompetitionSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import StatsBombCompetitionSchema
@@ -369,9 +363,7 @@ def StatsBombCompetitionSchema(*args, **kwargs):  # type: ignore
     return StatsBombCompetitionSchema(*args, **kwargs)
 
 
-def StatsBombGameSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def StatsBombGameSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import StatsBombGameSchema
@@ -384,9 +376,7 @@ def StatsBombGameSchema(*args, **kwargs):  # type: ignore
     return StatsBombGameSchema(*args, **kwargs)
 
 
-def StatsBombPlayerSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def StatsBombPlayerSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import StatsBombPlayerSchema
@@ -399,9 +389,7 @@ def StatsBombPlayerSchema(*args, **kwargs):  # type: ignore
     return StatsBombPlayerSchema(*args, **kwargs)
 
 
-def StatsBombTeamSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def StatsBombTeamSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import StatsBombTeamSchema
@@ -414,9 +402,7 @@ def StatsBombTeamSchema(*args, **kwargs):  # type: ignore
     return StatsBombTeamSchema(*args, **kwargs)
 
 
-def StatsBombEventSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def StatsBombEventSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.statsbomb import StatsBombEventSchema

@@ -14,7 +14,7 @@ def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> pd.DataFram
     ----------
     actions : pd.DataFrame
         The actions of a game.
-    nr_actions : int (default = 10)
+    nr_actions : int, default=10  # noqa: DAR103
         Number of actions after the current action to consider.
 
     Returns
@@ -58,7 +58,7 @@ def concedes(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> pd.DataFr
     ----------
     actions : pd.DataFrame
         The actions of a game.
-    nr_actions : int (default = 10)
+    nr_actions : int, default=10  # noqa: DAR103
         Number of actions after the current action to consider.
 
     Returns

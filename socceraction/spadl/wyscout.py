@@ -61,7 +61,7 @@ def get_tagsdf(events: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    df_events : pd.DataFrame
+    events : pd.DataFrame
         Wyscout event dataframe
 
     Returns
@@ -158,12 +158,12 @@ def _make_position_vars(event_id: int, positions: List[Dict[str, Optional[float]
     return pd.Series([event_id, start_x, start_y, end_x, end_y])
 
 
-def make_new_positions(events_df: pd.DataFrame) -> pd.DataFrame:
+def make_new_positions(events: pd.DataFrame) -> pd.DataFrame:
     """Extract the start and end coordinates for each action.
 
     Parameters
     ----------
-    df_events : pd.DataFrame
+    events : pd.DataFrame
         Wyscout event dataframe
 
     Returns
@@ -171,13 +171,13 @@ def make_new_positions(events_df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Wyscout event dataframe with start and end coordinates for each action.
     """
-    new_positions = events_df[['event_id', 'positions']].apply(
+    new_positions = events[['event_id', 'positions']].apply(
         lambda x: _make_position_vars(x[0], x[1]), axis=1
     )
     new_positions.columns = ['event_id', 'start_x', 'start_y', 'end_x', 'end_y']
-    events_df = pd.merge(events_df, new_positions, left_on='event_id', right_on='event_id')
-    events_df = events_df.drop('positions', axis=1)
-    return events_df
+    events = pd.merge(events, new_positions, left_on='event_id', right_on='event_id')
+    events = events.drop('positions', axis=1)
+    return events
 
 
 def fix_wyscout_events(df_events: pd.DataFrame) -> pd.DataFrame:
@@ -676,13 +676,13 @@ def fix_actions(df_actions: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    df_events : pd.DataFrame
-        Wyscout event dataframe
+    df_actions : pd.DataFrame
+        SPADL actions dataframe
 
     Returns
     -------
     pd.DataFrame
-        Wyscout event dataframe with end coordinates for shots
+        SpADL actions dataframe with end coordinates for shots
     """
     df_actions['start_x'] = df_actions['start_x'] * spadlconfig.field_length / 100
     df_actions['start_y'] = (
@@ -836,9 +836,7 @@ def adjust_goalkick_result(df_actions: pd.DataFrame) -> pd.DataFrame:
     return df_actions
 
 
-def WyscoutLoader(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def WyscoutLoader(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import WyscoutLoader  # type: ignore
@@ -851,9 +849,7 @@ def WyscoutLoader(*args, **kwargs):  # type: ignore
     return WyscoutLoader(*args, **kwargs)
 
 
-def PublicWyscoutLoader(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def PublicWyscoutLoader(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import PublicWyscoutLoader  # type: ignore
@@ -866,9 +862,7 @@ def PublicWyscoutLoader(*args, **kwargs):  # type: ignore
     return PublicWyscoutLoader(*args, **kwargs)
 
 
-def WyscoutCompetitionSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def WyscoutCompetitionSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import WyscoutCompetitionSchema
@@ -881,9 +875,7 @@ def WyscoutCompetitionSchema(*args, **kwargs):  # type: ignore
     return WyscoutCompetitionSchema(*args, **kwargs)
 
 
-def WyscoutGameSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def WyscoutGameSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import WyscoutGameSchema
@@ -896,9 +888,7 @@ def WyscoutGameSchema(*args, **kwargs):  # type: ignore
     return WyscoutGameSchema(*args, **kwargs)
 
 
-def WyscoutPlayerSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def WyscoutPlayerSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import WyscoutPlayerSchema
@@ -911,9 +901,7 @@ def WyscoutPlayerSchema(*args, **kwargs):  # type: ignore
     return WyscoutPlayerSchema(*args, **kwargs)
 
 
-def WyscoutTeamSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def WyscoutTeamSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import WyscoutTeamSchema
@@ -926,9 +914,7 @@ def WyscoutTeamSchema(*args, **kwargs):  # type: ignore
     return WyscoutTeamSchema(*args, **kwargs)
 
 
-def WyscoutEventSchema(*args, **kwargs):  # type: ignore
-    # noqa
-    # pylint: disable=W0621,C0415
+def WyscoutEventSchema(*args, **kwargs):  # type: ignore # noqa
     from warnings import warn
 
     from socceraction.data.wyscout import WyscoutEventSchema

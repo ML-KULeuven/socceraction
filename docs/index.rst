@@ -6,9 +6,9 @@ Socceraction documentation
 the individual actions performed by soccer players using event stream data. It
 contains the following components:
 
-- Convertors for event stream data to the **SPADL** and **atomic-SPADL** formats, which are unified and expressive languages for on-the-ball player actions.   
-- An implementation of the **VAEP** framework to value actions on their expected impact on the score line.  
-- An implementation of the **xT** framework to value ball-progressing actions using a possession-based Markov model.  
+- Convertors for event stream data to the **SPADL** and **atomic-SPADL** formats, which are unified and expressive languages for on-the-ball player actions.
+- An implementation of the **VAEP** framework to value actions on their expected impact on the score line.
+- An implementation of the **xT** framework to value ball-progressing actions using a possession-based Markov model.
 
 .. image:: actions_bra-bel.png
   :width: 600

@@ -25,7 +25,7 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
     ----------
     fs : list(callable)
         A list of feature transformers.
-    nb_prev_actions : int (default = 3)
+    nb_prev_actions : int, default=3  # noqa: DAR103
         The number of previous actions included in the game state.
 
     Returns
@@ -70,14 +70,14 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         A DataFrame with the actions of a game.
-    nb_prev_actions : int (default = 3)
+    nb_prev_actions : int, default=3  # noqa: DAR103
         The number of previous actions included in the game state.
 
     Returns
     -------
-    list(pd.DataFrame)
+    GameStates
          The <nb_prev_actions> previous actions for each action.
     """
     states = [actions]
@@ -96,14 +96,14 @@ def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
 
     Parameters
     ----------
-    gamestates : list(pd.DataFrame)
+    gamestates : GameStates
         The game states of a game.
     home_team_id : int
         The ID of the home team.
 
     Returns
     -------
-    list(pd.DataFrame)
+    GameStates
         The game states with all actions performed left to right.
     """
     a0 = gamestates[0]
@@ -126,7 +126,7 @@ def simple(actionfn: Callable[[Actions], Features]) -> FeatureTransfomer:
 
     Returns
     -------
-    callable
+    FeatureTransfomer
         A feature transformer that operates on game states.
     """
 
@@ -153,12 +153,12 @@ def actiontype(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'type_id' of each action.
     """
     return actions[['type_id']]
@@ -170,12 +170,12 @@ def actiontype_onehot(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A one-hot encoding of each action's type.
     """
     X = pd.DataFrame()
@@ -191,12 +191,12 @@ def result(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'result_id' of each action.
     """
     return actions[['result_id']]
@@ -208,12 +208,12 @@ def result_onehot(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The one-hot encoding of each action's result.
     """
     X = pd.DataFrame()
@@ -229,12 +229,12 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The one-hot encoding of each action's type and result.
     """
     res = result_onehot.__wrapped__(actions)  # type: ignore
@@ -252,12 +252,12 @@ def bodypart(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'bodypart_id' of each action.
     """
     return actions[['bodypart_id']]
@@ -269,12 +269,12 @@ def bodypart_onehot(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The one-hot encoding of each action's bodypart.
     """
     X = pd.DataFrame()
@@ -299,12 +299,12 @@ def time(actions: Actions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : Actions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'period_id', 'time_seconds' and 'time_seconds_overall' when each
         action was performed.
     """
@@ -319,12 +319,12 @@ def startlocation(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'start_x' and 'start_y' location of each action.
     """
     return actions[['start_x', 'start_y']]
@@ -336,12 +336,12 @@ def endlocation(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'end_x' and 'end_y' location of each action.
     """
     return actions[['end_x', 'end_y']]
@@ -359,12 +359,12 @@ def startpolar(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
@@ -384,12 +384,12 @@ def endpolar(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
@@ -407,12 +407,12 @@ def movement(actions: SPADLActions) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The horizontal ('dx'), vertical ('dy') and total ('movement') distance
         covered by each action.
     """
@@ -435,12 +435,12 @@ def team(gamestates: GameStates) -> Features:
 
     Parameters
     ----------
-    gamestates : pd.DataFrame
+    gamestates : GameStates
         The game states of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column 'team_ai' for each <nb_prev_actions> indicating
         whether the team that performed action a0 is in possession.
     """
@@ -451,17 +451,17 @@ def team(gamestates: GameStates) -> Features:
     return teamdf
 
 
-def time_delta(gamestates: GameStates) -> pd.DataFrame:
+def time_delta(gamestates: GameStates) -> Features:
     """Get the number of seconds between the last and previous actions.
 
     Parameters
     ----------
-    gamestates : pd.DataFrame
+    gamestates : GameStates
         The game states of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column 'time_delta_i' for each <nb_prev_actions>
         containing the number of seconds between action ai and action a0.
     """
@@ -477,12 +477,12 @@ def space_delta(gamestates: GameStates) -> Features:
 
     Parameters
     ----------
-    gamestates : pd.DataFrame
+    gamestates : GameStates
         The gamestates of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column for the horizontal ('dx_a0i'), vertical
         ('dy_a0i') and total ('mov_a0i') distance covered between each
         <nb_prev_actions> action ai and action a0.
@@ -506,12 +506,12 @@ def goalscore(gamestates: GameStates) -> Features:
 
     Parameters
     ----------
-    gamestates : pd.DataFrame
+    gamestates : GameStates
         The gamestates of a game.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         The number of goals scored by the team performing the last action of the
         game state ('goalscore_team'), by the opponent ('goalscore_opponent'),
         and the goal difference between both teams ('goalscore_diff').

@@ -12,11 +12,11 @@ scoring and conceding as a result of an action. Thus, VAEP values a game state a
 
 .. math::
 
-  V(S_i) = P_{score}(S_i, t) - P_{concede}(S_i, t), 
+  V(S_i) = P_{score}(S_i, t) - P_{concede}(S_i, t),
 
 where :math:`P_{score}(S_i, t)` and :math:`P_{concede}(S_i, t)` are the
 probabilities that team :math:`t` which possesses the ball in state
-:math:`S_i` will respectively score or concede in the next 10 actions. 
+:math:`S_i` will respectively score or concede in the next 10 actions.
 
 The remaining challenge is to "learn" :math:`P_{score}(S_i, t)` and :math:`P_{concede}(S_i, t)`.
 That is, a gradient boosted binary classifier is
@@ -45,7 +45,7 @@ include the distance covered and time elapsed between consecutive actions.
 The third category of features captures the current game context by looking at
 things such as the time remaining in the match and the current score differential.
 The table below gives an overview the features that can be used to encoded
-a gamestate :math:`S_i = \{a_{i-2}, a_{i−1}, a_i\}`: 
+a gamestate :math:`S_i = \{a_{i-2}, a_{i−1}, a_i\}`:
 
 +----------------------------------------------------+------------------------+------------------------------------------------------------------------------------------------------------------------------+
 | Transformer                                        | Feature                | Description                                                                                                                  |
@@ -142,7 +142,7 @@ state.
 
 
 Using these probabilities, VAEP defines the *offensive value* of an action as
-the change in scoring probability before and after the action. 
+the change in scoring probability before and after the action.
 
 .. math::
 
@@ -175,11 +175,11 @@ that action's offensive value and defensive value.
     values = vaepformula.value(actions, Y_hat["scores"], Y_hat["concedes"])
 
 
-.. seealso:: 
+.. seealso::
 
   A set of notebooks illustrates the complete pipeline to train and
   apply a VAEP model:
-  
+
   1. `compute features and labels`__
   2. `estimate scoring and conceding probabilities`__
   3. `compute VAEP values and top players`__

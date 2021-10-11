@@ -246,4 +246,3 @@ Initial release.
 .. _0.0.3: https://github.com/ML-KULeuven/socceraction/compare/v0.0.2...v0.0.3
 .. _0.0.2: https://github.com/ML-KULeuven/socceraction/compare/v0.0.1...v0.0.2
 .. _0.0.1: https://github.com/ML-KULeuven/socceraction/releases/tag/v0.0.1
-

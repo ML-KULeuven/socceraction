@@ -34,7 +34,7 @@ def offensive_value(
         SPADL action.
     scores : pd.Series
         The probability of scoring from each corresponding game state.
-    scores : pd.Series
+    concedes : pd.Series
         The probability of conceding from each corresponding game state.
 
     Returns
@@ -80,7 +80,7 @@ def defensive_value(
         SPADL action.
     scores : pd.Series
         The probability of scoring from each corresponding game state.
-    scores : pd.Series
+    concedes : pd.Series
         The probability of conceding from each corresponding game state.
 
     Returns
@@ -120,9 +120,9 @@ def value(
     ----------
     actions : pd.DataFrame
         SPADL action.
-    scores : pd.Series
+    Pscores : pd.Series
         The probability of scoring from each corresponding game state.
-    scores : pd.Series
+    Pconcedes : pd.Series
         The probability of conceding from each corresponding game state.
 
     Returns

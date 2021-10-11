@@ -18,7 +18,7 @@ paying attention. It would seem unfair to penalize the player who provided the
 pass in such a circumstance. Hence, it can be useful to generalize over
 possible results of an action to arrive at an action's "expected value".
 
-The combination of Atomic-SPADL and VAEP accomodates this alternative viewpoint.  
+The combination of Atomic-SPADL and VAEP accomodates this alternative viewpoint.
 Atomic-SPADL removes the "result" attribute from SPADL and adds a few new
 action and event types. This affects the features that can be computed to
 represent each game state. By default, Atomic-VAEP uses the following
@@ -79,11 +79,11 @@ portion of luck) should not dramatically alter an assessment of a player. In
 our prior work comparing VAEP to xT, one advantage of xT was that it produced
 more stable ratings. Using Atomic-SPADL helps alleviate this weakness.
 
-.. seealso:: 
+.. seealso::
 
   A set of notebooks illustrates the complete pipeline to train and
   apply an Atomic-VAEP model:
-  
+
   1. `compute features and labels`__
   2. `estimate scoring and conceding probabilities`__
   3. `compute VAEP values and top players`__

@@ -1,8 +1,8 @@
+"""Script for downloading test data."""
 import os
 import shutil
 import ssl
 import sys
-from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import urlopen, urlretrieve
@@ -23,12 +23,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 _data_dir = os.path.dirname(__file__)
 
 
-def read_json_file(filename):
-    with open(filename, 'rb') as json_file:
-        return BytesIO(json_file.read()).getvalue().decode('unicode_escape')
-
-
-def download_statsbomb_data():
+def download_statsbomb_data() -> None:
     dataset_url = 'https://github.com/statsbomb/open-data/archive/master.zip'
 
     tmp_datafolder = os.path.join(_data_dir, 'statsbomb', 'tmp')
@@ -50,7 +45,7 @@ def download_statsbomb_data():
     shutil.rmtree(tmp_datafolder)
 
 
-def convert_statsbomb_data():
+def convert_statsbomb_data() -> None:
     seasons = {
         3: '2018',
     }
@@ -65,9 +60,8 @@ def convert_statsbomb_data():
 
     # View all available competitions
     df_competitions = SBL.competitions()
-    df_selected_competitions = df_competitions[
-        df_competitions.competition_name.isin(leagues.keys())
-    ]
+    selected_competitions = df_competitions.competition_name.isin(leagues.keys())
+    df_selected_competitions = df_competitions.loc[selected_competitions]
 
     for competition in df_selected_competitions.itertuples():
         # Get games from all selected competition
@@ -111,7 +105,7 @@ def convert_statsbomb_data():
             )
 
 
-def download_wyscout_data():
+def download_wyscout_data() -> None:
     # https://figshare.com/collections/Soccer_match_event_dataset/4415000/5
     dataset_urls = dict(
         competitions='https://ndownloader.figshare.com/files/15073685',
@@ -136,7 +130,7 @@ def download_wyscout_data():
                 zip_file.extractall(raw_datafolder)
 
 
-def convert_wyscout_data():
+def convert_wyscout_data() -> None:
     seasons = {
         10078: '2018',
     }
@@ -151,9 +145,8 @@ def convert_wyscout_data():
 
     # View all available competitions
     df_competitions = WYL.competitions()
-    df_selected_competitions = df_competitions[
-        df_competitions.competition_id.isin(leagues.keys())
-    ]
+    selected_competitions = df_competitions.competition_id.isin(leagues.keys())
+    df_selected_competitions = df_competitions.loc[selected_competitions]
 
     for competition in df_selected_competitions.itertuples():
         # Get games from all selected competition

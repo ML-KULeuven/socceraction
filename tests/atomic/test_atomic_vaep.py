@@ -7,7 +7,7 @@ from socceraction.atomic.vaep import features as fs
 
 
 @pytest.mark.slow
-def test_predict(sb_worldcup_data):
+def test_predict(sb_worldcup_data: pd.HDFStore) -> None:
     # Convert to atomic actions
     games = sb_worldcup_data['games']
     atomic_actions = {

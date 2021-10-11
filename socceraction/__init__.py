@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# noqa: D205, D400
 """
 SoccerAction
-~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 SoccerAction is a Python package for objectively quantifying the impact of the
 individual actions performed by soccer players using event stream data.

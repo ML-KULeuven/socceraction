@@ -4,9 +4,6 @@ private-notebooks*
 experiments/
 tests/datasets/*
 !tests/data/download.py
-docs/modules/generated/
-
-.python-version
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -67,6 +64,7 @@ var/
 .installed.cfg
 *.egg
 .venv/
+.python-version
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -81,6 +79,8 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.mypy_cache/
+.nox/
 .coverage
 .coverage.*
 .cache
@@ -97,6 +97,7 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+docs/modules/generated/
 
 # PyBuilder
 target/

@@ -14,26 +14,22 @@ tests/datasets/wyscout_public/spadl-WorldCup-2018.h5:
 	$(BIN)python tests/datasets/download.py wyscout
 
 test: tests/datasets/statsbomb/spadl-WorldCup-2018.h5 tests/datasets/wyscout_public/spadl-WorldCup-2018.h5
-	$(BIN)pytest --verbosity=2 --showlocals --strict-markers --log-level=DEBUG $(args)
+	nox -rs tests -- $(args)
+
+mypy:
+	nox -rs mypy -- $(args)
 
 lint:
-	$(BIN)flake8 --jobs 4 --statistics --show-source $(CODE) tests
-	$(BIN)pylint --rcfile=setup.cfg --exit-zero $(CODE)
-	$(BIN)pydocstyle socceraction
-	$(BIN)mypy $(CODE)
-	$(BIN)black --target-version py36 --skip-string-normalization --line-length=99 --check $(CODE) tests
+	nox -rs lint -- $(args)
 
 pretty:
-	$(BIN)isort $(CODE) tests
-	$(BIN)black --target-version py36 --skip-string-normalization --line-length=99 $(CODE) tests
-	$(BIN)unify --in-place --recursive $(CODE) tests
+	nox -rs precommit -- $(args)
 
 notebooks:
 	$(BIN)python -m nbconvert --execute --inplace --config=default.json public-notebooks/*.ipynb
 
 precommit_install:
-	echo '#!/bin/sh\nmake lint test\n' > .git/hooks/pre-commit
-	chmod +x .git/hooks/pre-commit
+	nox -rs pre-commit -- install
 
 bump_major:
 	$(BIN)bumpversion major

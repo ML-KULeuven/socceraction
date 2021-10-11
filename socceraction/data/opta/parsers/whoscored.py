@@ -35,7 +35,7 @@ class WhoScoredParser(OptaParser):
         competition_id: Optional[int] = None,
         season_id: Optional[int] = None,
         game_id: Optional[int] = None,
-    ):
+    ) -> None:
         with open(path, 'rt', encoding='utf-8') as fh:
             self.root = json.load(fh)
             self.position_mapping = lambda formation, x, y: 'Unknown'

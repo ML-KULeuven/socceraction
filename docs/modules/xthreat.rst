@@ -8,7 +8,7 @@ xT
 Model
 -----
 
-.. autosummary:: 
+.. autosummary::
   :toctree: generated
   :nosignatures:
   :template: class.rst
@@ -18,7 +18,7 @@ Model
 Utility functions
 -----------------
 
-.. autosummary:: 
+.. autosummary::
   :toctree: generated
   :nosignatures:
 

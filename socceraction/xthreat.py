@@ -5,9 +5,9 @@ import os
 import warnings
 from typing import Callable, List, Optional, Tuple
 
-import numpy as np  # type: ignore
+import numpy as np
 import numpy.typing as npt
-import pandas as pd  # type: ignore
+import pandas as pd
 from pandera.typing import DataFrame, Series
 from sklearn.exceptions import NotFittedError
 
@@ -265,7 +265,7 @@ class ExpectedThreat:
         https://karun.in/blog/expected-threat.html
     """
 
-    def __init__(self, l: int = N, w: int = M, eps: float = 1e-5):
+    def __init__(self, l: int = N, w: int = M, eps: float = 1e-5) -> None:
         self.l = l
         self.w = w
         self.eps = eps

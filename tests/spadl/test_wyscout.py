@@ -9,21 +9,21 @@ from socceraction.spadl import wyscout as wy
 
 
 class TestSpadlConvertor:
-    def setup_method(self):
+    def setup_method(self) -> None:
         data_dir = os.path.join(
             os.path.dirname(__file__), os.pardir, 'datasets', 'wyscout_public', 'raw'
         )
         self.WSL = PublicWyscoutLoader(root=data_dir, download=False)
         self.events = self.WSL.events(2058007)
 
-    def test_convert_to_actions(self):
+    def test_convert_to_actions(self) -> None:
         df_actions = wy.convert_to_actions(self.events, 5629)
         assert len(df_actions) > 0
         SPADLSchema.validate(df_actions)
         assert (df_actions.game_id == 2058007).all()
         assert ((df_actions.team_id == 5629) | (df_actions.team_id == 12913)).all()
 
-    def test_insert_interception_passes(self):
+    def test_insert_interception_passes(self) -> None:
         event = pd.DataFrame(
             [
                 {
@@ -49,7 +49,7 @@ class TestSpadlConvertor:
         assert actions.at[0, 'result_id'] == spadl.results.index('success')
         assert actions.at[1, 'result_id'] == spadl.results.index('owngoal')
 
-    def test_convert_own_goal(self):
+    def test_convert_own_goal(self) -> None:
         events_morira = self.WSL.events(2057961)
         own_goal_event = events_morira[events_morira.event_id == 258696133]
         own_goal_actions = wy.convert_to_actions(own_goal_event, 16216)
@@ -58,8 +58,10 @@ class TestSpadlConvertor:
         assert own_goal_actions.iloc[0]['result_id'] == spadl.results.index('owngoal')
         assert own_goal_actions.iloc[0]['bodypart_id'] == spadl.bodyparts.index('foot')
 
-    def test_convert_own_goal_touches(self):
-        """Own goals resulting from bad touch events in the Wyscout event
+    def test_convert_own_goal_touches(self) -> None:
+        """Tests conversion of own goals following a bad touch.
+
+        Own goals resulting from bad touch events in the Wyscout event
         streams should be included in the SPADL representation.
         """
         # An own goal from the game between Leicester and Stoke on 24 Feb 2018.

@@ -12,8 +12,8 @@ Implementation of the SPADL language.
      - Module for converting event stream data to SPADL actions
    * - :ref:`Atomic-SPADL <api-spadl-atomic>`
      - Module for converting SPADL actions to atomic actions
- 
- 
+
+
 .. toctree::
   :hidden:
 

@@ -22,7 +22,7 @@ class OptaParser(ABC):
         Path of the data file.
     """
 
-    def __init__(self, path: str, **kwargs: Any):
+    def __init__(self, path: str, **kwargs: Any) -> None:
         raise NotImplementedError
 
     def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
@@ -101,7 +101,7 @@ class OptaJSONParser(OptaParser):
         Path of the data file.
     """
 
-    def __init__(self, path: str, **kwargs: Any):
+    def __init__(self, path: str, **kwargs: Any) -> None:
         with open(path, 'rt', encoding='utf-8') as fh:
             self.root = json.load(fh)
 
@@ -115,7 +115,7 @@ class OptaXMLParser(OptaParser):
         Path of the data file.
     """
 
-    def __init__(self, path: str, **kwargs: Any):
+    def __init__(self, path: str, **kwargs: Any) -> None:
         with open(path, 'rb') as fh:
             self.root = objectify.fromstring(fh.read())
 
@@ -135,7 +135,7 @@ def assertget(dictionary: Dict[str, Any], key: str) -> Any:
 
     Returns
     -------
-    value
+    Any
         Returns the value for the specified key if the key is in the dictionary.
 
     Raises

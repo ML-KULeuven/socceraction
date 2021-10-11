@@ -8,7 +8,7 @@ Wyscout
 Serializers
 ------------
 
-.. autosummary:: 
+.. autosummary::
   :toctree: generated
   :nosignatures:
   :template: class.rst
@@ -19,7 +19,7 @@ Serializers
 Schema
 ------
 
-.. autosummary:: 
+.. autosummary::
   :toctree: generated
   :nosignatures:
   :template: schema.rst

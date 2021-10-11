@@ -32,7 +32,7 @@ underlying intuition, consider the pass below:
 
 |
 
-The effect of the pass was to change the game state:  
+The effect of the pass was to change the game state:
 
 .. image:: action_changes_gamestate.png
    :alt: example action changes gamestate
@@ -43,12 +43,12 @@ The effect of the pass was to change the game state:
 The figure on the left shows the game in state :math:`S_{i−1}
 = \{a_1,\dots,a_{i−1}\}`, right before Benzema passes to Valverde and the one
 on the right shows the game in state :math:`S_i = \{a_1, \ldots, a_{i−1},
-a_i\}` just after Valverde successfully controlled the pass.  
+a_i\}` just after Valverde successfully controlled the pass.
 
 Consequently, a natural way to assess the usefulness of an action is to assign
 a value to each game state. Then an action’s usefulness is simply the
 difference between the post-action game state :math:`S_i` and pre-action game
-state :math:`S_{i-1}`. This can be expressed as: 
+state :math:`S_{i-1}`. This can be expressed as:
 
 .. math::
   U(a_i) = V(S_i) - V(S_{i-1}),
@@ -73,6 +73,3 @@ individual actions performed by soccer players: xT, VAEP and Atomic-VAEP.
   xT
   VAEP
   Atomic_VAEP
-
-
-

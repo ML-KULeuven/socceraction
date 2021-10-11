@@ -13,9 +13,9 @@ Data
        Perform and WhoScored
    * - :ref:`Wyscout <api-data-wyscout>`
      - Module for loading Wyscout event data
- 
- 
- 
+
+
+
 .. toctree::
   :hidden:
   :maxdepth: 1
