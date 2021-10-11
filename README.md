@@ -1,66 +1,61 @@
 <div align="center">
 	<img src="docs/_static/logo_white.png" height="200">
-	<p>
-		<b>Convert soccer event stream data to the SPADL format<br/>and value on-the-ball player actions</b>
-	</p>
-	<br>
-	<br>
+  <b>Convert soccer event stream data to the SPADL format<br/>and value on-the-ball player actions.</b>
+	<br/>
+	<br/>
 </div>
 
-[![pypi](https://badge.fury.io/py/socceraction.svg)](https://pypi.org/project/socceraction)
-[![Python: 3.6+](https://img.shields.io/badge/Python-3.7.1+-blue.svg)](https://pypi.org/project/socceraction)
+[![PyPi](https://img.shields.io/pypi/v/socceraction.svg)](https://pypi.org/project/socceraction)
+[![Python Version: 3.7.1+](https://img.shields.io/badge/Python-3.7.1+-blue.svg)](https://pypi.org/project/socceraction)
 [![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
-[![Build Status](https://img.shields.io/github/workflow/status/ML-KULeuven/socceraction/CI?label=build&logo=github&style=flat-square)](https://github.com/ML-KULeuven/socceraction/actions)
+[![Build Status](https://img.shields.io/github/workflow/status/ML-KULeuven/socceraction/CI?label=build&logo=github)](https://github.com/ML-KULeuven/socceraction/actions?workflow=CI)
+[![Read the Docs](https://img.shields.io/readthedocs/socceraction/latest.svg?label=Read%20the%20Docs)](https://socceraction.readthedocs.io)
 [![Code coverage](https://codecov.io/gh/ML-KULeuven/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/ML-KULeuven/socceraction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-This is a Python package for objectively quantifying the impact of the individual actions performed by soccer players using event stream data. It contains the following components:
+---
 
-- Converters for event stream data to the **SPADL** and **atomic-SPADL** formats, which are unified and expressive languages for on-the-ball player actions.   [Read more »](docs/documentation/SPADL.rst)
-- An implementation of the **VAEP** and **Atomic-VAEP** frameworks to value actions on their expected impact on the score line.  [Read more »](docs/documentation/VAEP.rst)
-- An implementation of the **xT** framework to value ball-progressing actions using a possession-based Markov model.  [Read more »](docs/documentation/xT.rst)
+Socceraction is a Python package for objectively quantifying the impact of the individual actions performed by soccer players using event stream data. The general idea is to assign a value to each on-the-ball action based on the action's impact on the game outcome, while accounting for the context in which the action happened. The video below gives a quick two-minute introduction to action values.
 
-<br/>
 <p align="center">
-  <img src="docs/actions_bra-bel.png" width="650" title="Example Brazil-Belgium">
+  <iframe width="609" height="342" src="https://www.youtube.com/embed/S_WJwqfVNis" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" style="margin: 20px;" allowfullscreen></iframe>
 </p>
+
+## Features
+
+Socceraction contains the following components:
+
+- Loaders for StatsBomb, Opta, Wyscout, StatsPerform and WhoScored data that enable **loading events and corresponding metadata** as Pandas DataFrames using a unified data model. [Read more »](docs/modules/data.rst)
+- Converters for event stream data to the **SPADL** and **atomic-SPADL** formats, which are unified and expressive languages for on-the-ball player actions. [Read more »](docs/documentation/SPADL.rst)
+- An implementation of the **xT** framework to value ball-progressing actions using a possession-based Markov model. [Read more »](docs/documentation/xT.rst)
+- An implementation of the **VAEP** and **Atomic-VAEP** frameworks to value actions on their expected impact on the score line. [Read more »](docs/documentation/VAEP.rst)
 
 ## Installation / Getting started
 
-The recommended way to install `socceraction` is to simply use pip:
+The recommended way to install `socceraction` is to simply use pip. The latest version officially supports Python 3.7.1 - 3.9.
 
 ```sh
 $ pip install socceraction
 ```
 
-`socceraction` officially supports Python 3.7.1--3.9.
+The folder [`public-notebooks`](public-notebooks) provides a demo of the full pipeline from raw StatsBomb event stream data to action values and player ratings. More detailed installation/usage instructions can be found in [the documentation](https://socceraction.readthedocs.io/en/latest/).
 
-The folder [`public-notebooks`](public-notebooks) provides a demo of the full pipeline from raw StatsBomb data to action values and player ratings. More detailed installation/usage instructions can be found in [the documentation](https://socceraction.readthedocs.io/en/latest/).
+## Contributing
+
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. However, be aware that socceraction is not actively developed. It's primary use is to enable reproducibility of our research. If you believe there is a feature missing, feel free to raise a feature request, but please do be aware that the overwhelming likelihood is that your feature request will not be accepted.
+To learn more on how to contribute, see the [Contributor Guide](CONTRIBUTING.rst).
 
 ## Research
 
-For more information about SPADL and VAEP, read our SIGKDD paper **"Actions Speak Louder Than Goals: Valuing Player Actions in Soccer"** available on ACM (https://dl.acm.org/citation.cfm?doid=3292500.3330758) and Arxiv (https://arxiv.org/abs/1802.07127).
+If you make use of this package in your research, please consider citing the following papers:
 
-For more information about xT, read Karun Singh's blog post: https://karun.in/blog/expected-threat.html
+- Decroos, Tom, Lotte Bransen, Jan Van Haaren, and Jesse Davis. **Actions speak louder than goals: Valuing player actions in soccer.** In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 1851-1861. 2019. <br/>[ [link](http://doi.acm.org/10.1145/3292500.3330758) | [bibtex](docs/_static/decroos19.bibtex) ]
 
-If you make use of this package or the ideas in our paper, please use the following citation:
-```
-@inproceedings{Decroos2019actions,
- author = {Decroos, Tom and Bransen, Lotte and Van Haaren, Jan and Davis, Jesse},
- title = {Actions Speak Louder Than Goals: Valuing Player Actions in Soccer},
- booktitle = {Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
- series = {KDD '19},
- year = {2019},
- isbn = {978-1-4503-6201-6},
- location = {Anchorage, AK, USA},
- pages = {1851--1861},
- numpages = {11},
- url = {http://doi.acm.org/10.1145/3292500.3330758},
- doi = {10.1145/3292500.3330758},
- acmid = {3330758},
- publisher = {ACM},
- address = {New York, NY, USA},
- keywords = {event stream data, probabilistic classification, soccer match data, sports analytics, valuing actions},
-} 
-```
+- Maaike Van Roy, Pieter Robberechts, Tom Decroos, and Jesse Davis. **Valuing on-the-ball actions in soccer: a critical comparison of XT and VAEP.** In Proceedings of the AAAI-20 Workshop on Artifical Intelligence in Team Sports. AI in Team Sports Organising Committee, 2020. <br/>[ [link](https://limo.libis.be/primo-explore/fulldisplay?docid=LIRIAS2913207&context=L&vid=KULeuven&search_scope=ALL_CONTENT&tab=all_content_tab&lang=en_US) | [bibtex](docs/_static/vanroy20.bibtex) ]
+
+The Expected Threat (xT) framework was originally introduced by Karun Singh on his [blog](https://karun.in/blog/expected-threat.html) in 2019.
+
+## License
+
+Distributed under the terms of the [MIT](https://opensource.org/licenses/MIT) license,
+socceraction is free and open source software. Although not strictly required, we appreciate it if you include a link to this repo or cite our research in your work if you make use of socceraction.
