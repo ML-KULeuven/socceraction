@@ -44,7 +44,7 @@ coverage = { version="^5.5", extras=["toml"] }
 pytest-cov = "^3.0.0"
 flake8-black = "^0.2.3"
 flake8-bugbear = "^21.9.2"
-flake8-annotations = "^2.6.2"
+flake8-annotations = "^2.7.0"
 flake8-docstrings = "^1.6.0"
 darglint = "^1.8.0"
 flake8-isort = "^4.0.0"
