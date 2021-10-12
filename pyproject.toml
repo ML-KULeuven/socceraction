@@ -38,7 +38,7 @@ types-requests = "^2.25.10"
 xgboost = "^1.4.2"
 tables = "^3.6.1"
 Sphinx = "^4.2.0"
-furo = "^2021.9.22"
+furo = "^2021.10.9"
 tqdm = "^4.62.3"
 coverage = { version="^6.0", extras=["toml"] }
 pytest-cov = "^3.0.0"
