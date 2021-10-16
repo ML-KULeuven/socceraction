@@ -134,7 +134,7 @@ def test_action_prob(spadl_actions: DataFrame[SPADLSchema]) -> None:
     assert move_prob.shape == (5, 10)
     assert np.any(shot_prob > 0)
     assert np.any(move_prob > 0)
-    assert np.all((move_prob + shot_prob) == 1)
+    assert np.all(((move_prob + shot_prob) == 1) | ((move_prob + shot_prob) == 0))
 
 
 def test_scoring_prob(spadl_actions: DataFrame[SPADLSchema]) -> None:

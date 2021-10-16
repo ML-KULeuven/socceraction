@@ -203,11 +203,11 @@ def create_spadl(game_id: int, home_team_id: int) -> None:
     # convert to spadl
     spadl_json = os.path.join(spadl_datafolder, 'spadl.json')
     df_actions = statsbomb.convert_to_actions(events, home_team_id)
-    df_actions.head(n=100).to_json(spadl_json, orient='records')
+    df_actions.head(n=200).to_json(spadl_json, orient='records')
     # convert to atomic spadl
     atomic_spadl_json = os.path.join(spadl_datafolder, 'atomic_spadl.json')
     df_atomic_actions = atomicspadl.convert_to_atomic(df_actions)
-    df_atomic_actions.head(n=100).to_json(atomic_spadl_json, orient='records')
+    df_atomic_actions.head(n=200).to_json(atomic_spadl_json, orient='records')
 
 
 if __name__ == '__main__':
