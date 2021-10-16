@@ -16,7 +16,7 @@ from socceraction.spadl.schema import SPADLSchema
 
 try:
     from scipy.interpolate import interp2d  # type: ignore
-except ImportError:
+except ImportError:  # pragma: no cover
     interp2d = None
 
 M: int = 12
@@ -375,7 +375,7 @@ class ExpectedThreat:
 
     def predict(
         self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False
-    ) -> npt.NDArray[np.float64]:
+    ) -> npt.NDArray[np.float64]:  # pragma: no cover
         """Compute the xT values for the given actions.
 
         xT should only be used to value actions that move the ball and also

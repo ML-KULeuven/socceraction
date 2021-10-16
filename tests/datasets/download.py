@@ -11,6 +11,7 @@ from zipfile import ZipFile, is_zipfile
 import pandas as pd
 from tqdm import tqdm
 
+import socceraction.atomic.spadl as atomicspadl
 import socceraction.spadl as spadl
 import socceraction.spadl.statsbomb as statsbomb
 import socceraction.spadl.wyscout as wyscout
@@ -190,6 +191,25 @@ def convert_wyscout_data() -> None:
             )
 
 
+def create_spadl(game_id: int, home_team_id: int) -> None:
+    spadl_datafolder = os.path.join(_data_dir, 'spadl')
+    if not os.path.exists(spadl_datafolder):
+        os.makedirs(spadl_datafolder, exist_ok=True)
+
+    # load events
+    free_open_data_remote = 'https://raw.githubusercontent.com/statsbomb/open-data/master/data/'
+    SBL = StatsBombLoader(root=free_open_data_remote, getter='remote')
+    events = SBL.events(game_id)
+    # convert to spadl
+    spadl_json = os.path.join(spadl_datafolder, 'spadl.json')
+    df_actions = statsbomb.convert_to_actions(events, home_team_id)
+    df_actions.head(n=100).to_json(spadl_json, orient='records')
+    # convert to atomic spadl
+    atomic_spadl_json = os.path.join(spadl_datafolder, 'atomic_spadl.json')
+    df_atomic_actions = atomicspadl.convert_to_atomic(df_actions)
+    df_atomic_actions.head(n=100).to_json(atomic_spadl_json, orient='records')
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == 'statsbomb':
         download_statsbomb_data()
@@ -197,3 +217,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == 'wyscout':
         download_wyscout_data()
         convert_wyscout_data()
+    if len(sys.argv) == 1 or sys.argv[1] == 'spadl':
+        create_spadl(8657, 777)

@@ -56,6 +56,9 @@ sphinx-autobuild = "^2021.3.14"
 pep8-naming = "^0.12.1"
 Pygments = "^2.10.0"
 
+[tool.pytest.ini_options]
+filterwarnings = "ignore::DeprecationWarning:tables.*:"
+
 [tool.coverage.paths]
 source = ["socceraction", "*/site-packages"]
 
