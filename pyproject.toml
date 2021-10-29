@@ -29,7 +29,7 @@ pytest-mock = "^3.6.1"
 [tool.poetry.dev-dependencies]
 black = "^21.9b0"
 bumpversion = "^0.6.0"
-flake8 = "^3.9.2"
+flake8 = "^4.0.1"
 mypy = "^0.910"
 pylint = "^2.11.1"
 pytest = "^6.2.5"
