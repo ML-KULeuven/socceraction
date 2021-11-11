@@ -3,3 +3,4 @@ nox==2021.10.1
 nox-poetry==0.8.6
 poetry==1.1.11
 virtualenv==20.10.0
+pyparsing<3
