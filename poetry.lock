@@ -585,8 +585,19 @@ pytz = ">=2017.3"
 test = ["hypothesis (>=3.58)", "pytest (>=6.0)", "pytest-xdist"]
 
 [[package]]
+name = "pandas-stubs"
+version = "1.2.0.39"
+description = "Type annotations for Pandas"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+typing-extensions = {version = ">=3.7.4.3", markers = "python_version < \"3.8\""}
+
+[[package]]
 name = "pandera"
-version = "0.7.2"
+version = "0.8.0"
 description = "A light-weight and flexible validation package for pandas data structures."
 category = "main"
 optional = false
@@ -596,15 +607,21 @@ python-versions = ">=3.7"
 numpy = ">=1.9.0"
 packaging = ">=20.0"
 pandas = ">=1.0"
+pandas-stubs = "*"
 pyarrow = "*"
 typing-extensions = {version = ">=3.7.4.3", markers = "python_version < \"3.8\""}
 typing-inspect = ">=0.6.0"
 wrapt = "*"
 
 [package.extras]
-all = ["pyyaml (>=5.1)", "hypothesis (>=5.41.1)", "frictionless", "scipy", "black"]
+all = ["pyyaml (>=5.1)", "pyspark", "frictionless", "koalas", "modin", "ray (<=1.7.0)", "black", "hypothesis (>=5.41.1)", "dask", "scipy"]
+dask = ["dask"]
 hypotheses = ["scipy"]
 io = ["pyyaml (>=5.1)", "black", "frictionless"]
+koalas = ["koalas", "pyspark"]
+modin = ["modin", "ray (<=1.7.0)", "dask"]
+modin-dask = ["modin", "dask"]
+modin-ray = ["modin", "ray (<=1.7.0)"]
 strategies = ["hypothesis (>=5.41.1)"]
 
 [[package]]
@@ -1267,7 +1284,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.11"
-content-hash = "27b42efe35e9fe5625e4eb3c8b7df7eba136d8fd25ad2577b23284f1982c5282"
+content-hash = "df2fdc1c3b95af864293a68a1f50d8dd7f44a4e53c4f1a19bd72f29e138d413a"
 
 [metadata.files]
 alabaster = [
@@ -1767,9 +1784,13 @@ pandas = [
     {file = "pandas-1.3.4-cp39-cp39-win_amd64.whl", hash = "sha256:a51528192755f7429c5bcc9e80832c517340317c861318fea9cea081b57c9afd"},
     {file = "pandas-1.3.4.tar.gz", hash = "sha256:a2aa18d3f0b7d538e21932f637fbfe8518d085238b429e4790a35e1e44a96ffc"},
 ]
+pandas-stubs = [
+    {file = "pandas-stubs-1.2.0.39.tar.gz", hash = "sha256:a9b8d95e41a58657918e9b0b665808925e86fbc508bc59e50e99e384b28f6498"},
+    {file = "pandas_stubs-1.2.0.39-py3-none-any.whl", hash = "sha256:d6cb03bc2c4681c678450c35b66d735937763e5c74cdeb8388fc706eb8d52d7d"},
+]
 pandera = [
-    {file = "pandera-0.7.2-py3-none-any.whl", hash = "sha256:7502c81548b19c575b6d11444ca83c28df097405fa7bba32be6d4285c213d82d"},
-    {file = "pandera-0.7.2.tar.gz", hash = "sha256:448b1f59c1f832d4bde1434c0de918fc9cc7a2f000165052781b9a5bdc8f9190"},
+    {file = "pandera-0.8.0-py3-none-any.whl", hash = "sha256:ac0c4bc28fe3ea55adb86379ae1e2f45f3120b0ba4b639b36d491da0f9ae28d0"},
+    {file = "pandera-0.8.0.tar.gz", hash = "sha256:86fc52ffde43ed3c16e646f74f12e4c9f39eac029abea9fa16d93d4a47be75b1"},
 ]
 pathspec = [
     {file = "pathspec-0.9.0-py2.py3-none-any.whl", hash = "sha256:7d15c4ddb0b5c802d161efc417ec1a2558ea2653c2e8ad9c19098201dc1c993a"},
