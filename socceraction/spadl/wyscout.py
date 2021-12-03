@@ -3,6 +3,7 @@
 from typing import Any, Dict, List, Optional, Set
 
 import pandas as pd  # type: ignore
+from pandera.typing import DataFrame
 
 from . import config as spadlconfig
 from .base import (
@@ -11,6 +12,7 @@ from .base import (
     _fix_direction_of_play,
     min_dribble_length,
 )
+from .schema import SPADLSchema
 
 ###################################
 # WARNING: HERE BE DRAGONS
@@ -20,7 +22,7 @@ from .base import (
 ###################################
 
 
-def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPADLSchema]:
     """
     Convert Wyscout events to SPADL actions.
 
@@ -49,7 +51,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     for col in [c for c in actions.columns.values if c != 'original_event_id']:
         if '_id' in col:
             actions[col] = actions[col].astype(int)
-    return actions
+    return actions.pipe(DataFrame[SPADLSchema])
 
 
 def _get_tag_set(tags: List[Dict[str, Any]]) -> Set[int]:
@@ -528,7 +530,7 @@ def create_df_actions(df_events: pd.DataFrame) -> pd.DataFrame:
     return df_actions
 
 
-def determine_bodypart_id(event: pd.DataFrame) -> pd.DataFrame:
+def determine_bodypart_id(event: pd.DataFrame) -> int:
     """Determint eht body part for each action.
 
     Parameters
@@ -552,7 +554,7 @@ def determine_bodypart_id(event: pd.DataFrame) -> pd.DataFrame:
     return spadlconfig.bodyparts.index(body_part)
 
 
-def determine_type_id(event: pd.DataFrame) -> pd.DataFrame:  # noqa: C901
+def determine_type_id(event: pd.DataFrame) -> int:  # noqa: C901
     """Determine the type of each action.
 
     This function transforms the Wyscout events, sub_events and tags
@@ -565,8 +567,8 @@ def determine_type_id(event: pd.DataFrame) -> pd.DataFrame:  # noqa: C901
 
     Returns
     -------
-    str
-        A string representing the SciSports action type
+    int
+        id of the action type
     """
     if event['own_goal']:
         action_type = 'bad_touch'
@@ -615,7 +617,7 @@ def determine_type_id(event: pd.DataFrame) -> pd.DataFrame:  # noqa: C901
     return spadlconfig.actiontypes.index(action_type)
 
 
-def determine_result_id(event: pd.DataFrame) -> pd.DataFrame:  # noqa: C901
+def determine_result_id(event: pd.DataFrame) -> int:  # noqa: C901
     """Determine the result of each event.
 
     Parameters

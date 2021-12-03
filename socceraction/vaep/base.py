@@ -8,7 +8,7 @@ xfns_default : list(callable)
 
 """
 import math
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -87,7 +87,7 @@ class VAEP:
 
     def __init__(
         self,
-        xfns: Optional[List[Callable[[List[pd.DataFrame]], pd.DataFrame]]] = None,
+        xfns: Optional[List[fs.FeatureTransfomer]] = None,
         nb_prev_actions: int = 3,
     ) -> None:
         self.__models: Dict[str, Any] = {}
@@ -95,7 +95,7 @@ class VAEP:
         self.yfns = [self._lab.scores, self._lab.concedes]
         self.nb_prev_actions = nb_prev_actions
 
-    def compute_features(self, game: pd.Series, game_actions: pd.DataFrame) -> pd.DataFrame:
+    def compute_features(self, game: pd.Series, game_actions: fs.Actions) -> pd.DataFrame:
         """
         Transform actions to the feature-based representation of game states.
 
@@ -111,13 +111,13 @@ class VAEP:
         features : pd.DataFrame
             Returns the feature-based representation of each game state in the game.
         """
-        game_actions_with_names = self._spadlcfg.add_names(game_actions)
+        game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
         gamestates = self._fs.gamestates(game_actions_with_names, self.nb_prev_actions)
         gamestates = self._fs.play_left_to_right(gamestates, game.home_team_id)
         return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
 
     def compute_labels(
-        self, game: pd.Series, game_actions: pd.DataFrame  # pylint: disable=W0613
+        self, game: pd.Series, game_actions: fs.Actions  # pylint: disable=W0613
     ) -> pd.DataFrame:
         """
         Compute the labels for each game state in the given game.
@@ -134,7 +134,7 @@ class VAEP:
         labels : pd.DataFrame
             Returns the labels of each game state in the game.
         """
-        game_actions_with_names = self._spadlcfg.add_names(game_actions)
+        game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
         return pd.concat([fn(game_actions_with_names) for fn in self.yfns], axis=1)
 
     def fit(
@@ -295,7 +295,7 @@ class VAEP:
         return Y_hat
 
     def rate(
-        self, game: pd.Series, game_actions: pd.DataFrame, game_states: pd.DataFrame = None
+        self, game: pd.Series, game_actions: fs.Actions, game_states: Optional[fs.Features] = None
     ) -> pd.DataFrame:
         """
         Compute the VAEP rating for the given game states.
@@ -324,7 +324,7 @@ class VAEP:
         if not self.__models:
             raise NotFittedError()
 
-        game_actions_with_names = self._spadlcfg.add_names(game_actions)
+        game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
         if game_states is None:
             game_states = self.compute_features(game, game_actions)
 

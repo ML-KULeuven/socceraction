@@ -98,9 +98,9 @@ class TestWhoscoredLoader:
             feeds={'whoscored': '{game_id}.json'},
         )
 
-    def test_competitions(self) -> None:
-        df_competitions = self.loader.competitions()
-        assert len(df_competitions) == 0
+    # def test_competitions(self) -> None:
+    #     df_competitions = self.loader.competitions()
+    #     assert len(df_competitions) == 0
 
     def test_games(self) -> None:
         df_games = self.loader.games(23, 2018)

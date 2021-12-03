@@ -3,12 +3,14 @@
 from typing import Any, Dict, Tuple
 
 import pandas as pd  # type: ignore
+from pandera.typing import DataFrame
 
 from . import config as spadlconfig
 from .base import _add_dribbles, _fix_clearances, _fix_direction_of_play
+from .schema import SPADLSchema
 
 
-def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPADLSchema]:
     """
     Convert StatsBomb events to SPADL actions.
 
@@ -75,7 +77,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     for col in [c for c in actions.columns.values if c != 'original_event_id']:
         if '_id' in col:
             actions[col] = actions[col].astype(int)
-    return actions
+    return actions.pipe(DataFrame[SPADLSchema])
 
 
 Location = Tuple[float, float]

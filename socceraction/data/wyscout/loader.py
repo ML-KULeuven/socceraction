@@ -4,7 +4,7 @@ import os
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from urllib.parse import urlparse
 from urllib.request import urlopen, urlretrieve
 from zipfile import ZipFile, is_zipfile
@@ -180,7 +180,7 @@ class PublicWyscoutLoader(EventDataLoader):
                 'competition_gender',
                 'season_name',
             ]
-        ]
+        ].pipe(DataFrame[WyscoutCompetitionSchema])
 
     def games(self, competition_id: int, season_id: int) -> DataFrame[WyscoutGameSchema]:
         """Return a dataframe with all available games in a season.
@@ -200,7 +200,7 @@ class PublicWyscoutLoader(EventDataLoader):
         """
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_matches'])
         df_matches = pd.DataFrame(self.get(path))
-        return _convert_games(df_matches)
+        return _convert_games(df_matches).pipe(DataFrame[WyscoutGameSchema])
 
     def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
         competition_id, season_id = self._match_index.loc[game_id, ['competition_id', 'season_id']]
@@ -225,7 +225,7 @@ class PublicWyscoutLoader(EventDataLoader):
         df_teams = pd.DataFrame(self.get(os.path.join(self.root, 'teams.json'))).set_index('wyId')
         df_teams_match_id = pd.DataFrame(self._lineups(game_id))['teamId']
         df_teams_match = df_teams.loc[df_teams_match_id].reset_index()
-        return _convert_teams(df_teams_match)
+        return _convert_teams(df_teams_match).pipe(DataFrame[WyscoutTeamSchema])
 
     def players(self, game_id: int) -> DataFrame[WyscoutPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
@@ -278,11 +278,11 @@ class PublicWyscoutLoader(EventDataLoader):
         path_events = os.path.join(
             self.root, self._index.at[(competition_id, season_id), 'db_events']
         )
-        mp = _get_minutes_played(lineups, self.get(path_events))
+        mp = _get_minutes_played(lineups, cast(List[Dict[str, Any]], self.get(path_events)))
         df_players_match = pd.merge(df_players_match, mp, on='player_id', how='right')
         df_players_match['minutes_played'] = df_players_match.minutes_played.fillna(0)
         df_players_match['game_id'] = game_id
-        return df_players_match
+        return df_players_match.pipe(DataFrame[WyscoutPlayerSchema])
 
     def events(self, game_id: int) -> DataFrame[WyscoutEventSchema]:
         """Return a dataframe with the event stream of a game.
@@ -301,7 +301,9 @@ class PublicWyscoutLoader(EventDataLoader):
         competition_id, season_id = self._match_index.loc[game_id, ['competition_id', 'season_id']]
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), 'db_events'])
         df_events = pd.DataFrame(self.get(path)).set_index('matchId')
-        return _convert_events(df_events.loc[game_id].reset_index())
+        return _convert_events(df_events.loc[game_id].reset_index()).pipe(
+            DataFrame[WyscoutEventSchema]
+        )
 
 
 class WyscoutLoader(EventDataLoader):
@@ -426,7 +428,9 @@ class WyscoutLoader(EventDataLoader):
         df_competitions = _convert_competitions(pd.DataFrame(competitions))
         df_seasons = _convert_seasons(pd.DataFrame(seasons))
         # Merge into a single dataframe
-        return pd.merge(df_competitions, df_seasons, on='competition_id')
+        return pd.merge(df_competitions, df_seasons, on='competition_id').pipe(
+            DataFrame[WyscoutCompetitionSchema]
+        )
 
     def games(self, competition_id: int, season_id: int) -> DataFrame[WyscoutGameSchema]:
         """Return a dataframe with all available games in a season.
@@ -482,7 +486,7 @@ class WyscoutLoader(EventDataLoader):
             except FileNotFoundError:
                 warnings.warn('File not found: {}'.format(gamedetails_url))
         df_games = _convert_games(pd.DataFrame(games))
-        return df_games
+        return df_games.pipe(DataFrame[WyscoutGameSchema])
 
     def teams(self, game_id: int) -> DataFrame[WyscoutTeamSchema]:
         """Return a dataframe with both teams that participated in a game.
@@ -510,7 +514,7 @@ class WyscoutLoader(EventDataLoader):
             raise ParseError('{} should contain a list of matches'.format(path))
         teams = [t['team'] for t in obj['teams'].values() if t.get('team')]
         df_teams = _convert_teams(pd.DataFrame(teams))
-        return df_teams
+        return df_teams.pipe(DataFrame[WyscoutTeamSchema])
 
     def players(self, game_id: int) -> DataFrame[WyscoutPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
@@ -551,7 +555,7 @@ class WyscoutLoader(EventDataLoader):
         )
         df_players['minutes_played'] = df_players.minutes_played.fillna(0)
         df_players['game_id'] = game_id
-        return df_players
+        return df_players.pipe(DataFrame[WyscoutPlayerSchema])
 
     def events(self, game_id: int) -> DataFrame[WyscoutEventSchema]:
         """Return a dataframe with the event stream of a game.
@@ -578,7 +582,7 @@ class WyscoutLoader(EventDataLoader):
         if not isinstance(obj, dict) or 'events' not in obj:
             raise ParseError('{} should contain a list of events'.format(path))
         df_events = _convert_events(pd.DataFrame(obj['events']))
-        return df_events
+        return df_events.pipe(DataFrame[WyscoutEventSchema])
 
 
 def _convert_competitions(competitions: pd.DataFrame) -> pd.DataFrame:
@@ -701,7 +705,9 @@ def _convert_events(raw_events: pd.DataFrame) -> pd.DataFrame:
     return events.rename(columns=eventmapping)[cols]
 
 
-def _get_minutes_played(teamsData: pd.DataFrame, events: pd.DataFrame) -> pd.DataFrame:
+def _get_minutes_played(
+    teamsData: List[Dict[str, Any]], events: List[Dict[str, Any]]
+) -> pd.DataFrame:
     periods_ts = {i: [0] for i in range(6)}
     for e in events:
         period_id = wyscout_periods[e['matchPeriod']]

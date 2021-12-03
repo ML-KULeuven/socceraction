@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements a converter for regular SPADL actions to atomic actions."""
+from typing import cast
+
 import pandas as pd
 from pandera.typing import DataFrame
 
@@ -24,14 +26,14 @@ def convert_to_atomic(actions: DataFrame[SPADLSchema]) -> DataFrame[AtomicSPADLS
     pd.DataFrame
         The Atomic-SPADL dataframe.
     """
-    actions = actions.copy()
-    actions = _extra_from_passes(actions)
-    actions = _add_dribbles(actions)  # for some reason this adds more dribbles
-    actions = _extra_from_shots(actions)
-    actions = _extra_from_fouls(actions)
-    actions = _convert_columns(actions)
-    actions = _simplify(actions)
-    return actions
+    atomic_actions = cast(pd.DataFrame, actions.copy())
+    atomic_actions = _extra_from_passes(atomic_actions)
+    atomic_actions = _add_dribbles(atomic_actions)  # for some reason this adds more dribbles
+    atomic_actions = _extra_from_shots(atomic_actions)
+    atomic_actions = _extra_from_fouls(atomic_actions)
+    atomic_actions = _convert_columns(atomic_actions)
+    atomic_actions = _simplify(atomic_actions)
+    return atomic_actions.pipe(DataFrame[AtomicSPADLSchema])
 
 
 def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:

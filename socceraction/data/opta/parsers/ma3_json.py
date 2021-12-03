@@ -164,7 +164,7 @@ class MA3JSONParser(OptaJSONParser):
             if player_id not in playerid_to_name:
                 playerid_to_name[player_id] = player_name
 
-        df_players_data = pd.DataFrame.from_dict(players_data)
+        df_players_data = pd.DataFrame.from_dict(players_data)  # type: ignore
 
         substitutions = list(self.extract_substitutions().values())
         substitutions_columns = ['player_id', 'team_id', 'minute_start', 'minute_end']
@@ -195,14 +195,14 @@ class MA3JSONParser(OptaJSONParser):
         )
 
         players = {}
-        for player_data in df_players_data.itertuples():
-            if player_data.minutes_played > 0:
-                players[player_data.player_id] = {
-                    'player_id': player_data.player_id,
-                    'player_name': playerid_to_name[player_data.player_id],
-                    'team_id': player_data.team_id,
-                    'starting_position_id': player_data.starting_position_id,
-                    'minutes_played': player_data.minutes_played,
+        for _, player in df_players_data.iterrows():
+            if player.minutes_played > 0:
+                players[player.player_id] = {
+                    'player_id': player.player_id,
+                    'player_name': playerid_to_name[player.player_id],
+                    'team_id': player.team_id,
+                    'starting_position_id': player.starting_position_id,
+                    'minutes_played': player.minutes_played,
                 }
         return players
 

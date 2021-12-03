@@ -3,12 +3,14 @@
 from typing import Any, Dict, Tuple
 
 import pandas as pd  # type: ignore
+from pandera.typing import DataFrame
 
 from . import config as spadlconfig
 from .base import _add_dribbles, _fix_clearances, _fix_direction_of_play
+from .schema import SPADLSchema
 
 
-def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
+def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPADLSchema]:
     """
     Convert Opta events to SPADL actions.
 
@@ -64,7 +66,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    return actions
+    return actions.pipe(DataFrame[SPADLSchema])
 
 
 def _get_bodypart_id(qualifiers: Dict[int, Any]) -> int:

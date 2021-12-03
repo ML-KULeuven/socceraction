@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from pandera.typing import DataFrame
+from pandera.typing import DataFrame, Series
 from pytest_mock import MockerFixture
 from sklearn.exceptions import NotFittedError
 
@@ -29,31 +29,31 @@ class TestGridCount:
 
     def test_get_cell_indexes(self) -> None:
         """It should map pitch coordinates to a 2D cell index."""
-        x = pd.Series([0, field_length / 2 - 1, field_length])
-        y = pd.Series([0, field_width / 2 + 1, field_width])
+        x = Series[float]([0, field_length / 2 - 1, field_length])
+        y = Series[float]([0, field_width / 2 + 1, field_width])
         xi, yi = xt._get_cell_indexes(x, y, self.N, self.M)
         pd.testing.assert_series_equal(xi, pd.Series([0, 0, 1]))
         pd.testing.assert_series_equal(yi, pd.Series([0, 1, 1]))
 
     def test_get_cell_indexes_out_of_bounds(self) -> None:
         """It should map out-of-bounds coordinates to the nearest cell index."""
-        x = pd.Series([-10, field_length + 10])
-        y = pd.Series([-10, field_width + 10])
+        x = Series[float]([-10, field_length + 10])
+        y = Series[float]([-10, field_width + 10])
         xi, yi = xt._get_cell_indexes(x, y, self.N, self.M)
         pd.testing.assert_series_equal(xi, pd.Series([0, 1]))
         pd.testing.assert_series_equal(yi, pd.Series([0, 1]))
 
     def test_get_flat_indexes(self) -> None:
         """It should map pitch coordinates to a flat index."""
-        x = pd.Series([0, field_length / 2 - 1, field_length / 2 + 1, field_length])
-        y = pd.Series([0, field_width / 2 + 1, field_width / 2 - 1, field_width])
+        x = Series[float]([0, field_length / 2 - 1, field_length / 2 + 1, field_length])
+        y = Series[float]([0, field_width / 2 + 1, field_width / 2 - 1, field_width])
         idx = xt._get_flat_indexes(x, y, self.N, self.M)
         pd.testing.assert_series_equal(idx, pd.Series([2, 0, 3, 1]))
 
     def test_count(self) -> None:
         """It should return the number of occurences in each grid cell."""
-        x = pd.Series([0, field_length / 2 - 1, field_length, field_length + 10])
-        y = pd.Series([0, field_width / 2 + 1, field_width, field_width + 10])
+        x = Series[float]([0, field_length / 2 - 1, field_length, field_length + 10])
+        y = Series[float]([0, field_width / 2 + 1, field_width, field_width + 10])
         cnt = xt._count(x, y, self.N, self.M)
         np.testing.assert_array_equal(cnt, [[1, 2], [1, 0]])
 
@@ -150,21 +150,37 @@ def test_move_transition_matrix() -> None:
     """It should return the move transition matrix."""
     pass_id = spadl.config.actiontypes.index("pass")
     success_id = spadl.config.results.index("success")
-    spadl_actions = pd.DataFrame(
+    spadl_actions = DataFrame[SPADLSchema](
         [
             {
+                "game_id": 1,
+                "original_event_id": 'a',
+                "action_id": 1,
+                "period_id": 1,
+                "time_seconds": 1.0,
+                "team_id": 1,
+                "player_id": 1,
                 "start_x": 10.0,
                 "end_x": 10.0,
                 "start_y": 10.0,
                 "end_y": 10.0,
+                "bodypart_id": 1,
                 "type_id": pass_id,
                 "result_id": success_id,
             },
             {
+                "game_id": 1,
+                "original_event_id": 'a',
+                "action_id": 2,
+                "period_id": 1,
+                "time_seconds": 1.2,
+                "team_id": 1,
+                "player_id": 1,
                 "start_x": 10.0,
                 "end_x": 10.0,
                 "start_y": 10.0,
                 "end_y": 10.0,
+                "bodypart_id": 1,
                 "type_id": pass_id,
                 "result_id": success_id,
             },
@@ -215,7 +231,7 @@ def test_xt_model_rate(spadl_actions: DataFrame[SPADLSchema]) -> None:
     """It should rate all successful move actions and assign all other actions NaN."""
     xTModel = xt.ExpectedThreat()
     xTModel.fit(spadl_actions)
-    successful_move_actions_idx = xt.get_successful_move_actions(spadl_actions.reset_index()).index
+    successful_move_actions_idx = xt.get_successful_move_actions(spadl_actions).index
     ratings = xTModel.rate(spadl_actions)
     assert ratings.shape == (len(spadl_actions),)
     assert np.all(~np.isnan(ratings[successful_move_actions_idx]))
@@ -243,7 +259,7 @@ def xt_model(sb_worldcup_data: pd.HDFStore) -> xt.ExpectedThreat:
             )
             for game_id, game in df_games.iterrows()
         ]
-    )
+    ).pipe(DataFrame[SPADLSchema])
     # 3. Train xT model
     xTModel = xt.ExpectedThreat(l=16, w=12)
     xTModel.fit(actions_ltr)

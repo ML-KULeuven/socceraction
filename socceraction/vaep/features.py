@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the feature tranformers of the VAEP framework."""
 from functools import wraps
-from typing import Callable, List, Type, Union
+from typing import Callable, List, Union, no_type_check
 
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
@@ -11,10 +11,10 @@ import socceraction.spadl.config as spadlconfig
 from socceraction.atomic.spadl import AtomicSPADLSchema
 from socceraction.spadl.schema import SPADLSchema
 
-Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]
 SPADLActions = DataFrame[SPADLSchema]
-GameStates = List[SPADLActions]
-Features = Type[pd.DataFrame]
+Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]
+GameStates = List[Actions]
+Features = pd.DataFrame
 FeatureTransfomer = Callable[[GameStates], Features]
 
 
@@ -35,9 +35,10 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
     """
     spadlcolumns = [
         'game_id',
+        'original_event_id',
+        'action_id',
         'period_id',
         'time_seconds',
-        'timestamp',
         'team_id',
         'player_id',
         'start_x',
@@ -55,7 +56,7 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
     for c in spadlcolumns:
         if 'name' in c:
             dummy_actions[c] = dummy_actions[c].astype(str)
-    gs = gamestates(dummy_actions, nb_prev_actions)
+    gs = gamestates(dummy_actions, nb_prev_actions)  # type: ignore
     return list(pd.concat([f(gs) for f in fs], axis=1).columns.values)
 
 
@@ -84,7 +85,7 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
     for i in range(1, nb_prev_actions):
         prev_actions = actions.copy().shift(i, fill_value=0)
         prev_actions.loc[: i - 1, :] = pd.concat([actions[:1]] * i, ignore_index=True)
-        states.append(prev_actions)
+        states.append(prev_actions)  # type: ignore
     return states
 
 
@@ -116,7 +117,8 @@ def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
     return gamestates
 
 
-def simple(actionfn: Callable[[Actions], Features]) -> FeatureTransfomer:
+@no_type_check
+def simple(actionfn) -> FeatureTransfomer:
     """Make a function decorator to apply actionfeatures to game states.
 
     Parameters
@@ -131,7 +133,7 @@ def simple(actionfn: Callable[[Actions], Features]) -> FeatureTransfomer:
     """
 
     @wraps(actionfn)
-    def _wrapper(gamestates: List[pd.DataFrame]) -> pd.DataFrame:
+    def _wrapper(gamestates: List[Actions]) -> pd.DataFrame:
         if not isinstance(gamestates, (list,)):
             gamestates = [gamestates]
         X = []
@@ -368,8 +370,8 @@ def startpolar(actions: SPADLActions) -> Features:
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
-    dx = abs(_goal_x - actions['start_x'])
-    dy = abs(_goal_y - actions['start_y'])
+    dx = (_goal_x - actions['start_x']).abs().values
+    dy = (_goal_y - actions['start_y']).abs().values
     polardf['start_dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
     with np.errstate(divide='ignore', invalid='ignore'):
         polardf['start_angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
@@ -393,8 +395,8 @@ def endpolar(actions: SPADLActions) -> Features:
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
-    dx = abs(_goal_x - actions['end_x'])
-    dy = abs(_goal_y - actions['end_y'])
+    dx = (_goal_x - actions['end_x']).abs().values
+    dy = (_goal_y - actions['end_y']).abs().values
     polardf['end_dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
     with np.errstate(divide='ignore', invalid='ignore'):
         polardf['end_angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))

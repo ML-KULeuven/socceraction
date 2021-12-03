@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the feature tranformers of the VAEP framework."""
-from typing import Callable, List, Type
+from typing import Callable, List, Union
 
 import numpy as np
 import pandas as pd
@@ -8,6 +8,7 @@ from pandera.typing import DataFrame
 
 import socceraction.atomic.spadl.config as atomicspadl
 from socceraction.atomic.spadl import AtomicSPADLSchema
+from socceraction.spadl import SPADLSchema
 from socceraction.vaep.features import (
     actiontype,
     bodypart,
@@ -37,9 +38,9 @@ __all__ = [
     'goalscore',
 ]
 
-Actions = DataFrame[AtomicSPADLSchema]
+Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]
 GameStates = List[Actions]
-Features = Type[pd.DataFrame]
+Features = pd.DataFrame
 FeatureTransfomer = Callable[[GameStates], Features]
 
 
@@ -60,9 +61,10 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
     """
     spadlcolumns = [
         'game_id',
+        'original_event_id',
+        'action_id',
         'period_id',
         'time_seconds',
-        'timestamp',
         'team_id',
         'player_id',
         'x',
@@ -78,7 +80,7 @@ def feature_column_names(fs: List[FeatureTransfomer], nb_prev_actions: int = 3) 
     for c in spadlcolumns:
         if 'name' in c:
             dummy_actions[c] = dummy_actions[c].astype(str)
-    gs = gamestates(dummy_actions, nb_prev_actions)
+    gs = gamestates(dummy_actions, nb_prev_actions)  # type: ignore
     return list(pd.concat([f(gs) for f in fs], axis=1).columns)
 
 
@@ -169,8 +171,8 @@ def polar(actions: Actions) -> Features:
         The 'dist_to_goal' and 'angle_to_goal' of each action.
     """
     polardf = pd.DataFrame()
-    dx = abs(_goal_x - actions['x'])
-    dy = abs(_goal_y - actions['y'])
+    dx = (_goal_x - actions['x']).abs().values
+    dy = (_goal_y - actions['y']).abs().values
     polardf['dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
     with np.errstate(divide='ignore', invalid='ignore'):
         polardf['angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))

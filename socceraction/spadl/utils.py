@@ -24,6 +24,7 @@ def add_names(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
         .merge(spadlconfig.actiontypes_df(), how='left')
         .merge(spadlconfig.results_df(), how='left')
         .merge(spadlconfig.bodyparts_df(), how='left')
+        .pipe(DataFrame[SPADLSchema])
     )
 
 

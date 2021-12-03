@@ -11,14 +11,6 @@ from typing import Any, Dict, List, Union
 import requests
 from pandera.typing import DataFrame
 
-from .schema import (
-    CompetitionSchema,
-    EventSchema,
-    GameSchema,
-    PlayerSchema,
-    TeamSchema,
-)
-
 JSONType = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 
@@ -62,7 +54,7 @@ class EventDataLoader(ABC):
             raise Exception('Invalid getter specified')
 
     @abstractmethod
-    def competitions(self) -> DataFrame[CompetitionSchema]:
+    def competitions(self) -> DataFrame[Any]:
         """Return a dataframe with all available competitions and seasons.
 
         Returns
@@ -74,7 +66,7 @@ class EventDataLoader(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def games(self, competition_id: int, season_id: int) -> DataFrame[GameSchema]:
+    def games(self, competition_id: int, season_id: int) -> DataFrame[Any]:
         """Return a dataframe with all available games in a season.
 
         Parameters
@@ -93,7 +85,7 @@ class EventDataLoader(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def teams(self, game_id: int) -> DataFrame[TeamSchema]:
+    def teams(self, game_id: int) -> DataFrame[Any]:
         """Return a dataframe with both teams that participated in a game.
 
         Parameters
@@ -110,7 +102,7 @@ class EventDataLoader(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def players(self, game_id: int) -> DataFrame[PlayerSchema]:
+    def players(self, game_id: int) -> DataFrame[Any]:
         """Return a dataframe with all players that participated in a game.
 
         Parameters
@@ -127,7 +119,7 @@ class EventDataLoader(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def events(self, game_id: int) -> DataFrame[EventSchema]:
+    def events(self, game_id: int) -> DataFrame[Any]:
         """Return a dataframe with the event stream of a game.
 
         Parameters

@@ -64,7 +64,7 @@ class StatsBombLoader(EventDataLoader):
                 'competition_gender',
                 'season_name',
             ]
-        ]
+        ].pipe(DataFrame[StatsBombCompetitionSchema])
 
     def games(self, competition_id: int, season_id: int) -> DataFrame[StatsBombGameSchema]:
         """Return a dataframe with all available games in a season.
@@ -106,7 +106,7 @@ class StatsBombLoader(EventDataLoader):
         if not isinstance(obj, list):
             raise ParseError('{} should contain a list of games'.format(path))
         if len(obj) == 0:
-            return pd.DataFrame(columns=cols)
+            return pd.DataFrame(columns=cols).pipe(DataFrame[StatsBombGameSchema])
         gamesdf = pd.DataFrame(_flatten(m) for m in obj)
         gamesdf['kick_off'] = gamesdf['kick_off'].fillna('12:00:00.000')
         gamesdf['match_date'] = pd.to_datetime(
@@ -126,7 +126,7 @@ class StatsBombLoader(EventDataLoader):
             gamesdf['venue'] = None
         if 'referee_id' not in gamesdf:
             gamesdf['referee_id'] = None
-        return gamesdf[cols]
+        return gamesdf[cols].pipe(DataFrame[StatsBombGameSchema])
 
     def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
         path = os.path.join(self.root, f'lineups/{game_id}.json')
@@ -154,7 +154,9 @@ class StatsBombLoader(EventDataLoader):
             A dataframe containing both teams. See
             :class:`~socceraction.spadl.statsbomb.StatsBombTeamSchema` for the schema.
         """
-        return pd.DataFrame(self._lineups(game_id))[['team_id', 'team_name']]
+        return pd.DataFrame(self._lineups(game_id))[['team_id', 'team_name']].pipe(
+            DataFrame[StatsBombTeamSchema]
+        )
 
     def players(self, game_id: int) -> DataFrame[StatsBombPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
@@ -211,7 +213,7 @@ class StatsBombLoader(EventDataLoader):
                 'starting_position_name',
                 'minutes_played',
             ]
-        ]
+        ].pipe(DataFrame[StatsBombPlayerSchema])
 
     def events(self, game_id: int) -> DataFrame[StatsBombEventSchema]:
         """Return a dataframe with the event stream of a game.
@@ -251,7 +253,7 @@ class StatsBombLoader(EventDataLoader):
             },
             inplace=True,
         )
-        return eventsdf
+        return eventsdf.pipe(DataFrame[StatsBombEventSchema])
 
 
 def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:

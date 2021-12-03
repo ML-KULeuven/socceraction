@@ -1,6 +1,6 @@
 """Configuration for pytest."""
 import os
-from typing import List
+from typing import Iterator, List
 
 import _pytest
 import pandas as pd
@@ -29,7 +29,7 @@ def pytest_collection_modifyitems(config: _pytest.config.Config, items: List[pyt
 
 
 @pytest.fixture(scope='session')
-def sb_worldcup_data() -> pd.HDFStore:
+def sb_worldcup_data() -> Iterator[pd.HDFStore]:
     hdf_file = os.path.join(
         os.path.dirname(__file__), 'datasets', 'statsbomb', 'spadl-WorldCup-2018.h5'
     )

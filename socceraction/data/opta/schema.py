@@ -1,5 +1,5 @@
 """SPADL schema for Opta data."""
-from typing import Optional
+from typing import Any, Optional
 
 import pandera as pa
 from pandera.typing import DateTime, Object, Series
@@ -21,7 +21,7 @@ class OptaGameSchema(GameSchema):
     """Definition of a dataframe containing a list of games."""
 
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[Any] = pa.Field(nullable=True)
     attendance: Series[int] = pa.Field(nullable=True)
     duration: Series[int]
     home_score: Series[int]
@@ -64,38 +64,38 @@ class OptaEventSchema(EventSchema):
 class StatsPerformCompetitionSchema(OptaCompetitionSchema):
     """Definition of a dataframe containing a list of competitions and seasons."""
 
-    season_id: Series[str]
-    competition_id: Series[str]
+    season_id: Series[Object]
+    competition_id: Series[Object]
 
 
 class StatsPerformGameSchema(OptaGameSchema):
     """Definition of a dataframe containing a list of games."""
 
-    game_id: Series[str]
-    season_id: Series[str]
-    competition_id: Series[str]
-    home_team_id: Series[str]
-    away_team_id: Series[str]
-    referee_id: Series[str] = pa.Field(nullable=True)
+    game_id: Series[Object]
+    season_id: Series[Object]
+    competition_id: Series[Object]
+    home_team_id: Series[Object]
+    away_team_id: Series[Object]
+    referee_id: Series[Object] = pa.Field(nullable=True)
 
 
 class StatsPerformPlayerSchema(OptaPlayerSchema):
     """Definition of a dataframe containing the list of players of a game."""
 
-    team_id: Series[str]
+    team_id: Series[Object]
 
 
 class StatsPerformTeamSchema(OptaTeamSchema):
     """Definition of a dataframe containing the list of teams of a game."""
 
-    game_id: Series[str]
-    team_id: Series[str]
-    player_id: Series[str]
+    game_id: Series[Object]
+    team_id: Series[Object]
+    player_id: Series[Object]
 
 
 class StatsPerformEventSchema(OptaEventSchema):
     """Definition of a dataframe containing event stream data of a game."""
 
-    game_id: Series[str]
-    team_id: Series[str] = pa.Field(nullable=True)
-    player_id: Series[str] = pa.Field(nullable=True)
+    game_id: Series[Object]
+    team_id: Series[Object] = pa.Field(nullable=True)
+    player_id: Series[Object] = pa.Field(nullable=True)

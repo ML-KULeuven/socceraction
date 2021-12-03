@@ -297,7 +297,7 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_competitions())
-        return pd.DataFrame(list(data.values()))
+        return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaCompetitionSchema])
 
     def games(self, competition_id: int, season_id: int) -> DataFrame[OptaGameSchema]:
         """Return a dataframe with all available games in a season.
@@ -328,7 +328,7 @@ class OptaLoader(EventDataLoader):
                     _deepupdate(data, parser.extract_games())
                 except Exception:
                     warnings.warn('Could not parse {}'.format(ffp))
-        return pd.DataFrame(list(data.values()))
+        return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaGameSchema])
 
     def teams(self, game_id: int) -> DataFrame[OptaTeamSchema]:
         """Return a dataframe with both teams that participated in a game.
@@ -352,7 +352,7 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_teams())
-        return pd.DataFrame(list(data.values()))
+        return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaTeamSchema])
 
     def players(self, game_id: int) -> DataFrame[OptaPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
@@ -378,7 +378,7 @@ class OptaLoader(EventDataLoader):
                 _deepupdate(data, parser.extract_players())
         df_players = pd.DataFrame(list(data.values()))
         df_players['game_id'] = game_id
-        return df_players
+        return df_players.pipe(DataFrame[OptaPlayerSchema])
 
     def events(self, game_id: int) -> DataFrame[OptaEventSchema]:
         """Return a dataframe with the event stream of a game.
@@ -408,4 +408,4 @@ class OptaLoader(EventDataLoader):
             .sort_values(['game_id', 'period_id', 'minute', 'second', 'timestamp'])
             .reset_index(drop=True)
         )
-        return events
+        return events.pipe(DataFrame[OptaEventSchema])
