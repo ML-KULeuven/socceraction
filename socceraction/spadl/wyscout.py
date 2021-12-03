@@ -178,6 +178,8 @@ def make_new_positions(events: pd.DataFrame) -> pd.DataFrame:
     )
     new_positions.columns = ['event_id', 'start_x', 'start_y', 'end_x', 'end_y']
     events = pd.merge(events, new_positions, left_on='event_id', right_on='event_id')
+    events[['start_x', 'end_x']] = events[['start_x', 'end_x']].clip(0, 105)
+    events[['start_y', 'end_y']] = events[['start_y', 'end_y']].clip(0, 68)
     events = events.drop('positions', axis=1)
     return events
 
