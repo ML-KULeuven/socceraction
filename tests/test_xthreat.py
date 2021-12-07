@@ -266,7 +266,7 @@ def xt_model(sb_worldcup_data: pd.HDFStore) -> xt.ExpectedThreat:
     return xTModel
 
 
-@pytest.mark.slow
+@pytest.mark.e2e
 def test_predict(sb_worldcup_data: pd.HDFStore, xt_model: xt.ExpectedThreat) -> None:
     games = sb_worldcup_data["games"]
     game = games.iloc[-1]
@@ -276,7 +276,7 @@ def test_predict(sb_worldcup_data: pd.HDFStore, xt_model: xt.ExpectedThreat) -> 
     assert len(ratings) == len(actions)
 
 
-@pytest.mark.slow
+@pytest.mark.e2e
 def test_predict_with_interpolation(
     sb_worldcup_data: pd.HDFStore, xt_model: xt.ExpectedThreat
 ) -> None:

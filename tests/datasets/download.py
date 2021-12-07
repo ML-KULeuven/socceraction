@@ -9,7 +9,11 @@ from urllib.request import urlopen, urlretrieve
 from zipfile import ZipFile, is_zipfile
 
 import pandas as pd
-from tqdm import tqdm
+
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None
 
 import socceraction.atomic.spadl as atomicspadl
 import socceraction.spadl as spadl
@@ -68,7 +72,10 @@ def convert_statsbomb_data() -> None:
         # Get games from all selected competition
         games = SBL.games(competition.competition_id, competition.season_id)
 
-        games_verbose = tqdm(list(games.itertuples()), desc='Loading match data')
+        if tqdm is not None:
+            games_verbose = tqdm(list(games.itertuples()), desc='Loading match data')
+        else:
+            games_verbose = games.itertuples()
         teams, players = [], []
 
         competition_id = leagues[competition.competition_name]
@@ -121,7 +128,7 @@ def download_wyscout_data() -> None:
         os.makedirs(raw_datafolder, exist_ok=True)
 
     # download and unzip Wyscout open data
-    for url in tqdm(dataset_urls.values(), desc='Downloading data'):
+    for url in dataset_urls.values():
         url_obj = urlopen(url).geturl()
         path = Path(urlparse(url_obj).path)
         file_name = os.path.join(raw_datafolder, path.name)
@@ -153,7 +160,10 @@ def convert_wyscout_data() -> None:
         # Get games from all selected competition
         games = WYL.games(competition.competition_id, competition.season_id)
 
-        games_verbose = tqdm(list(games.itertuples()), desc='Loading match data')
+        if tqdm is not None:
+            games_verbose = tqdm(list(games.itertuples()), desc='Loading match data')
+        else:
+            games_verbose = games.itertuples()
         teams, players = [], []
 
         competition_id = leagues[competition.competition_id]
@@ -213,9 +223,11 @@ def create_spadl(game_id: int, home_team_id: int) -> None:
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == 'statsbomb':
         download_statsbomb_data()
+    if sys.argv[1] == 'convert-statsbomb':
         convert_statsbomb_data()
     if len(sys.argv) == 1 or sys.argv[1] == 'wyscout':
         download_wyscout_data()
+    if sys.argv[1] == 'convert-wyscout':
         convert_wyscout_data()
     if len(sys.argv) == 1 or sys.argv[1] == 'spadl':
         create_spadl(8657, 777)

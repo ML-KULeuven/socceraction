@@ -116,9 +116,11 @@ def mypy(session: Session) -> None:
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
-    session.install("coverage[toml]", "pytest", "pygments", "tables", "xgboost")
+    session.install("coverage[toml]", "pytest", "pygments", "pytest-mock")
     try:
-        session.run("coverage", "run", "--parallel", "-m", "pytest", *session.posargs)
+        session.run(
+            "coverage", "run", "--parallel", "-m", "pytest", "-m", "not e2e", *session.posargs
+        )
     finally:
         if session.interactive:
             session.notify("coverage", posargs=[])
