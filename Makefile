@@ -23,7 +23,7 @@ lint:
 	nox -rs lint -- $(args)
 
 pretty:
-	nox -rs precommit -- $(args)
+	nox -rs pre-commit -- $(args)
 
 notebooks:
 	$(BIN)python -m nbconvert --execute --inplace --config=default.json public-notebooks/*.ipynb

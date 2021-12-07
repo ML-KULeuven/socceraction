@@ -1,9 +1,9 @@
 """Configuration for pytest."""
 import os
 
-from _pytest.config import Config
 import pandas as pd
 import pytest
+from _pytest.config import Config
 from pandera.typing import DataFrame
 
 from socceraction.atomic.spadl import AtomicSPADLSchema
