@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache StatsBomb test data
-        id: cache-statsbomb
+        id: cache-statsbombx
         uses: actions/cache@v2
         with:
           path: tests/datasets/statsbomb
           key: cache-statsbomb-data
 
       - name: Cache public Wyscout test data
-        id: cache-public-wyscout
+        id: cache-public-wyscoutx
         uses: actions/cache@v2
         with:
           path: tests/datasets/wyscout_public

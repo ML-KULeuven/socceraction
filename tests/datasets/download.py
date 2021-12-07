@@ -9,6 +9,7 @@ from urllib.request import urlopen, urlretrieve
 from zipfile import ZipFile, is_zipfile
 
 import pandas as pd
+
 try:
     from tqdm import tqdm
 except ImportError:
