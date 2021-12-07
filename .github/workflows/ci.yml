@@ -5,8 +5,34 @@ on:
   - pull_request
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache StatsBomb test data
+        id: cache-statsbomb
+        uses: actions/cache@v2
+        with:
+          path: tests/datasets/statsbomb
+          key: cache-statsbomb-data
+
+      - name: Download StatsBomb test data
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true'
+        run: poetry run python tests/datasets/download.py statsbomb
+
+      - name: Cache public Wyscout test data
+        id: cache-public-wyscout
+        uses: actions/cache@v2
+        with:
+          path: tests/datasets/wyscout_public
+          key: cache-public-wyscout-data
+
+      - name: Download Wyscout test data
+        if: steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        run: poetry run python tests/datasets/download.py wyscout
+
   tests:
     name: ${{ matrix.session }} ${{ matrix.python-version }} / ${{ matrix.os }}
+    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -48,33 +74,22 @@ jobs:
           pip install --constraint=.github/workflows/constraints.txt nox nox-poetry
           nox --version
 
-      - name: Install PyTables dependencies
-        run: sudo apt-get install libhdf5-dev python-numpy python3-numexpr python-six python-mock
-
       - name: Install dependencies
         run: poetry install -v
 
-      - name: Cache StatsBomb test data
+      - name: Load cached StatsBomb test data
         id: cache-statsbomb
         uses: actions/cache@v2
         with:
           path: tests/datasets/statsbomb
           key: cache-statsbomb-data
 
-      - name: Download StatsBomb test data
-        if: steps.cache-statsbomb.outputs.cache-hit != 'true'
-        run: poetry run python tests/datasets/download.py statsbomb
-
-      - name: Cache public Wyscout test data
+      - name: Load cached Wyscout test data
         id: cache-public-wyscout
         uses: actions/cache@v2
         with:
           path: tests/datasets/wyscout_public
           key: cache-public-wyscout-data
-
-      - name: Download Wyscout test data
-        if: steps.cache-public-wyscout.outputs.cache-hit != 'true'
-        run: poetry run python tests/datasets/download.py wyscout
 
       - name: Compute pre-commit cache key
         if: matrix.session == 'pre-commit'
