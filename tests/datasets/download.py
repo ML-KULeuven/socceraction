@@ -128,7 +128,7 @@ def download_wyscout_data() -> None:
         os.makedirs(raw_datafolder, exist_ok=True)
 
     # download and unzip Wyscout open data
-    for url in tqdm(dataset_urls.values(), desc='Downloading data'):
+    for url in dataset_urls.values():
         url_obj = urlopen(url).geturl()
         path = Path(urlparse(url_obj).path)
         file_name = os.path.join(raw_datafolder, path.name)
