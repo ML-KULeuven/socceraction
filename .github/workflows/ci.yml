@@ -15,16 +15,48 @@ jobs:
           path: tests/datasets/statsbomb
           key: cache-statsbomb-data
 
-      - name: Download StatsBomb test data
-        if: steps.cache-statsbomb.outputs.cache-hit != 'true'
-        run: poetry run python tests/datasets/download.py statsbomb
-
       - name: Cache public Wyscout test data
         id: cache-public-wyscout
         uses: actions/cache@v2
         with:
           path: tests/datasets/wyscout_public
           key: cache-public-wyscout-data
+
+      - name: Check out the repository
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2.4.0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt pip
+          pip --version
+
+      - name: Install Poetry
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt poetry
+          poetry --version
+
+      - name: Install Nox
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        run: |
+          pip install --constraint=.github/workflows/constraints.txt nox nox-poetry
+          nox --version
+
+      - name: Install dependencies
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
+        run: poetry install --no-dev
+
+      - name: Download StatsBomb test data
+        if: steps.cache-statsbomb.outputs.cache-hit != 'true'
+        run: poetry run python tests/datasets/download.py statsbomb
 
       - name: Download Wyscout test data
         if: steps.cache-public-wyscout.outputs.cache-hit != 'true'
@@ -73,9 +105,6 @@ jobs:
         run: |
           pip install --constraint=.github/workflows/constraints.txt nox nox-poetry
           nox --version
-
-      - name: Install dependencies
-        run: poetry install -v
 
       - name: Load cached StatsBomb test data
         id: cache-statsbomb

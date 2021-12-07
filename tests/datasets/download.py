@@ -213,9 +213,9 @@ def create_spadl(game_id: int, home_team_id: int) -> None:
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == 'statsbomb':
         download_statsbomb_data()
-        convert_statsbomb_data()
+        # convert_statsbomb_data()
     if len(sys.argv) == 1 or sys.argv[1] == 'wyscout':
         download_wyscout_data()
-        convert_wyscout_data()
+        # convert_wyscout_data()
     if len(sys.argv) == 1 or sys.argv[1] == 'spadl':
         create_spadl(8657, 777)
