@@ -7,13 +7,13 @@ init:
 	python3 -m venv .venv
 	poetry install
 
-tests/datasets/statsbomb/spadl-WorldCup-2018.h5:
+tests/datasets/statsbomb/:
 	$(BIN)python tests/datasets/download.py statsbomb
 
-tests/datasets/wyscout_public/spadl-WorldCup-2018.h5:
+tests/datasets/wyscout_public/:
 	$(BIN)python tests/datasets/download.py wyscout
 
-test: tests/datasets/statsbomb/spadl-WorldCup-2018.h5 tests/datasets/wyscout_public/spadl-WorldCup-2018.h5
+test: tests/datasets/statsbomb/  tests/datasets/wyscout_public/
 	nox -rs tests -- $(args)
 
 mypy:

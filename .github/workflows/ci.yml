@@ -107,6 +107,7 @@ jobs:
           nox --version
 
       - name: Load cached StatsBomb test data
+        if: matrix.session == 'tests'
         id: cache-statsbomb
         uses: actions/cache@v2
         with:
@@ -114,6 +115,7 @@ jobs:
           key: cache-statsbomb-data
 
       - name: Load cached Wyscout test data
+        if: matrix.session == 'tests'
         id: cache-public-wyscout
         uses: actions/cache@v2
         with:
