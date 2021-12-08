@@ -103,7 +103,9 @@ def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:
     )
     is_interception = extra['type_id'] == ar.index('interception')
     extra['team_id'] = prev.team_id.mask(is_interception, nex.team_id)
-    extra['player_id'] = nex.player_id.mask(out | offside, prev.player_id)
+    extra['player_id'] = nex.player_id.mask(out | offside, prev.player_id).astype(
+        prev.player_id.dtype
+    )
 
     actions = pd.concat([actions, extra], ignore_index=True, sort=False)
     actions = actions.sort_values(['game_id', 'period_id', 'action_id']).reset_index(drop=True)
