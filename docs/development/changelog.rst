@@ -7,18 +7,31 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
-Fixed
------
-- Bugs in the StatsPerform MA3 parser affecting `extract_players()`.
 
-Changed
--------
-- Drop support for Python 3.6
+1.1.2_ - 2021-12-08
+===================
 
 Added
 -----
 - Use Poetry for depency management.
-- Use Tox for testing multiple Python versions.
+- Use Nox for testing multiple Python versions.
+- Automatic depandency updates with Depandabot.
+
+Changed
+-------
+- Drop support for Python 3.6
+- Updated README.md
+- Updated CONTRIBUTING.md
+- Improved CI workflow with deployment to test PyPi and test coverage.
+
+Fixed
+-----
+- Bugs in the StatsPerform MA3 parser affecting `extract_players()`.
+- Conversion to Atomic-SPADL changed the data type of the `player_id` column to `float`.
+- Fix incorrect type annnotations.
+- Wyscout action coordinates could be outside the [0, 68] or [0, 105] range.
+- Moved broken CI workflow from Travis to Github Actions.
+
 
 1.1.1_ - 2021-09-22
 ====================
@@ -227,7 +240,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.1...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...HEAD
+.. _1.1.2: https://github.com/ML-KULeuven/socceraction/compare/v1.1.1...v1.1.2
 .. _1.1.1: https://github.com/ML-KULeuven/socceraction/compare/v1.1.0...v1.1.1
 .. _1.1.0: https://github.com/ML-KULeuven/socceraction/compare/v1.0.2...v1.1.0
 .. _1.0.2: https://github.com/ML-KULeuven/socceraction/compare/v1.0.1...v1.0.2
