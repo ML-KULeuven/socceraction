@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.1.3_ - 2021-12-20
+===================
+
+Fixed
+-----
+-  Support loading new StatsBomb event data containing 360 snaphots.
 
 1.1.2_ - 2021-12-08
 ===================
@@ -240,7 +246,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...HEAD
+.. _1.1.3: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...v1.1.3
 .. _1.1.2: https://github.com/ML-KULeuven/socceraction/compare/v1.1.1...v1.1.2
 .. _1.1.1: https://github.com/ML-KULeuven/socceraction/compare/v1.1.0...v1.1.1
 .. _1.1.0: https://github.com/ML-KULeuven/socceraction/compare/v1.0.2...v1.1.0
