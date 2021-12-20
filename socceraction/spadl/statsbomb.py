@@ -48,14 +48,14 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['team_id'] = events.team_id
     actions['player_id'] = events.player_id
 
-    actions['start_x'] = events.location.apply(lambda x: x[0] if x else 1)
-    actions['start_y'] = events.location.apply(lambda x: x[1] if x else 1)
+    actions['start_x'] = events.location.apply(lambda x: x[0] if x else 1).clip(1, 120)
+    actions['start_y'] = events.location.apply(lambda x: x[1] if x else 1).clip(1, 80)
     actions['start_x'] = ((actions['start_x'] - 1) / 119) * spadlconfig.field_length
     actions['start_y'] = 68 - ((actions['start_y'] - 1) / 79) * spadlconfig.field_width
 
     end_location = events[['location', 'extra']].apply(_get_end_location, axis=1)
-    actions['end_x'] = end_location.apply(lambda x: x[0] if x else 1)
-    actions['end_y'] = end_location.apply(lambda x: x[1] if x else 1)
+    actions['end_x'] = end_location.apply(lambda x: x[0] if x else 1).clip(1, 120)
+    actions['end_y'] = end_location.apply(lambda x: x[1] if x else 1).clip(1, 80)
     actions['end_x'] = ((actions['end_x'] - 1) / 119) * spadlconfig.field_length
     actions['end_y'] = 68 - ((actions['end_y'] - 1) / 79) * spadlconfig.field_width
 

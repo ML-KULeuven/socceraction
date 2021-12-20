@@ -126,6 +126,7 @@ class StatsBombLoader(EventDataLoader):
             gamesdf['venue'] = None
         if 'referee_id' not in gamesdf:
             gamesdf['referee_id'] = None
+        gamesdf['referee_id'] = gamesdf['referee_id'].fillna(0).astype(int)
         return gamesdf[cols].pipe(DataFrame[StatsBombGameSchema])
 
     def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
@@ -190,6 +191,7 @@ class StatsBombLoader(EventDataLoader):
         )
         playersdf['game_id'] = game_id
         playersdf['position_name'] = playersdf['position_name'].replace(0, 'Substitute')
+        playersdf['position_id'] = playersdf['position_id'].fillna(0).astype(int)
         playersdf['is_starter'] = playersdf['position_id'] != 0
         playersdf.rename(
             columns={

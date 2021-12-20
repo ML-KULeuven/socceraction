@@ -25,7 +25,7 @@ class StatsBombGameSchema(GameSchema):
     home_score: Series[int]
     away_score: Series[int]
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int] = pa.Field(nullable=True)
+    referee_id: Series[int]
 
 
 class StatsBombPlayerSchema(PlayerSchema):
