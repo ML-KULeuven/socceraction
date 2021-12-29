@@ -7,8 +7,8 @@ stream data.
 import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Union
+from urllib.request import urlopen
 
-import requests
 from pandera.typing import DataFrame
 
 JSONType = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -23,17 +23,40 @@ class MissingDataError(Exception):
 
 
 def _remoteloadjson(path: str) -> JSONType:
-    return requests.get(path).json()
+    """Load JSON data from a URL.
+
+    Parameters
+    ----------
+    path : str
+        URL of the data source.
+
+    Returns
+    -------
+    JSONType
+        A dictionary with the loaded JSON data.
+    """
+    return json.loads(urlopen(path).read())
 
 
 def _localloadjson(path: str) -> JSONType:
+    """Load a dictionary from a JSON's filepath.
+
+    Parameters
+    ----------
+    path : str
+        JSON's filepath.
+
+    Returns
+    -------
+    JSONType
+        A dictionary with the data loaded.
+    """
     with open(path, 'rt', encoding='utf-8') as fh:
         return json.load(fh)
 
 
 class EventDataLoader(ABC):
-    """
-    Load event data either from a remote location or from a local folder.
+    """Load event data either from a remote location or from a local folder.
 
     Parameters
     ----------
@@ -63,7 +86,6 @@ class EventDataLoader(ABC):
             A dataframe containing all available competitions and seasons. See
             :class:`~socceraction.spadl.base.CompetitionSchema` for the schema.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def games(self, competition_id: int, season_id: int) -> DataFrame[Any]:
@@ -82,7 +104,6 @@ class EventDataLoader(ABC):
             A dataframe containing all available games. See
             :class:`~socceraction.spadl.base.GameSchema` for the schema.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def teams(self, game_id: int) -> DataFrame[Any]:
@@ -99,7 +120,6 @@ class EventDataLoader(ABC):
             A dataframe containing both teams. See
             :class:`~socceraction.spadl.base.TeamSchema` for the schema.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def players(self, game_id: int) -> DataFrame[Any]:
@@ -116,7 +136,6 @@ class EventDataLoader(ABC):
             A dataframe containing all players. See
             :class:`~socceraction.spadl.base.PlayerSchema` for the schema.
         """
-        raise NotImplementedError
 
     @abstractmethod
     def events(self, game_id: int) -> DataFrame[Any]:
@@ -133,4 +152,3 @@ class EventDataLoader(ABC):
             A dataframe containing the event stream. See
             :class:`~socceraction.spadl.base.EventSchema` for the schema.
         """
-        raise NotImplementedError
