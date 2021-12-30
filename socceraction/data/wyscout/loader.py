@@ -12,7 +12,13 @@ from zipfile import ZipFile, is_zipfile
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
-from ..base import EventDataLoader, MissingDataError, ParseError
+from ..base import (
+    EventDataLoader,
+    MissingDataError,
+    ParseError,
+    _localloadjson,
+    _remoteloadjson,
+)
 from .schema import (
     WyscoutCompetitionSchema,
     WyscoutEventSchema,
@@ -49,9 +55,12 @@ class PublicWyscoutLoader(EventDataLoader):
 
     def __init__(self, root: Optional[str] = None, download: bool = False) -> None:
         if root is None:
-            root = os.path.join(os.getcwd(), 'wyscout_data')
-            os.makedirs(root, exist_ok=True)
-        super().__init__(root, 'local')
+            self.root = os.path.join(os.getcwd(), 'wyscout_data')
+            os.makedirs(self.root, exist_ok=True)
+        else:
+            self.root = root
+
+        self.get = _localloadjson
 
         if download or len(os.listdir(self.root)) == 0:
             self._download_repo()
@@ -345,7 +354,14 @@ class WyscoutLoader(EventDataLoader):
         getter: str = 'remote',
         feeds: Optional[Dict[str, str]] = None,
     ) -> None:
-        super().__init__(root, getter)
+        self.root = root
+        if getter == 'remote':
+            self.get = _remoteloadjson
+        elif getter == 'local':
+            self.get = _localloadjson
+        else:
+            raise ValueError('Invalid getter specified')
+
         if feeds is not None:
             self.feeds = feeds
         elif getter == 'remote':
@@ -362,6 +378,8 @@ class WyscoutLoader(EventDataLoader):
                 'games': 'matches_{season_id}.json',
                 'events': 'matches/events_{game_id}.json',
             }
+        else:
+            raise ValueError('Invalid getter specified')
 
     def _get_file_or_url(
         self,

@@ -66,16 +66,6 @@ class EventDataLoader(ABC):
         "remote" or "local"
     """
 
-    def __init__(self, root: str, getter: str) -> None:
-        self.root = root
-
-        if getter == 'remote':
-            self.get = _remoteloadjson
-        elif getter == 'local':
-            self.get = _localloadjson
-        else:
-            raise Exception('Invalid getter specified')
-
     @abstractmethod
     def competitions(self) -> DataFrame[Any]:
         """Return a dataframe with all available competitions and seasons.

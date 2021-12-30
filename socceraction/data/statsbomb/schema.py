@@ -1,4 +1,6 @@
 """SPADL schema for StatsBomb data."""
+from typing import Optional
+
 import pandera as pa
 from pandera.typing import DateTime, Object, Series
 
@@ -25,7 +27,7 @@ class StatsBombGameSchema(GameSchema):
     home_score: Series[int]
     away_score: Series[int]
     venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[int]
+    referee: Series[str] = pa.Field(nullable=True)
 
 
 class StatsBombPlayerSchema(PlayerSchema):
@@ -63,3 +65,5 @@ class StatsBombEventSchema(EventSchema):
     location: Series[Object] = pa.Field(nullable=True)
     under_pressure: Series[bool] = pa.Field(nullable=True)
     counterpress: Series[bool] = pa.Field(nullable=True)
+    visible_area_360: Optional[Series[Object]] = pa.Field(nullable=True)
+    freeze_frame_360: Optional[Series[Object]] = pa.Field(nullable=True)
