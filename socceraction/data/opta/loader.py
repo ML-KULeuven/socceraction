@@ -43,6 +43,11 @@ _xmlparsers = {
     'f24': F24XMLParser,
 }
 
+_statsperformparsers = {
+    'ma1': MA1JSONParser,
+    'ma3': MA3JSONParser,
+}
+
 _whoscoredparsers = {
     'whoscored': WhoScoredParser,
 }
@@ -148,10 +153,10 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
 
     Examples
     --------
-    >>> t = {'name': 'Ferry', 'hobbies': ['programming', 'sci-fi']}
+    >>> t = {'name': 'ferry', 'hobbies': ['programming', 'sci-fi']}
     >>> deepupdate(t, {'hobbies': ['gaming']})
     >>> print(t)
-    {'name': 'Ferry', 'hobbies': ['programming', 'sci-fi', 'gaming']}
+    {'name': 'ferry', 'hobbies': ['programming', 'sci-fi', 'gaming']}
     """
     for k, v in src.items():
         if isinstance(v, list):
@@ -189,31 +194,37 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, Union[str, int]
 
 
 class OptaLoader(EventDataLoader):
-    """
-    Load Opta data from a local folder.
+    """Load Opta data from a local folder.
 
     Parameters
     ----------
     root : str
         Root-path of the data.
     feeds : dict
-        Glob pattern for each feed that should be parsed. For example::
+        Glob pattern for each feed that should be parsed. For example, if
+        files are named::
 
-            {
+            f7-1-2021-17362.xml
+            f24-1-2021-17362.xml
+
+        use::
+
+            feeds = {
                 'f7': "f7-{competition_id}-{season_id}-{game_id}.xml",
                 'f24': "f24-{competition_id}-{season_id}-{game_id}.xml"
             }
 
         If you use JSON files obtained from `WhoScored <whoscored.com>`__ use::
 
-            {
+            feeds = {
                 'whoscored': "{competition_id}-{season_id}/{game_id}.json",
             }
 
     parser : str or dict
-        Either 'xml', 'json', 'whoscored' or your custom parser for each feed.
-        The default xml parser supports F7 and F24 feeds; the default json
-        parser supports F1, F9 and F24 feeds. Custom parsers can be specified
+        Either 'xml', 'json', 'statsperform', 'whoscored' or your custom
+        parser for each feed. The default xml parser supports F7 and F24
+        feeds; the default json parser supports F1, F9 and F24 feeds, the StatsPerform
+        parser supports MA1 and MA3 feeds. Custom parsers can be specified
         as::
 
             {
@@ -239,6 +250,8 @@ class OptaLoader(EventDataLoader):
             self.parsers = self._get_parsers_for_feeds(_jsonparsers, feeds)
         elif parser == 'xml':
             self.parsers = self._get_parsers_for_feeds(_xmlparsers, feeds)
+        elif parser == 'statsperform':
+            self.parsers = self._get_parsers_for_feeds(_statsperformparsers, feeds)
         elif parser == 'whoscored':
             self.parsers = self._get_parsers_for_feeds(_whoscoredparsers, feeds)
         elif isinstance(parser, dict):
@@ -322,12 +335,9 @@ class OptaLoader(EventDataLoader):
             )
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
-                try:
-                    ids = _extract_ids_from_path(ffp, feed_pattern)
-                    parser = self.parsers[feed](ffp, **ids)
-                    _deepupdate(data, parser.extract_games())
-                except Exception:
-                    warnings.warn('Could not parse {}'.format(ffp))
+                ids = _extract_ids_from_path(ffp, feed_pattern)
+                parser = self.parsers[feed](ffp, **ids)
+                _deepupdate(data, parser.extract_games())
         return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaGameSchema])
 
     def teams(self, game_id: int) -> DataFrame[OptaTeamSchema]:

@@ -1,5 +1,8 @@
 import os
 
+import pytest
+from py.path import local
+
 from socceraction.data import opta as opta
 from socceraction.data.opta import (
     OptaCompetitionSchema,
@@ -10,16 +13,134 @@ from socceraction.data.opta import (
 )
 
 
+def test_create_opta_json_loader(tmpdir: local) -> None:
+    """It should be able to parse F1, f9 and F24 JSON feeds."""
+    feeds = {
+        "f1": "f1-{competition_id}-{season_id}-{game_id}.json",
+        "f9": "f9-{competition_id}-{season_id}-{game_id}.json",
+        "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+    }
+    loader = opta.OptaLoader(root=str(tmpdir), parser="json", feeds=feeds)
+    assert loader.parsers == {
+        "f1": opta.parsers.F1JSONParser,
+        "f9": opta.parsers.F9JSONParser,
+        "f24": opta.parsers.F24JSONParser,
+    }
+
+
+def test_create_opta_xml_loader(tmpdir: local) -> None:
+    """It should be able to parse F7 and F24 XML feeds."""
+    feeds = {
+        "f7": "f7-{competition_id}-{season_id}-{game_id}.json",
+        "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+    }
+    loader = opta.OptaLoader(root=str(tmpdir), parser="xml", feeds=feeds)
+    assert loader.parsers == {
+        "f7": opta.parsers.F7XMLParser,
+        "f24": opta.parsers.F24XMLParser,
+    }
+
+
+def test_create_statsperform_loader(tmpdir: local) -> None:
+    """It should be able to parse MA1 and MA3 StatsPerfrom feeds."""
+    feeds = {
+        "ma1": "ma1-{competition_id}-{season_id}-{game_id}.json",
+        "ma3": "ma3-{competition_id}-{season_id}-{game_id}.json",
+    }
+    loader = opta.OptaLoader(root=str(tmpdir), parser="statsperform", feeds=feeds)
+    assert loader.parsers == {
+        "ma1": opta.parsers.MA1JSONParser,
+        "ma3": opta.parsers.MA3JSONParser,
+    }
+
+
+def test_create_whoscored_loader(tmpdir: local) -> None:
+    """It should be able to parse WhoScored feeds."""
+    feeds = {
+        "whoscored": "{competition_id}-{season_id}-{game_id}.json",
+    }
+    loader = opta.OptaLoader(root=str(tmpdir), parser="whoscored", feeds=feeds)
+    assert loader.parsers == {
+        "whoscored": opta.parsers.WhoScoredParser,
+    }
+
+
+def test_create_custom_loader(tmpdir: local) -> None:
+    """It should support a custom feed and parser."""
+    feeds = {
+        "myfeed": "{competition_id}-{season_id}-{game_id}.json",
+    }
+    parser = {
+        "myfeed": opta.parsers.base.OptaParser,
+    }
+    loader = opta.OptaLoader(root=str(tmpdir), parser=parser, feeds=feeds)
+    assert loader.parsers == {
+        "myfeed": opta.parsers.base.OptaParser,
+    }
+
+
+def test_create_loader_with_unsupported_feed(tmpdir: local) -> None:
+    """It should warn if a feed is not supported."""
+    feeds = {
+        "f0": "f0-{competition_id}-{season_id}-{game_id}.json",
+    }
+    with pytest.warns(
+        UserWarning, match="No parser available for f0 feeds. This feed is ignored."
+    ):
+        loader = opta.OptaLoader(root=str(tmpdir), parser="json", feeds=feeds)
+    assert loader.parsers == {}
+
+
+def test_create_invalid_loader(tmpdir: local) -> None:
+    """It should raise an error if the parser is not supported."""
+    feeds = {
+        "myfeed": "{competition_id}-{season_id}-{game_id}.json",
+    }
+    with pytest.raises(ValueError):
+        opta.OptaLoader(root=str(tmpdir), parser="wrong", feeds=feeds)
+
+
+def test_deepupdate() -> None:
+    """It should update a dict with another dict."""
+    # list
+    t1 = {'name': 'ferry', 'hobbies': ['programming', 'sci-fi']}
+    opta.loader._deepupdate(t1, {'hobbies': ['gaming'], 'jobs': ['student']})
+    assert t1 == {
+        'name': 'ferry',
+        'hobbies': ['programming', 'sci-fi', 'gaming'],
+        'jobs': ['student'],
+    }
+    # set
+    t2 = {'name': 'ferry', 'hobbies': {'programming', 'sci-fi'}}
+    opta.loader._deepupdate(t2, {'hobbies': {'gaming'}, 'jobs': {'student'}})
+    assert t2 == {
+        'name': 'ferry',
+        'hobbies': {'programming', 'sci-fi', 'gaming'},
+        'jobs': {'student'},
+    }
+    # dict
+    t3 = {'name': 'ferry', 'hobbies': {'programming': True, 'sci-fi': True}}
+    opta.loader._deepupdate(t3, {'hobbies': {'gaming': True}})
+    assert t3 == {
+        'name': 'ferry',
+        'hobbies': {'programming': True, 'sci-fi': True, 'gaming': True},
+    }
+    # value
+    t4 = {'name': 'ferry', 'hobby': 'programming'}
+    opta.loader._deepupdate(t4, {'hobby': 'gaming'})
+    assert t4 == {'name': 'ferry', 'hobby': 'gaming'}
+
+
 class TestJSONOptaLoader:
     def setup_method(self) -> None:
-        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "opta")
         self.loader = opta.OptaLoader(
             root=data_dir,
-            parser='json',
+            parser="json",
             feeds={
-                'f1': 'tournament-{season_id}-{competition_id}.json',
-                'f9': 'match-{season_id}-{competition_id}-{game_id}.json',
-                'f24': 'match-{season_id}-{competition_id}-{game_id}.json',
+                "f1": "tournament-{season_id}-{competition_id}.json",
+                "f9": "match-{season_id}-{competition_id}-{game_id}.json",
+                "f24": "match-{season_id}-{competition_id}-{game_id}.json",
             },
         )
 
@@ -51,14 +172,14 @@ class TestJSONOptaLoader:
 
 class TestXMLOptaLoader:
     def setup_method(self) -> None:
-        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "opta")
 
         self.loader = opta.OptaLoader(
             root=data_dir,
-            parser='xml',
+            parser="xml",
             feeds={
-                'f7': 'f7-{competition_id}-{season_id}-{game_id}-matchresults.xml',
-                'f24': 'f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml',
+                "f7": "f7-{competition_id}-{season_id}-{game_id}-matchresults.xml",
+                "f24": "f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml",
             },
         )
 
@@ -90,12 +211,12 @@ class TestXMLOptaLoader:
 
 class TestWhoscoredLoader:
     def setup_method(self) -> None:
-        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'whoscored')
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "whoscored")
 
         self.loader = opta.OptaLoader(
             root=data_dir,
-            parser='whoscored',
-            feeds={'whoscored': '{game_id}.json'},
+            parser="whoscored",
+            feeds={"whoscored": "{game_id}.json"},
         )
 
     # def test_competitions(self) -> None:
