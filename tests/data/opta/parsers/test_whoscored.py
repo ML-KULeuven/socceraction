@@ -145,7 +145,7 @@ def test_extract_players(whoscored_parser: WhoScoredParser) -> None:
 
 def test_extract_events(whoscored_parser: WhoScoredParser) -> None:
     events = whoscored_parser.extract_events()
-    # assert len(events) == 1567
+    assert len(events) == 1562
     assert events[(1005916, 832925173)] == {
         "game_id": 1005916,
         "event_id": 832925173,
@@ -153,7 +153,6 @@ def test_extract_events(whoscored_parser: WhoScoredParser) -> None:
         "team_id": 272,
         "player_id": 128778,
         "type_id": 1,
-        "type_name": "Pass",
         "timestamp": datetime(2015, 8, 23, 19, 45, 1),
         "minute": 0,
         "second": 1,

@@ -221,7 +221,7 @@ class WhoScoredParser(OptaParser):
                 team_id=int(assertget(attr, "teamId")),
                 player_id=int(attr.get("playerId")) if "playerId" in attr else None,
                 type_id=int(assertget(eventtype, "value")),
-                type_name=assertget(eventtype, "displayName"),
+                # type_name=assertget(eventtype, "displayName"),  # added in the opta loader
                 # Fields required by the opta schema
                 # Timestamp is not availe in the data stream. The returned
                 # timestamp  is not accurate, but sufficient for camptability
