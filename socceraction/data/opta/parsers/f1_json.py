@@ -41,6 +41,7 @@ class F1JSONParser(OptaJSONParser):
         attr = assertget(optadocument, '@attributes')
         competition_id = int(assertget(attr, 'competition_id'))
         competition = dict(
+            # Fields required by the base schema
             season_id=int(assertget(attr, 'season_id')),
             season_name=str(assertget(attr, 'season_id')),
             competition_id=competition_id,
@@ -62,26 +63,40 @@ class F1JSONParser(OptaJSONParser):
         matchdata = assertget(optadocument, 'MatchData')
         matches = {}
         for match in matchdata:
-            match_dict: Dict[str, Any] = {}
-            match_dict['competition_id'] = int(assertget(attr, 'competition_id'))
-            match_dict['season_id'] = int(assertget(attr, 'season_id'))
             matchattr = assertget(match, '@attributes')
-            match_dict['game_id'] = int(assertget(matchattr, 'uID')[1:])
             matchinfo = assertget(match, 'MatchInfo')
             matchinfoattr = assertget(matchinfo, '@attributes')
-            match_dict['game_day'] = int(assertget(matchinfoattr, 'MatchDay'))
-            match_dict['venue'] = str(assertget(matchinfoattr, 'Venue_id'))
-            match_dict['game_date'] = datetime.strptime(
-                assertget(matchinfo, 'Date'), '%Y-%m-%d %H:%M:%S'
+            game_id = int(assertget(matchattr, 'uID')[1:])
+            matches[game_id] = dict(
+                # Fields required by the base schema
+                game_id=game_id,
+                competition_id=int(assertget(attr, 'competition_id')),
+                season_id=int(assertget(attr, 'season_id')),
+                game_day=int(assertget(matchinfoattr, 'MatchDay')),
+                game_date=datetime.strptime(assertget(matchinfo, 'Date'), '%Y-%m-%d %H:%M:%S'),
+                # home_team_id=see below,
+                # away_team_id=see below,
+                # Fields required by the opta schema
+                # home_score=see below,
+                # away_score=see below,
+                # duration=?
+                # referee=?
+                # venue=?,
+                # attendance=?
+                # Optional fields
+                # home_manager=?
+                # away_manager=?
             )
             teamdata = assertget(match, 'TeamData')
             for team in teamdata:
                 teamattr = assertget(team, '@attributes')
                 side = assertget(teamattr, 'Side')
                 teamid = assertget(teamattr, 'TeamRef')
+                score = assertget(teamattr, 'Score')
                 if side == 'Home':
-                    match_dict['home_team_id'] = int(teamid[1:])
+                    matches[game_id]['home_team_id'] = int(teamid[1:])
+                    matches[game_id]['home_score'] = int(score)
                 else:
-                    match_dict['away_team_id'] = int(teamid[1:])
-            matches[match_dict['game_id']] = match_dict
+                    matches[game_id]['away_team_id'] = int(teamid[1:])
+                    matches[game_id]['away_score'] = int(score)
         return matches
