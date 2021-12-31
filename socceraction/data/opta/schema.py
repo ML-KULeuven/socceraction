@@ -34,9 +34,6 @@ class OptaPlayerSchema(PlayerSchema):
     """Definition of a dataframe containing the list of players of a game."""
 
     starting_position: Series[str]
-    firstname: Optional[Series[str]]
-    lastname: Optional[Series[str]]
-    nickname: Optional[Series[str]] = pa.Field(nullable=True)
     height: Optional[Series[float]]
     weight: Optional[Series[float]]
     age: Optional[Series[int]]
