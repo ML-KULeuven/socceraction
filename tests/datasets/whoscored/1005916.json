@@ -52683,8 +52683,8 @@
   "timeoutInSeconds": 0,
   "venueName": "Carlo Castellani",
   "weatherCode": "",
-  "id": 1005916,
   "url": "https://www.whoscored.com/Matches/1005916/Live/Italy-Serie-A-2015-2016-Empoli-Chievo",
+  "game_id": 1005916,
   "season_id": "1516",
   "competition_id": 5
 }

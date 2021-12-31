@@ -8,7 +8,7 @@ encoded in the file.
 """
 import json  # type: ignore
 from abc import ABC
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from lxml import objectify
 
@@ -58,14 +58,14 @@ class OptaParser(ABC):
         """
         return {}
 
-    def extract_players(self) -> Dict[int, Dict[str, Any]]:
+    def extract_players(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
         """Return a dictionary with all available players.
 
         Returns
         -------
         dict
-            A mapping between player IDs and the information available about
-            each player in the data stream.
+            A mapping between (game ID, player ID) tuples and the information
+            available about each player in the data stream.
         """
         return {}
 
@@ -80,14 +80,14 @@ class OptaParser(ABC):
         """
         return {}
 
-    def extract_events(self) -> Dict[int, Dict[str, Any]]:
+    def extract_events(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
         -------
         dict
-            A mapping between event IDs and the information available about
-            each event in the data stream.
+            A mapping between (game ID, event ID) tuples and the information
+            available about each event in the data stream.
         """
         return {}
 

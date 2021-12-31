@@ -1,5 +1,5 @@
 """SPADL schema for Opta data."""
-from typing import Any, Optional
+from typing import Optional
 
 import pandera as pa
 from pandera.typing import DateTime, Object, Series
@@ -20,22 +20,23 @@ class OptaCompetitionSchema(CompetitionSchema):
 class OptaGameSchema(GameSchema):
     """Definition of a dataframe containing a list of games."""
 
-    venue: Series[str] = pa.Field(nullable=True)
-    referee_id: Series[Any] = pa.Field(nullable=True)
-    attendance: Series[int] = pa.Field(nullable=True)
-    duration: Series[int]
     home_score: Series[int]
     away_score: Series[int]
+    duration: Series[int]
+    referee: Series[str] = pa.Field(nullable=True)
+    venue: Series[str] = pa.Field(nullable=True)
+    attendance: Series[int] = pa.Field(nullable=True)
+    home_manager: Optional[Series[str]] = pa.Field(nullable=True)
+    away_manager: Optional[Series[str]] = pa.Field(nullable=True)
 
 
 class OptaPlayerSchema(PlayerSchema):
     """Definition of a dataframe containing the list of players of a game."""
 
+    starting_position: Series[str]
     firstname: Optional[Series[str]]
     lastname: Optional[Series[str]]
     nickname: Optional[Series[str]] = pa.Field(nullable=True)
-    starting_position_id: Series[int]
-    starting_position_name: Series[str]
     height: Optional[Series[float]]
     weight: Optional[Series[float]]
     age: Optional[Series[int]]
@@ -56,8 +57,6 @@ class OptaEventSchema(EventSchema):
     start_y: Series[float] = pa.Field(nullable=True)
     end_x: Series[float] = pa.Field(nullable=True)
     end_y: Series[float] = pa.Field(nullable=True)
-    assist: Series[bool] = pa.Field(nullable=True)
-    keypass: Series[bool] = pa.Field(nullable=True)
     qualifiers: Series[Object]
 
 
