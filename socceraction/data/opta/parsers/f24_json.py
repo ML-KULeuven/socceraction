@@ -1,6 +1,6 @@
 """JSON parser for Opta F24 feeds."""
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from ...base import MissingDataError
 from .base import OptaJSONParser, _get_end_x, _get_end_y, assertget
@@ -40,24 +40,38 @@ class F24JSONParser(OptaJSONParser):
         game_id = int(assertget(attr, 'id'))
         game_dict = {
             game_id: dict(
-                competition_id=int(assertget(attr, 'competition_id')),
+                # Fields required by the base schema
                 game_id=game_id,
                 season_id=int(assertget(attr, 'season_id')),
+                competition_id=int(assertget(attr, 'competition_id')),
                 game_day=int(assertget(attr, 'matchday')),
+                game_date=datetime.strptime(
+                    assertget(assertget(attr, "game_date"), "locale"), "%Y-%m-%dT%H:%M:%S.%fZ"
+                ).replace(tzinfo=None),
                 home_team_id=int(assertget(attr, 'home_team_id')),
                 away_team_id=int(assertget(attr, 'away_team_id')),
+                # Fields required by the opta schema
+                # home_score=?
+                # away_score=?
+                # duration=?
+                # referee=?
+                # venue=?,
+                # attendance=?
+                # Optional fields
+                # home_manager=?
+                # away_manager=?
             )
         }
         return game_dict
 
-    def extract_events(self) -> Dict[int, Dict[str, Any]]:
+    def extract_events(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
         -------
         dict
-            A mapping between event IDs and the information available about
-            each event in the data stream.
+            A mapping between (game ID, event ID) tuples and the information
+            available about each event in the data stream.
         """
         f24 = self._get_doc()
 
@@ -78,32 +92,31 @@ class F24JSONParser(OptaJSONParser):
             }
             start_x = float(assertget(attr, 'x'))
             start_y = float(assertget(attr, 'y'))
-            end_x = _get_end_x(qualifiers)
-            end_y = _get_end_y(qualifiers)
-            if end_x is None:
-                end_x = start_x
-            if end_y is None:
-                end_y = start_y
+            end_x = _get_end_x(qualifiers) or start_x
+            end_y = _get_end_y(qualifiers) or start_y
 
-            event_id = int(assertget(attr, 'event_id'))
-            event = dict(
+            event_id = int(assertget(attr, 'id'))
+            events[(game_id, event_id)] = dict(
+                # Fields required by the base schema
                 game_id=game_id,
                 event_id=event_id,
-                type_id=int(assertget(attr, 'type_id')),
                 period_id=int(assertget(attr, 'period_id')),
+                team_id=int(assertget(attr, 'team_id')),
+                player_id=int(assertget(attr, 'player_id')),
+                type_id=int(assertget(attr, 'type_id')),
+                # type_name=?, # added in the opta loader
+                # Fields required by the opta schema
+                timestamp=timestamp,
                 minute=int(assertget(attr, 'min')),
                 second=int(assertget(attr, 'sec')),
-                timestamp=timestamp,
-                player_id=int(assertget(attr, 'player_id')),
-                team_id=int(assertget(attr, 'team_id')),
                 outcome=bool(int(attr.get('outcome', 1))),
                 start_x=start_x,
                 start_y=start_y,
                 end_x=end_x,
                 end_y=end_y,
+                qualifiers=qualifiers,
+                # Optional fields
                 assist=bool(int(attr.get('assist', 0))),
                 keypass=bool(int(attr.get('keypass', 0))),
-                qualifiers=qualifiers,
             )
-            events[event_id] = event
         return events
