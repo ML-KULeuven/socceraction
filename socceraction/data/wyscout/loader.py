@@ -287,7 +287,9 @@ class PublicWyscoutLoader(EventDataLoader):
         path_events = os.path.join(
             self.root, self._index.at[(competition_id, season_id), 'db_events']
         )
-        mp = _get_minutes_played(lineups, cast(List[Dict[str, Any]], self.get(path_events)))
+        events = cast(List[Dict[str, Any]], self.get(path_events))
+        match_events = [e for e in events if e['matchId'] == game_id]
+        mp = _get_minutes_played(lineups, match_events)
         df_players_match = pd.merge(df_players_match, mp, on='player_id', how='right')
         df_players_match['minutes_played'] = df_players_match.minutes_played.fillna(0)
         df_players_match['game_id'] = game_id
