@@ -1,0 +1,684 @@
+{
+  "match": [
+    {
+      "matchInfo": {
+        "id": "bsu6pjne1eqz2hs8r3685vbhl",
+        "coverageLevel": "13",
+        "date": "2016-02-20Z",
+        "time": "12:00:00Z",
+        "week": "22",
+        "lastUpdated": "2021-06-25T10:43:44Z",
+        "description": "Karlsruher SC vs Eintracht Braunschweig",
+        "sport": {
+          "id": "289u5typ3vp4ifwh5thalohmq",
+          "name": "Soccer"
+        },
+        "ruleset": {
+          "id": "79plas4983031idr6vw83nuel",
+          "name": "Men"
+        },
+        "competition": {
+          "id": "722fdbecxzcq9788l6jqclzlw",
+          "name": "2. Bundesliga",
+          "competitionCode": "2.B",
+          "competitionFormat": "Domestic league",
+          "country": {
+            "id": "36min0qztu8eydwvpv8t1is0m",
+            "name": "Germany"
+          }
+        },
+        "tournamentCalendar": {
+          "id": "408bfjw6uz5k19zk4am50ykmh",
+          "startDate": "2015-07-24Z",
+          "endDate": "2016-05-15Z",
+          "name": "2015/2016"
+        },
+        "stage": {
+          "id": "6tca7sbnh37w596ws64rrez8p",
+          "formatId": "e2q01r9o9jwiq1fls93d1sslx",
+          "startDate": "2015-07-24Z",
+          "endDate": "2016-05-15Z",
+          "name": "Regular Season"
+        },
+        "contestant": [
+          {
+            "id": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "name": "Karlsruher SC",
+            "shortName": "Karlsruhe",
+            "officialName": "Karlsruher SC",
+            "code": "KSC",
+            "position": "home",
+            "country": {
+              "id": "36min0qztu8eydwvpv8t1is0m",
+              "name": "Germany"
+            }
+          },
+          {
+            "id": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "name": "Eintracht Braunschweig",
+            "shortName": "Braunschweig",
+            "officialName": "Braunschweiger TSV Eintracht 1895",
+            "code": "EBS",
+            "position": "away",
+            "country": {
+              "id": "36min0qztu8eydwvpv8t1is0m",
+              "name": "Germany"
+            }
+          }
+        ],
+        "venue": {
+          "id": "3kjfhyt2g4y2enxkdxrdfscxi",
+          "neutral": "no",
+          "longName": "BBBank Wildpark",
+          "shortName": "BBBank Wildpark"
+        }
+      },
+      "liveData": {
+        "matchDetails": {
+          "periodId": 14,
+          "matchStatus": "Played",
+          "winner": "draw",
+          "matchLengthMin": 93,
+          "matchLengthSec": 14,
+          "period": [
+            {
+              "id": 1,
+              "start": "2016-02-20T12:00:02Z",
+              "end": "2016-02-20T12:46:09Z",
+              "lengthMin": 46,
+              "lengthSec": 7
+            },
+            {
+              "id": 2,
+              "start": "2016-02-20T13:02:40Z",
+              "end": "2016-02-20T13:49:47Z",
+              "lengthMin": 47,
+              "lengthSec": 7
+            }
+          ],
+          "scores": {
+            "ht": {
+              "home": 1,
+              "away": 1
+            },
+            "ft": {
+              "home": 2,
+              "away": 2
+            },
+            "total": {
+              "home": 2,
+              "away": 2
+            }
+          }
+        },
+        "goal": [
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "periodId": 1,
+            "timeMin": 22,
+            "timeMinSec": "21:31",
+            "lastUpdated": "2016-08-04T08:27:12Z",
+            "type": "G",
+            "scorerId": "6bzvqgnj0ld4gerxnpk3w7idx",
+            "scorerName": "M. Boland",
+            "assistPlayerId": "dik7igz9kbpqrn6urdcw5mtp1",
+            "assistPlayerName": "O. Ademi",
+            "optaEventId": "32476800",
+            "homeScore": 0,
+            "awayScore": 1
+          },
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 1,
+            "timeMin": 29,
+            "timeMinSec": "28:55",
+            "lastUpdated": "2017-08-24T12:09:22Z",
+            "type": "PG",
+            "scorerId": "47wnj6a5qgqa7j7em7sgjij85",
+            "scorerName": "Manuel Torres",
+            "optaEventId": "1027817148",
+            "homeScore": 1,
+            "awayScore": 1
+          },
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "periodId": 2,
+            "timeMin": 47,
+            "timeMinSec": "46:51",
+            "lastUpdated": "2018-09-25T15:01:34Z",
+            "type": "G",
+            "scorerId": "9c9bcgsg10k7j2l8n0xh6laz9",
+            "scorerName": "S. Decarli",
+            "optaEventId": "1905090533",
+            "homeScore": 1,
+            "awayScore": 2
+          },
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 2,
+            "timeMin": 65,
+            "timeMinSec": "64:41",
+            "lastUpdated": "2020-03-31T19:09:17Z",
+            "type": "G",
+            "scorerId": "yuw4a34cpasw5e4vqsg6ex1x",
+            "scorerName": "D. Diamantakos",
+            "assistPlayerId": "b40xhpgxf8cvruo6vumzu3u1h",
+            "assistPlayerName": "E. Valentini",
+            "optaEventId": "458000905",
+            "homeScore": 2,
+            "awayScore": 2
+          }
+        ],
+        "card": [
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 1,
+            "timeMin": 35,
+            "timeMinSec": "34:02",
+            "lastUpdated": "2016-08-04T07:17:54Z",
+            "type": "YC",
+            "playerId": "2175hvbfk4jn4lnj3cetfpp1",
+            "playerName": "Y. Sallahi",
+            "optaEventId": "393368356",
+            "cardReason": "Foul"
+          },
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 2,
+            "timeMin": 60,
+            "timeMinSec": "59:38",
+            "lastUpdated": "2016-08-04T07:17:54Z",
+            "type": "Y2C",
+            "playerId": "2175hvbfk4jn4lnj3cetfpp1",
+            "playerName": "Y. Sallahi",
+            "optaEventId": "1245554540",
+            "cardReason": "Foul"
+          },
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "periodId": 2,
+            "timeMin": 83,
+            "timeMinSec": "82:04",
+            "lastUpdated": "2019-08-31T02:02:21Z",
+            "type": "YC",
+            "playerId": "f35u25047d9vmzt6j20fd29cl",
+            "playerName": "S. Khelifi",
+            "optaEventId": "1149333485",
+            "cardReason": "Foul"
+          }
+        ],
+        "substitute": [
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 2,
+            "timeMin": 57,
+            "timeMinSec": "56:03",
+            "lastUpdated": "2020-03-31T19:09:17Z",
+            "playerOnId": "yuw4a34cpasw5e4vqsg6ex1x",
+            "playerOnName": "D. Diamantakos",
+            "playerOffId": "49797zk0b4wmp4tevwmaeeh91",
+            "playerOffName": "H. Yamada",
+            "subReason": "Tactical"
+          },
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 2,
+            "timeMin": 64,
+            "timeMinSec": "63:46",
+            "lastUpdated": "2019-10-13T16:47:48Z",
+            "playerOnId": "57c808184l80uuuv7z3flcu6t",
+            "playerOnName": "G. Pr\u00f6mel",
+            "playerOffId": "e5bdaf9c6tsfxrga1zrxeiz85",
+            "playerOffName": "G. Krebs",
+            "subReason": "Tactical"
+          },
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "periodId": 2,
+            "timeMin": 67,
+            "timeMinSec": "66:47",
+            "lastUpdated": "2016-02-20T13:25:28Z",
+            "playerOnId": "2al4ukl1akx2790weoa2p7e8l",
+            "playerOnName": "M. Pfitzner",
+            "playerOffId": "778pjwtaf4v2ytk8fef3hdtqt",
+            "playerOffName": "J. Hochscheidt",
+            "subReason": "Tactical"
+          },
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "periodId": 2,
+            "timeMin": 67,
+            "timeMinSec": "66:52",
+            "lastUpdated": "2017-08-24T13:07:11Z",
+            "playerOnId": "1gnphfgkgd9fgbf5vu9dekn9x",
+            "playerOnName": "P. Sch\u00f6nfeld",
+            "playerOffId": "502gg2gz0abul3s4rn3023sgl",
+            "playerOffName": "A. Matuszczyk",
+            "subReason": "Tactical"
+          },
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "periodId": 2,
+            "timeMin": 69,
+            "timeMinSec": "68:02",
+            "lastUpdated": "2016-02-20T13:26:09Z",
+            "playerOnId": "3xdq68t1w4zcksan8e5t7u1h",
+            "playerOnName": "S. Traut",
+            "playerOffId": "e3bdoni6do5qjgipeya8d932t",
+            "playerOffName": "E. Hoffer",
+            "subReason": "Tactical"
+          },
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "periodId": 2,
+            "timeMin": 83,
+            "timeMinSec": "82:42",
+            "lastUpdated": "2017-08-24T13:05:34Z",
+            "playerOnId": "294c2a3xoi1gg29au703xkbmd",
+            "playerOnName": "H. Zuck",
+            "playerOffId": "2m7zps8hqiq6o09preuwz8frp",
+            "playerOffName": "J. Baffo",
+            "subReason": "Tactical"
+          }
+        ],
+        "lineUp": [
+          {
+            "contestantId": "aojwbjr39s1w2mcd9l2bf2dhk",
+            "formationUsed": "4231",
+            "player": [
+              {
+                "playerId": "evf5jibid9ybzcdi7bp9po0d1",
+                "firstName": "Ren\u00e8",
+                "lastName": "Vollath",
+                "matchName": "R. Vollath",
+                "shirtNumber": 24,
+                "position": "Goalkeeper",
+                "positionSide": "Centre",
+                "formationPlace": "1"
+              },
+              {
+                "playerId": "2175hvbfk4jn4lnj3cetfpp1",
+                "firstName": "Ylli",
+                "lastName": "Sallahi",
+                "matchName": "Y. Sallahi",
+                "shirtNumber": 20,
+                "position": "Defender",
+                "positionSide": "Left",
+                "formationPlace": "3"
+              },
+              {
+                "playerId": "e8dpcth2x1y0zbaovljbgk5hx",
+                "firstName": "Manuel",
+                "lastName": "Gulde",
+                "matchName": "M. Gulde",
+                "shirtNumber": 14,
+                "position": "Defender",
+                "positionSide": "Left/Centre",
+                "formationPlace": "6"
+              },
+              {
+                "playerId": "5os8k5ibx2v9vks50z7wjeeol",
+                "firstName": "Martin",
+                "lastName": "Stoll",
+                "matchName": "M. Stoll",
+                "shirtNumber": 4,
+                "position": "Defender",
+                "positionSide": "Centre/Right",
+                "formationPlace": "5"
+              },
+              {
+                "playerId": "b40xhpgxf8cvruo6vumzu3u1h",
+                "firstName": "Enrico",
+                "lastName": "Valentini",
+                "matchName": "E. Valentini",
+                "shirtNumber": 22,
+                "position": "Defender",
+                "positionSide": "Right",
+                "formationPlace": "2"
+              },
+              {
+                "playerId": "apdrig6xt1hxub1986s3uh1x",
+                "firstName": "Jonas",
+                "lastName": "Meffert",
+                "matchName": "J. Meffert",
+                "shirtNumber": 23,
+                "position": "Defensive Midfielder",
+                "positionSide": "Left/Centre",
+                "formationPlace": "4"
+              },
+              {
+                "playerId": "e5bdaf9c6tsfxrga1zrxeiz85",
+                "firstName": "Ga\u00ebtan",
+                "lastName": "Krebs",
+                "matchName": "G. Krebs",
+                "shirtNumber": 21,
+                "position": "Defensive Midfielder",
+                "positionSide": "Centre/Right",
+                "formationPlace": "8"
+              },
+              {
+                "playerId": "264rfp2mhsxw4s9fuvhpdfaol",
+                "firstName": "Mohamed",
+                "lastName": "Gouaida",
+                "matchName": "M. Gouaida",
+                "shirtNumber": 17,
+                "position": "Attacking Midfielder",
+                "positionSide": "Left/Centre"
+              },
+              {
+                "playerId": "49797zk0b4wmp4tevwmaeeh91",
+                "firstName": "Hiroki",
+                "lastName": "Yamada",
+                "matchName": "H. Yamada",
+                "shirtNumber": 10,
+                "position": "Attacking Midfielder",
+                "positionSide": "Centre",
+                "formationPlace": "10"
+              },
+              {
+                "playerId": "47wnj6a5qgqa7j7em7sgjij85",
+                "firstName": "Manuel",
+                "lastName": "Torres Jimenez",
+                "matchName": "Manuel Torres",
+                "shirtNumber": 18,
+                "position": "Attacking Midfielder",
+                "positionSide": "Centre/Right"
+              },
+              {
+                "playerId": "e3bdoni6do5qjgipeya8d932t",
+                "firstName": "Erwin",
+                "lastName": "Hoffer",
+                "matchName": "E. Hoffer",
+                "shirtNumber": 8,
+                "position": "Striker",
+                "positionSide": "Centre",
+                "formationPlace": "9"
+              },
+              {
+                "playerId": "5s4anpx21xp59nevhwmsqlsl",
+                "firstName": "Boubacar",
+                "lastName": "Barry",
+                "matchName": "B. Barry",
+                "shirtNumber": 15,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              },
+              {
+                "playerId": "yuw4a34cpasw5e4vqsg6ex1x",
+                "firstName": "Dimitrios",
+                "lastName": "Diamantakos",
+                "matchName": "D. Diamantakos",
+                "shirtNumber": 9,
+                "position": "Substitute",
+                "subPosition": "Attacker"
+              },
+              {
+                "playerId": "arpyxey4c28pox7dwd31pmlsl",
+                "firstName": "Dimitrij",
+                "lastName": "Nazarov",
+                "matchName": "D. Nazarov",
+                "shirtNumber": 11,
+                "position": "Substitute",
+                "subPosition": "Attacker"
+              },
+              {
+                "playerId": "6jerp4x6ruyb5byycmcwmfvth",
+                "firstName": "Dirk",
+                "lastName": "Orlishausen",
+                "matchName": "D. Orlishausen",
+                "shirtNumber": 1,
+                "position": "Substitute",
+                "subPosition": "Goalkeeper"
+              },
+              {
+                "playerId": "c86u8qk3fjl4rhic396nn8ixh",
+                "firstName": "Dominic",
+                "lastName": "Peitz",
+                "matchName": "D. Peitz",
+                "shirtNumber": 13,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              },
+              {
+                "playerId": "57c808184l80uuuv7z3flcu6t",
+                "firstName": "Grischa",
+                "lastName": "Pr\u00f6mel",
+                "matchName": "G. Pr\u00f6mel",
+                "shirtNumber": 19,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              },
+              {
+                "playerId": "3xdq68t1w4zcksan8e5t7u1h",
+                "firstName": "Sascha",
+                "lastName": "Traut",
+                "matchName": "S. Traut",
+                "shirtNumber": 7,
+                "position": "Substitute",
+                "subPosition": "Defender"
+              }
+            ],
+            "teamOfficial": {
+              "id": "3u410q38jpg2rpjf00sjy3mxh",
+              "firstName": "Markus",
+              "lastName": "Kauczinski",
+              "type": "manager"
+            }
+          },
+          {
+            "contestantId": "kxpw3rqn4ukt7nqmtjj62lbn",
+            "formationUsed": "4231",
+            "player": [
+              {
+                "playerId": "61xxo4zsk6hby0swa756l3wlx",
+                "firstName": "Rafa\u0142",
+                "lastName": "Gikiewicz",
+                "matchName": "R. Gikiewicz",
+                "shirtNumber": 33,
+                "position": "Goalkeeper",
+                "positionSide": "Centre",
+                "formationPlace": "1"
+              },
+              {
+                "playerId": "7snb6fw0mbkrlgxgcbuqaq51",
+                "firstName": "Ken",
+                "lastName": "Reichel",
+                "matchName": "K. Reichel",
+                "shirtNumber": 19,
+                "position": "Defender",
+                "positionSide": "Left",
+                "formationPlace": "3"
+              },
+              {
+                "playerId": "2m7zps8hqiq6o09preuwz8frp",
+                "firstName": "Joseph",
+                "lastName": "Baffo",
+                "matchName": "J. Baffo",
+                "shirtNumber": 4,
+                "position": "Defender",
+                "positionSide": "Left/Centre",
+                "formationPlace": "6"
+              },
+              {
+                "playerId": "9c9bcgsg10k7j2l8n0xh6laz9",
+                "firstName": "Saulo Igor",
+                "lastName": "Decarli",
+                "matchName": "S. Decarli",
+                "shirtNumber": 3,
+                "position": "Defender",
+                "positionSide": "Centre/Right",
+                "formationPlace": "5"
+              },
+              {
+                "playerId": "52a5br8e27u4mj5f4m3djjkd1",
+                "firstName": "Philemon",
+                "lastName": "Ofosu-Ayeh",
+                "matchName": "P. Ofosu-Ayeh",
+                "shirtNumber": 17,
+                "position": "Defender",
+                "positionSide": "Right",
+                "formationPlace": "2"
+              },
+              {
+                "playerId": "6bzvqgnj0ld4gerxnpk3w7idx",
+                "firstName": "Mirko",
+                "lastName": "Boland",
+                "matchName": "M. Boland",
+                "shirtNumber": 10,
+                "position": "Defensive Midfielder",
+                "positionSide": "Left/Centre",
+                "formationPlace": "4"
+              },
+              {
+                "playerId": "502gg2gz0abul3s4rn3023sgl",
+                "firstName": "Adam",
+                "lastName": "Matuszczyk",
+                "matchName": "A. Matuszczyk",
+                "shirtNumber": 8,
+                "position": "Defensive Midfielder",
+                "positionSide": "Centre/Right",
+                "formationPlace": "8"
+              },
+              {
+                "playerId": "3nins3wtqjz9vt8q06s087vth",
+                "firstName": "Gerrit",
+                "lastName": "Holtmann",
+                "matchName": "G. Holtmann",
+                "shirtNumber": 38,
+                "position": "Attacking Midfielder",
+                "positionSide": "Left/Centre"
+              },
+              {
+                "playerId": "778pjwtaf4v2ytk8fef3hdtqt",
+                "firstName": "Jan",
+                "lastName": "Hochscheidt",
+                "matchName": "J. Hochscheidt",
+                "shirtNumber": 11,
+                "position": "Attacking Midfielder",
+                "positionSide": "Centre",
+                "formationPlace": "10"
+              },
+              {
+                "playerId": "f35u25047d9vmzt6j20fd29cl",
+                "firstName": "Salim",
+                "lastName": "Khelifi",
+                "matchName": "S. Khelifi",
+                "shirtNumber": 22,
+                "position": "Attacking Midfielder",
+                "positionSide": "Centre/Right"
+              },
+              {
+                "playerId": "dik7igz9kbpqrn6urdcw5mtp1",
+                "firstName": "Orhan",
+                "lastName": "Ademi",
+                "matchName": "O. Ademi",
+                "shirtNumber": 18,
+                "position": "Striker",
+                "positionSide": "Centre",
+                "formationPlace": "9"
+              },
+              {
+                "playerId": "byab0p1k46q76he4qdotdadp1",
+                "firstName": "Julius",
+                "lastName": "D\u00fcker",
+                "matchName": "J. D\u00fcker",
+                "shirtNumber": 26,
+                "position": "Substitute",
+                "subPosition": "Attacker"
+              },
+              {
+                "playerId": "71h4rx7893dz4aw3lfoz7h05",
+                "firstName": "Jasmin",
+                "lastName": "Fejzi\u0107",
+                "matchName": "J. Fejzi\u0107",
+                "shirtNumber": 16,
+                "position": "Substitute",
+                "subPosition": "Goalkeeper"
+              },
+              {
+                "playerId": "47wbeeo0jqxvgowrknvwk8lw5",
+                "firstName": "Niko",
+                "lastName": "Kijewski",
+                "matchName": "N. Kijewski",
+                "shirtNumber": 27,
+                "position": "Substitute",
+                "subPosition": "Defender"
+              },
+              {
+                "playerId": "4qwkz81tf5zv3bopcimbsacb9",
+                "firstName": "Nik",
+                "lastName": "Omladi\u010d",
+                "matchName": "N. Omladi\u010d",
+                "shirtNumber": 12,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              },
+              {
+                "playerId": "2al4ukl1akx2790weoa2p7e8l",
+                "firstName": "Marc",
+                "lastName": "Pfitzner",
+                "matchName": "M. Pfitzner",
+                "shirtNumber": 31,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              },
+              {
+                "playerId": "1gnphfgkgd9fgbf5vu9dekn9x",
+                "firstName": "Patrick",
+                "lastName": "Sch\u00f6nfeld",
+                "matchName": "P. Sch\u00f6nfeld",
+                "shirtNumber": 21,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              },
+              {
+                "playerId": "294c2a3xoi1gg29au703xkbmd",
+                "firstName": "Hendrick",
+                "lastName": "Zuck",
+                "matchName": "H. Zuck",
+                "shirtNumber": 30,
+                "position": "Substitute",
+                "subPosition": "Midfielder"
+              }
+            ],
+            "teamOfficial": {
+              "id": "95ryh79yvae3qbb5e3rfi7rh1",
+              "firstName": "Torsten",
+              "lastName": "Lieberknecht",
+              "type": "manager"
+            }
+          }
+        ],
+        "matchDetailsExtra": {
+          "attendance": "12746",
+          "matchOfficial": [
+            {
+              "id": "5jncj8i1pzgcvmkp2zufh8dsl",
+              "type": "Main",
+              "firstName": "Robert",
+              "lastName": "Kampka"
+            },
+            {
+              "id": "efvjrgi8sxkc1n3xzb4iolg45",
+              "type": "Lineman 1",
+              "firstName": "Tobias",
+              "lastName": "Reichel"
+            },
+            {
+              "id": "dklhp3meedvpmy4g3yn1cukt1",
+              "type": "Lineman 2",
+              "firstName": "Jonas",
+              "lastName": "Weickenmeier"
+            },
+            {
+              "id": "3wlgme2da228dbve370hzo7v9",
+              "type": "Fourth official",
+              "firstName": "Torsten",
+              "lastName": "Bauer"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
