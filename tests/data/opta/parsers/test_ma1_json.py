@@ -1,8 +1,15 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from pytest import fixture
 
+from socceraction.data.opta import (
+    OptaCompetitionSchema,
+    OptaGameSchema,
+    OptaPlayerSchema,
+    OptaTeamSchema,
+)
 from socceraction.data.opta.parsers import MA1JSONParser
 
 
@@ -23,12 +30,13 @@ def ma1json_parser() -> MA1JSONParser:
 def test_extract_competitions(ma1json_parser: MA1JSONParser) -> None:
     competitions = ma1json_parser.extract_competitions()
     assert len(competitions) == 1
-    assert competitions["408bfjw6uz5k19zk4am50ykmh"] == {
+    assert competitions[("722fdbecxzcq9788l6jqclzlw", "408bfjw6uz5k19zk4am50ykmh")] == {
         "competition_id": "722fdbecxzcq9788l6jqclzlw",
         "season_id": "408bfjw6uz5k19zk4am50ykmh",
         "competition_name": "2. Bundesliga",
         "season_name": "2015/2016",
     }
+    OptaCompetitionSchema.validate(pd.DataFrame.from_dict(competitions, orient="index"))
 
 
 def test_extract_games(ma1json_parser: MA1JSONParser) -> None:
@@ -49,6 +57,7 @@ def test_extract_games(ma1json_parser: MA1JSONParser) -> None:
         "attendance": 12746,
         "referee": "Robert Kampka",
     }
+    OptaGameSchema.validate(pd.DataFrame.from_dict(games, orient="index"))
 
 
 def test_extract_teams(ma1json_parser: MA1JSONParser) -> None:
@@ -58,6 +67,7 @@ def test_extract_teams(ma1json_parser: MA1JSONParser) -> None:
         "team_id": "aojwbjr39s1w2mcd9l2bf2dhk",
         "team_name": "Karlsruher SC",
     }
+    OptaTeamSchema.validate(pd.DataFrame.from_dict(teams, orient="index"))
 
 
 def test_extract_players(ma1json_parser: MA1JSONParser) -> None:
@@ -79,3 +89,4 @@ def test_extract_players(ma1json_parser: MA1JSONParser) -> None:
     assert players[("bsu6pjne1eqz2hs8r3685vbhl", "yuw4a34cpasw5e4vqsg6ex1x")][
         "minutes_played"
     ] == (93 - 57)
+    OptaPlayerSchema.validate(pd.DataFrame.from_dict(players, orient="index"))

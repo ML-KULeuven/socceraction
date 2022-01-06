@@ -31,27 +31,28 @@ class F7XMLParser(OptaXMLParser):
             return obj.Known
         return obj.First + " " + obj.Last
 
-    def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
+    def extract_competitions(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
         -------
         dict
-            A mapping between competion IDs and the information available about
-            each competition in the data stream.
+            A mapping between (competion ID, season ID) tuples and the
+            information available about each competition in the data stream.
         """
         optadocument = self._get_doc()
         competition = optadocument.Competition
         competition_id = int(competition.attrib['uID'][1:])
         stats = self._get_stats(competition)
+        season_id = int(assertget(stats, 'season_id'))
         competition_dict = dict(
             # Fields required by the base schema
             competition_id=competition_id,
-            season_id=int(assertget(stats, 'season_id')),
+            season_id=season_id,
             season_name=assertget(stats, 'season_name'),
             competition_name=competition.Name.text,
         )
-        return {competition_id: competition_dict}
+        return {(competition_id, season_id): competition_dict}
 
     def extract_games(self) -> Dict[int, Dict[str, Any]]:
         """Return a dictionary with all available games.
@@ -96,14 +97,13 @@ class F7XMLParser(OptaXMLParser):
             ),
             home_team_id=int(assertget(assertget(team_data_elms, "Home").attrib, "TeamRef")[1:]),
             away_team_id=int(assertget(assertget(team_data_elms, "Away").attrib, "TeamRef")[1:]),
-            # Fields required by the opta schema
+            # Optional fields
             home_score=int(assertget(assertget(team_data_elms, "Home").attrib, "Score")),
             away_score=int(assertget(assertget(team_data_elms, "Away").attrib, "Score")),
             duration=int(stats['match_time']),
             referee=self._get_name(optadocument.MatchData.MatchOfficial.OfficialName),
             venue=optadocument.Venue.Name.text,
             attendance=int(match_info.Attendance),
-            # Optional fields
             home_manager=self._get_name(team_officials["Home"].PersonName)
             if "Home" in team_officials
             else None,

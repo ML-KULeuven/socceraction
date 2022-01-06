@@ -1,8 +1,14 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from pytest import fixture
 
+from socceraction.data.opta import (
+    OptaGameSchema,
+    OptaPlayerSchema,
+    OptaTeamSchema,
+)
 from socceraction.data.opta.parsers import F9JSONParser
 
 
@@ -40,6 +46,7 @@ def test_extract_games(f9json_parser: F9JSONParser) -> None:
         "home_manager": None,
         "away_manager": None,
     }
+    OptaGameSchema.validate(pd.DataFrame.from_dict(games, orient="index"))
 
 
 def test_extract_teams(f9json_parser: F9JSONParser) -> None:
@@ -53,6 +60,7 @@ def test_extract_teams(f9json_parser: F9JSONParser) -> None:
         "team_id": 13,
         "team_name": "Leicester City",
     }
+    OptaTeamSchema.validate(pd.DataFrame.from_dict(teams, orient="index"))
 
 
 def test_extract_players(f9json_parser: F9JSONParser) -> None:
@@ -68,3 +76,4 @@ def test_extract_players(f9json_parser: F9JSONParser) -> None:
         "starting_position": "Goalkeeper",
         "is_starter": True,
     }
+    OptaPlayerSchema.validate(pd.DataFrame.from_dict(players, orient="index"))

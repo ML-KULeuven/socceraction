@@ -1,8 +1,15 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from pytest import fixture
 
+from socceraction.data.opta import (
+    OptaCompetitionSchema,
+    OptaGameSchema,
+    OptaPlayerSchema,
+    OptaTeamSchema,
+)
 from socceraction.data.opta.parsers import F7XMLParser
 
 
@@ -23,12 +30,13 @@ def f7xml_parser() -> F7XMLParser:
 def test_extract_competitions(f7xml_parser: F7XMLParser) -> None:
     competitions = f7xml_parser.extract_competitions()
     assert len(competitions) == 1
-    assert competitions[23] == {
+    assert competitions[(23, 2018)] == {
         "competition_id": 23,
         "season_id": 2018,
         "competition_name": "Spanish La Liga",
         "season_name": "Season 2018/2019",
     }
+    OptaCompetitionSchema.validate(pd.DataFrame.from_dict(competitions, orient="index"))
 
 
 def test_extract_games(f7xml_parser: F7XMLParser) -> None:
@@ -51,6 +59,7 @@ def test_extract_games(f7xml_parser: F7XMLParser) -> None:
         "home_manager": "Eduardo Berizzo",
         "away_manager": "Mauricio Pellegrino",
     }
+    OptaGameSchema.validate(pd.DataFrame.from_dict(games, orient="index"))
 
 
 def test_extract_teams(f7xml_parser: F7XMLParser) -> None:
@@ -64,6 +73,7 @@ def test_extract_teams(f7xml_parser: F7XMLParser) -> None:
         "team_id": 174,
         "team_name": "Athletic Club",
     }
+    OptaTeamSchema.validate(pd.DataFrame.from_dict(teams, orient="index"))
 
 
 def test_extract_players(f7xml_parser: F7XMLParser) -> None:
@@ -79,3 +89,4 @@ def test_extract_players(f7xml_parser: F7XMLParser) -> None:
         "jersey_number": 31,
         "starting_position": "Defender",
     }
+    OptaPlayerSchema.validate(pd.DataFrame.from_dict(players, orient="index"))

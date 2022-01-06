@@ -82,7 +82,7 @@ class F9JSONParser(OptaJSONParser):
             ),
             # home_team_id=see below
             # away_team_id=see below
-            # Fields required by the opta schema
+            # Optional fields
             home_score=int(scores["Home"]),
             away_score=int(scores["Away"]),
             duration=int(assertget(matchstat, "match_time")),
@@ -91,7 +91,6 @@ class F9JSONParser(OptaJSONParser):
             else None,
             venue=venue["Name"] if "Name" in venue else None,
             attendance=int(matchinfo["Attendance"]) if "Attendance" in matchinfo else None,
-            # Optional fields
             # home_manager=see below
             # away_manager=see below
         )

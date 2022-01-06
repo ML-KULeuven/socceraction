@@ -1,6 +1,7 @@
 """SPADL schema for Opta data."""
 from typing import Optional
 
+import pandas as pd
 import pandera as pa
 from pandera.typing import DateTime, Object, Series
 
@@ -20,12 +21,12 @@ class OptaCompetitionSchema(CompetitionSchema):
 class OptaGameSchema(GameSchema):
     """Definition of a dataframe containing a list of games."""
 
-    home_score: Series[int]
-    away_score: Series[int]
-    duration: Series[int]
-    referee: Series[str] = pa.Field(nullable=True)
-    venue: Series[str] = pa.Field(nullable=True)
-    attendance: Series[int] = pa.Field(nullable=True)
+    home_score: Optional[Series[int]]
+    away_score: Optional[Series[int]]
+    duration: Optional[Series[int]]
+    referee: Optional[Series[str]] = pa.Field(nullable=True)
+    venue: Optional[Series[str]] = pa.Field(nullable=True)
+    attendance: Optional[Series[int]] = pa.Field(nullable=True)
     home_manager: Optional[Series[str]] = pa.Field(nullable=True)
     away_manager: Optional[Series[str]] = pa.Field(nullable=True)
 
@@ -34,9 +35,6 @@ class OptaPlayerSchema(PlayerSchema):
     """Definition of a dataframe containing the list of players of a game."""
 
     starting_position: Series[str]
-    height: Optional[Series[float]]
-    weight: Optional[Series[float]]
-    age: Optional[Series[int]]
 
 
 class OptaTeamSchema(TeamSchema):
@@ -55,6 +53,12 @@ class OptaEventSchema(EventSchema):
     end_x: Series[float] = pa.Field(nullable=True)
     end_y: Series[float] = pa.Field(nullable=True)
     qualifiers: Series[Object]
+    assist: Optional[Series[bool]]
+    keypass: Optional[Series[bool]]
+    goal: Optional[Series[bool]]
+    shot: Optional[Series[bool]]
+    touch: Optional[Series[bool]]
+    related_player_id: Optional[Series[pd.Int64Dtype]] = pa.Field(nullable=True)
 
 
 class StatsPerformCompetitionSchema(OptaCompetitionSchema):
@@ -72,7 +76,6 @@ class StatsPerformGameSchema(OptaGameSchema):
     competition_id: Series[Object]
     home_team_id: Series[Object]
     away_team_id: Series[Object]
-    referee_id: Series[Object] = pa.Field(nullable=True)
 
 
 class StatsPerformPlayerSchema(OptaPlayerSchema):

@@ -1,8 +1,16 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from pytest import fixture
 
+from socceraction.data.opta import (
+    OptaCompetitionSchema,
+    OptaEventSchema,
+    OptaGameSchema,
+    OptaPlayerSchema,
+    OptaTeamSchema,
+)
 from socceraction.data.opta.parsers import MA3JSONParser
 
 
@@ -23,12 +31,13 @@ def ma3json_parser() -> MA3JSONParser:
 def test_extract_competitions(ma3json_parser: MA3JSONParser) -> None:
     competitions = ma3json_parser.extract_competitions()
     assert len(competitions) == 1
-    assert competitions["7u6i088r32wrl84442qxr0gh6"] == {
+    assert competitions[("722fdbecxzcq9788l6jqclzlw", "7u6i088r32wrl84442qxr0gh6")] == {
         "competition_id": "722fdbecxzcq9788l6jqclzlw",
         "season_id": "7u6i088r32wrl84442qxr0gh6",
         "competition_name": "2. Bundesliga",
         "season_name": "2020/2021",
     }
+    OptaCompetitionSchema.validate(pd.DataFrame.from_dict(competitions, orient="index"))
 
 
 def test_extract_games(ma3json_parser: MA3JSONParser) -> None:
@@ -47,6 +56,7 @@ def test_extract_games(ma3json_parser: MA3JSONParser) -> None:
         "duration": 93,
         "venue": "Wildparkstadion",
     }
+    OptaGameSchema.validate(pd.DataFrame.from_dict(games, orient="index"))
 
 
 def test_extract_teams(ma3json_parser: MA3JSONParser) -> None:
@@ -60,6 +70,7 @@ def test_extract_teams(ma3json_parser: MA3JSONParser) -> None:
         "team_id": "aojwbjr39s1w2mcd9l2bf2dhk",
         "team_name": "Karlsruher SC",
     }
+    OptaTeamSchema.validate(pd.DataFrame.from_dict(teams, orient="index"))
 
 
 def test_extract_players(ma3json_parser: MA3JSONParser) -> None:
@@ -75,6 +86,7 @@ def test_extract_players(ma3json_parser: MA3JSONParser) -> None:
         "starting_position": "Substitute",
         "is_starter": False,
     }
+    OptaPlayerSchema.validate(pd.DataFrame.from_dict(players, orient="index"))
 
 
 def test_extract_events(ma3json_parser: MA3JSONParser) -> None:
@@ -110,3 +122,6 @@ def test_extract_events(ma3json_parser: MA3JSONParser) -> None:
         "assist": False,
         "keypass": False,
     }
+    df = pd.DataFrame.from_dict(events, orient="index")
+    df["type_name"] = "Added later"
+    OptaEventSchema.validate(df)

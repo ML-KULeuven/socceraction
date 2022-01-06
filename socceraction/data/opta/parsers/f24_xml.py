@@ -41,14 +41,13 @@ class F24XMLParser(OptaXMLParser):
             game_date=datetime.strptime(assertget(attr, 'game_date'), '%Y-%m-%dT%H:%M:%S'),
             home_team_id=int(assertget(attr, 'home_team_id')),
             away_team_id=int(assertget(attr, 'away_team_id')),
-            # Fields required by the opta schema
+            # Optional fields
             home_score=int(assertget(attr, 'home_score')),
             away_score=int(assertget(attr, 'away_score')),
             # duration=?
             # referee=?
             # venue=?
             # attendance=?
-            # Optional fields
             # home_manager=?
             # away_manager=?
         )

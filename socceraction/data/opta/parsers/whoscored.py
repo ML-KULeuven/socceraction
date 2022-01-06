@@ -117,7 +117,7 @@ class WhoScoredParser(OptaParser):
             ),  # Dates are UTC
             home_team_id=int(assertget(team_home, "teamId")),
             away_team_id=int(assertget(team_away, "teamId")),
-            # Fields required by the opta schema
+            # Optional fields
             home_score=int(assertget(assertget(self.root["home"], "scores"), "running")),
             away_score=int(assertget(assertget(self.root["away"], "scores"), "running")),
             duration=int(self.root.get("expandedMaxMinute"))
@@ -126,7 +126,6 @@ class WhoScoredParser(OptaParser):
             referee=self.root.get("referee", {}).get("name"),
             venue=self.root.get("venueName"),
             attendance=int(self.root.get("attendance")) if "attendance" in self.root else None,
-            # Optional fields
             home_manager=team_home.get("managerName"),
             away_manager=team_away.get("managerName"),
         )
@@ -239,9 +238,9 @@ class WhoScoredParser(OptaParser):
                 related_player_id=int(attr.get("relatedPlayerId"))
                 if "relatedPlayerId" in attr
                 else None,
-                is_touch=bool(attr.get("isTouch", False)),
-                is_shot=bool(attr.get("isGoal", False)),
-                is_goal=bool(attr.get("isShot", False)),
+                touch=bool(attr.get("isTouch", False)),
+                shot=bool(attr.get("isGoal", False)),
+                goal=bool(attr.get("isShot", False)),
                 # assist=bool(attr.get('assist')) if "assist" in attr else None,
                 # keypass=bool(attr.get('keypass')) if "keypass" in attr else None,
             )

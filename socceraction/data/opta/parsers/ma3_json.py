@@ -36,7 +36,7 @@ class MA3JSONParser(OptaJSONParser):
             return self.root["liveData"]
         raise MissingDataError
 
-    def extract_competitions(self) -> Dict[str, Dict[str, Any]]:
+    def extract_competitions(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
@@ -46,17 +46,18 @@ class MA3JSONParser(OptaJSONParser):
             each competition in the data stream.
         """
         match_info = self._get_match_info()
-        tournament_calender = assertget(match_info, "tournamentCalendar")
+        season = assertget(match_info, "tournamentCalendar")
         competition = assertget(match_info, "competition")
-        season_id = assertget(tournament_calender, "id")
+        competition_id = assertget(competition, "id")
+        season_id = assertget(season, "id")
         season = dict(
             # Fields required by the base schema
-            season_id=assertget(tournament_calender, "id"),
-            season_name=assertget(tournament_calender, "name"),
-            competition_id=assertget(competition, "id"),
+            season_id=season_id,
+            season_name=assertget(season, "name"),
+            competition_id=competition_id,
             competition_name=assertget(competition, "name"),
         )
-        return {season_id: season}
+        return {(competition_id, season_id): season}
 
     def extract_games(self) -> Dict[str, Dict[str, Any]]:
         """Return a dictionary with all available games.
@@ -69,7 +70,7 @@ class MA3JSONParser(OptaJSONParser):
         """
         match_info = self._get_match_info()
         live_data = self._get_live_data()
-        tournament_calender = assertget(match_info, "tournamentCalendar")
+        season = assertget(match_info, "tournamentCalendar")
         competition = assertget(match_info, "competition")
         contestant = assertget(match_info, "contestant")
         venue = assertget(match_info, "venue")
@@ -90,20 +91,19 @@ class MA3JSONParser(OptaJSONParser):
             game_id: dict(
                 # Fields required by the base schema
                 game_id=game_id,
-                season_id=assertget(tournament_calender, "id"),
+                season_id=assertget(season, "id"),
                 competition_id=assertget(competition, "id"),
                 game_day=int(assertget(match_info, "week")),
                 game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
                 home_team_id=self._extract_team_id(contestant, "home"),
                 away_team_id=self._extract_team_id(contestant, "away"),
-                # Fields required by the opta schema
+                # Optional fields
                 home_score=home_score,
                 away_score=away_score,
                 duration=assertget(match_details, "matchLengthMin"),
                 # referee=?
                 venue=assertget(venue, "shortName"),
                 # attendance=?
-                # Optional fields
                 # home_manager=?
                 # away_manager=?
             )

@@ -25,14 +25,14 @@ class OptaParser(ABC):
     def __init__(self, path: str, **kwargs: Any) -> None:
         raise NotImplementedError
 
-    def extract_competitions(self) -> Dict[Any, Dict[str, Any]]:
+    def extract_competitions(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
         -------
         dict
-            A mapping between competion IDs and the information available about
-            each competition in the data stream.
+            A mapping between (competion ID, season ID) tuples and the
+            information available about each competition in the data stream.
         """
         return {}
 

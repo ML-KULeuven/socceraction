@@ -48,25 +48,26 @@ class MA1JSONParser(OptaJSONParser):
                 return team_id
         raise MissingDataError
 
-    def extract_competitions(self) -> Dict[str, Dict[str, Any]]:
+    def extract_competitions(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
         -------
         dict
-            A mapping between competion IDs and the information available about
-            each competition in the data stream.
+            A mapping between (competion ID, season ID) tuples and the
+            information available about each competition in the data stream.
         """
         competitions = {}
         for match in self._get_matches():
             match_info = self._get_match_info(match)
             season = assertget(match_info, 'tournamentCalendar')
-            competition = assertget(match_info, 'competition')
             season_id = assertget(season, 'id')
-            competitions[season_id] = dict(
-                season_id=assertget(season, 'id'),
+            competition = assertget(match_info, 'competition')
+            competition_id = assertget(competition, 'id')
+            competitions[(competition_id, season_id)] = dict(
+                season_id=season_id,
                 season_name=assertget(season, 'name'),
-                competition_id=assertget(competition, 'id'),
+                competition_id=competition_id,
                 competition_name=assertget(competition, 'name'),
             )
         return competitions
@@ -100,14 +101,13 @@ class MA1JSONParser(OptaJSONParser):
                 game_date=datetime.strptime(game_datetime, "%Y-%m-%dZ %H:%M:%SZ"),
                 home_team_id=self._extract_team_id(contestant, "home"),
                 away_team_id=self._extract_team_id(contestant, "away"),
-                # Fields required by the opta schema
+                # Optional fields
                 # home_score=?,
                 # away_score=?,
                 # duration=?,
                 # referee=?,
                 venue=venue["shortName"] if "shortName" in venue else None,
                 # attendance=?,
-                # Optional fields
                 # home_manager=?,
                 # away_manager=?,
             )

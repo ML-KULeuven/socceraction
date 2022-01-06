@@ -1,8 +1,10 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from pytest import fixture
 
+from socceraction.data.opta import OptaEventSchema, OptaGameSchema
 from socceraction.data.opta.parsers import F24JSONParser
 
 
@@ -32,6 +34,7 @@ def test_extract_games(f24json_parser: F24JSONParser) -> None:
         "home_team_id": 3,
         "away_team_id": 13,
     }
+    OptaGameSchema.validate(pd.DataFrame.from_dict(games, orient="index"))
 
 
 def test_extract_events(f24json_parser: F24JSONParser) -> None:
@@ -59,3 +62,6 @@ def test_extract_events(f24json_parser: F24JSONParser) -> None:
         "assist": False,
         "keypass": False,
     }
+    df = pd.DataFrame.from_dict(events, orient="index")
+    df["type_name"] = "Added later"
+    OptaEventSchema.validate(df)

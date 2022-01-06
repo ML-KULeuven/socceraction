@@ -2,11 +2,18 @@ import json
 import os
 from datetime import datetime
 
+import pandas as pd
 import pytest
 from py.path import local
 from pytest import fixture
 
 from socceraction.data.base import MissingDataError
+from socceraction.data.opta import (
+    OptaEventSchema,
+    OptaGameSchema,
+    OptaPlayerSchema,
+    OptaTeamSchema,
+)
 from socceraction.data.opta.parsers import WhoScoredParser
 
 
@@ -113,6 +120,7 @@ def test_extract_games(whoscored_parser: WhoScoredParser) -> None:
         "home_manager": "Marco Giampaolo",
         "away_manager": "Rolando Maran",
     }
+    OptaGameSchema.validate(pd.DataFrame.from_dict(games, orient="index"))
 
 
 def test_extract_teams(whoscored_parser: WhoScoredParser) -> None:
@@ -126,6 +134,7 @@ def test_extract_teams(whoscored_parser: WhoScoredParser) -> None:
         "team_id": 267,
         "team_name": "Chievo",
     }
+    OptaTeamSchema.validate(pd.DataFrame.from_dict(teams, orient="index"))
 
 
 def test_extract_players(whoscored_parser: WhoScoredParser) -> None:
@@ -141,6 +150,7 @@ def test_extract_players(whoscored_parser: WhoScoredParser) -> None:
         "jersey_number": 1,
         "starting_position": "GK",
     }
+    OptaPlayerSchema.validate(pd.DataFrame.from_dict(players, orient="index"))
 
 
 def test_extract_events(whoscored_parser: WhoScoredParser) -> None:
@@ -163,10 +173,13 @@ def test_extract_events(whoscored_parser: WhoScoredParser) -> None:
         "end_y": 49.8,
         "qualifiers": {56: "Back", 140: "35.9", 141: "49.8", 212: "15.8", 213: "3.1"},
         "related_player_id": None,
-        "is_goal": False,
-        "is_shot": False,
-        "is_touch": True,
+        "goal": False,
+        "shot": False,
+        "touch": True,
     }
+    df = pd.DataFrame.from_dict(events, orient="index")
+    df["type_name"] = "Added later"
+    OptaEventSchema.validate(df)
 
 
 def test_extract_substitutions(whoscored_parser: WhoScoredParser) -> None:

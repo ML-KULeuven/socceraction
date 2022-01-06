@@ -77,5 +77,5 @@ class EventSchema(pa.SchemaModel):
     type_name: Series[str] = pa.Field()
 
     class Config:  # noqa: D106
-        strict = False
+        strict = True
         coerce = True
