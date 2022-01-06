@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the feature tranformers of the VAEP framework."""
 from functools import wraps
-from typing import Callable, List, Union, no_type_check
+from typing import Any, Callable, List, Union, no_type_check
 
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
@@ -14,7 +14,7 @@ from socceraction.spadl.schema import SPADLSchema
 SPADLActions = DataFrame[SPADLSchema]
 Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]
 GameStates = List[Actions]
-Features = pd.DataFrame
+Features = DataFrame[Any]
 FeatureTransfomer = Callable[[GameStates], Features]
 
 
