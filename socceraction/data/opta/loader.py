@@ -4,7 +4,7 @@ import glob
 import os
 import re
 import warnings
-from typing import Any, Dict, Mapping, Type, Union
+from typing import Any, Dict, Mapping, Optional, Type, Union
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -31,109 +31,109 @@ from .schema import (
 )
 
 _jsonparsers = {
-    'f1': F1JSONParser,
-    'f9': F9JSONParser,
-    'f24': F24JSONParser,
-    'ma1': MA1JSONParser,
-    'ma3': MA3JSONParser,
+    "f1": F1JSONParser,
+    "f9": F9JSONParser,
+    "f24": F24JSONParser,
+    "ma1": MA1JSONParser,
+    "ma3": MA3JSONParser,
 }
 
 _xmlparsers = {
-    'f7': F7XMLParser,
-    'f24': F24XMLParser,
+    "f7": F7XMLParser,
+    "f24": F24XMLParser,
 }
 
 _statsperformparsers = {
-    'ma1': MA1JSONParser,
-    'ma3': MA3JSONParser,
+    "ma1": MA1JSONParser,
+    "ma3": MA3JSONParser,
 }
 
 _whoscoredparsers = {
-    'whoscored': WhoScoredParser,
+    "whoscored": WhoScoredParser,
 }
 
 _eventtypesdf = pd.DataFrame(
     [
-        (1, 'pass'),
-        (2, 'offside pass'),
-        (3, 'take on'),
-        (4, 'foul'),
-        (5, 'out'),
-        (6, 'corner awarded'),
-        (7, 'tackle'),
-        (8, 'interception'),
-        (9, 'turnover'),
-        (10, 'save'),
-        (11, 'claim'),
-        (12, 'clearance'),
-        (13, 'miss'),
-        (14, 'post'),
-        (15, 'attempt saved'),
-        (16, 'goal'),
-        (17, 'card'),
-        (18, 'player off'),
-        (19, 'player on'),
-        (20, 'player retired'),
-        (21, 'player returns'),
-        (22, 'player becomes goalkeeper'),
-        (23, 'goalkeeper becomes player'),
-        (24, 'condition change'),
-        (25, 'official change'),
-        (26, 'unknown26'),
-        (27, 'start delay'),
-        (28, 'end delay'),
-        (29, 'unknown29'),
-        (30, 'end'),
-        (31, 'unknown31'),
-        (32, 'start'),
-        (33, 'unknown33'),
-        (34, 'team set up'),
-        (35, 'player changed position'),
-        (36, 'player changed jersey number'),
-        (37, 'collection end'),
-        (38, 'temp_goal'),
-        (39, 'temp_attempt'),
-        (40, 'formation change'),
-        (41, 'punch'),
-        (42, 'good skill'),
-        (43, 'deleted event'),
-        (44, 'aerial'),
-        (45, 'challenge'),
-        (46, 'unknown46'),
-        (47, 'rescinded card'),
-        (48, 'unknown46'),
-        (49, 'ball recovery'),
-        (50, 'dispossessed'),
-        (51, 'error'),
-        (52, 'keeper pick-up'),
-        (53, 'cross not claimed'),
-        (54, 'smother'),
-        (55, 'offside provoked'),
-        (56, 'shield ball opp'),
-        (57, 'foul throw in'),
-        (58, 'penalty faced'),
-        (59, 'keeper sweeper'),
-        (60, 'chance missed'),
-        (61, 'ball touch'),
-        (62, 'unknown62'),
-        (63, 'temp_save'),
-        (64, 'resume'),
-        (65, 'contentious referee decision'),
-        (66, 'possession data'),
-        (67, '50/50'),
-        (68, 'referee drop ball'),
-        (69, 'failed to block'),
-        (70, 'injury time announcement'),
-        (71, 'coach setup'),
-        (72, 'caught offside'),
-        (73, 'other ball contact'),
-        (74, 'blocked pass'),
-        (75, 'delayed start'),
-        (76, 'early end'),
-        (77, 'player off pitch'),
-        (10000, 'offside given'),  # Seems specific to WhoScored
+        (1, "pass"),
+        (2, "offside pass"),
+        (3, "take on"),
+        (4, "foul"),
+        (5, "out"),
+        (6, "corner awarded"),
+        (7, "tackle"),
+        (8, "interception"),
+        (9, "turnover"),
+        (10, "save"),
+        (11, "claim"),
+        (12, "clearance"),
+        (13, "miss"),
+        (14, "post"),
+        (15, "attempt saved"),
+        (16, "goal"),
+        (17, "card"),
+        (18, "player off"),
+        (19, "player on"),
+        (20, "player retired"),
+        (21, "player returns"),
+        (22, "player becomes goalkeeper"),
+        (23, "goalkeeper becomes player"),
+        (24, "condition change"),
+        (25, "official change"),
+        (26, "unknown26"),
+        (27, "start delay"),
+        (28, "end delay"),
+        (29, "unknown29"),
+        (30, "end"),
+        (31, "unknown31"),
+        (32, "start"),
+        (33, "unknown33"),
+        (34, "team set up"),
+        (35, "player changed position"),
+        (36, "player changed jersey number"),
+        (37, "collection end"),
+        (38, "temp_goal"),
+        (39, "temp_attempt"),
+        (40, "formation change"),
+        (41, "punch"),
+        (42, "good skill"),
+        (43, "deleted event"),
+        (44, "aerial"),
+        (45, "challenge"),
+        (46, "unknown46"),
+        (47, "rescinded card"),
+        (48, "unknown46"),
+        (49, "ball recovery"),
+        (50, "dispossessed"),
+        (51, "error"),
+        (52, "keeper pick-up"),
+        (53, "cross not claimed"),
+        (54, "smother"),
+        (55, "offside provoked"),
+        (56, "shield ball opp"),
+        (57, "foul throw in"),
+        (58, "penalty faced"),
+        (59, "keeper sweeper"),
+        (60, "chance missed"),
+        (61, "ball touch"),
+        (62, "unknown62"),
+        (63, "temp_save"),
+        (64, "resume"),
+        (65, "contentious referee decision"),
+        (66, "possession data"),
+        (67, "50/50"),
+        (68, "referee drop ball"),
+        (69, "failed to block"),
+        (70, "injury time announcement"),
+        (71, "coach setup"),
+        (72, "caught offside"),
+        (73, "other ball contact"),
+        (74, "blocked pass"),
+        (75, "delayed start"),
+        (76, "early end"),
+        (77, "player off pitch"),
+        (10000, "offside given"),  # Seems specific to WhoScored
     ],
-    columns=['type_id', 'type_name'],
+    columns=["type_id", "type_name"],
 )
 
 
@@ -181,15 +181,15 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
 
 def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, Union[str, int]]:
     regex = re.compile(
-        '.+?'
+        ".+?"
         + re.escape(pattern)
-        .replace(r'\{competition_id\}', r'(?P<competition_id>[a-zA-Z0-9]+)')
-        .replace(r'\{season_id\}', r'(?P<season_id>[a-zA-Z0-9]+)')
-        .replace(r'\{game_id\}', r'(?P<game_id>[a-zA-Z0-9]+)')
+        .replace(r"\{competition_id\}", r"(?P<competition_id>[a-zA-Z0-9]+)")
+        .replace(r"\{season_id\}", r"(?P<season_id>[a-zA-Z0-9]+)")
+        .replace(r"\{game_id\}", r"(?P<game_id>[a-zA-Z0-9]+)")
     )
     m = re.match(regex, path)
     if m is None:
-        raise ValueError('The filepath {} does not match the format {}.'.format(path, pattern))
+        raise ValueError("The filepath {} does not match the format {}.".format(path, pattern))
     ids = m.groupdict()
     return {k: int(v) if v.isdigit() else v for k, v in ids.items()}
 
@@ -201,6 +201,21 @@ class OptaLoader(EventDataLoader):
     ----------
     root : str
         Root-path of the data.
+    parser : str or dict
+        Either 'xml', 'json', 'statsperform', 'whoscored' or your custom
+        parser for each feed. The default xml parser supports F7 and F24
+        feeds; the default json parser supports F1, F9 and F24 feeds, the StatsPerform
+        parser supports MA1 and MA3 feeds. Custom parsers can be specified
+        as::
+
+            {
+                'feed1_name': Feed1Parser
+                'feed2_name': Feed2Parser
+            }
+
+        where Feed1Parser and Feed2Parser are classes implementing
+        :class:`~socceraction.spadl.opta.OptaParser` and 'feed1_name' and
+        'feed2_name' correspond to the keys in 'feeds'.
     feeds : dict
         Glob pattern for each feed that should be parsed. For example, if
         files are named::
@@ -221,44 +236,53 @@ class OptaLoader(EventDataLoader):
                 'whoscored': "{competition_id}-{season_id}/{game_id}.json",
             }
 
-    parser : str or dict
-        Either 'xml', 'json', 'statsperform', 'whoscored' or your custom
-        parser for each feed. The default xml parser supports F7 and F24
-        feeds; the default json parser supports F1, F9 and F24 feeds, the StatsPerform
-        parser supports MA1 and MA3 feeds. Custom parsers can be specified
-        as::
-
-            {
-                'feed1_name': Feed1Parser
-                'feed2_name': Feed2Parser
-            }
-
-        where Feed1Parser and Feed2Parser are classes implementing
-        :class:`~socceraction.spadl.opta.OptaParser` and 'feed1_name' and
-        'feed2_name' correspond to the keys in 'feeds'.
-
     Raises
     ------
     ValueError
         If an invalid parser is provided.
     """
 
-    def __init__(
-        self, root: str, feeds: Dict[str, str], parser: Union[str, Mapping[str, Type[OptaParser]]]
+    def __init__(  # noqa: C901
+        self,
+        root: str,
+        parser: Union[str, Mapping[str, Type[OptaParser]]] = "xml",
+        feeds: Optional[Dict[str, str]] = None,
     ) -> None:
         self.root = root
-        if parser == 'json':
+        if parser == "json":
+            if feeds is None:
+                feeds = {
+                    "f1": "f7-{competition_id}-{season_id}-{game_id}.json",
+                    "f9": "f7-{competition_id}-{season_id}-{game_id}.json",
+                    "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+                }
             self.parsers = self._get_parsers_for_feeds(_jsonparsers, feeds)
-        elif parser == 'xml':
+        elif parser == "xml":
+            if feeds is None:
+                feeds = {
+                    "f7": "f7-{competition_id}-{season_id}-{game_id}.json",
+                    "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+                }
             self.parsers = self._get_parsers_for_feeds(_xmlparsers, feeds)
-        elif parser == 'statsperform':
+        elif parser == "statsperform":
+            if feeds is None:
+                feeds = {
+                    "ma1": "ma1-{competition_id}-{season_id}.json",
+                    "ma3": "ma3-{competition_id}-{season_id}-{game_id}.json",
+                }
             self.parsers = self._get_parsers_for_feeds(_statsperformparsers, feeds)
-        elif parser == 'whoscored':
+        elif parser == "whoscored":
+            if feeds is None:
+                feeds = {
+                    "whoscored": "{competition_id}-{season_id}-{game_id}.json",
+                }
             self.parsers = self._get_parsers_for_feeds(_whoscoredparsers, feeds)
         elif isinstance(parser, dict):
+            if feeds is None:
+                raise ValueError("You must specify a feed for each parser.")
             self.parsers = self._get_parsers_for_feeds(parser, feeds)
         else:
-            raise ValueError('Invalid parser provided.')
+            raise ValueError("Invalid parser provided.")
         self.feeds = feeds
 
     def _get_parsers_for_feeds(
@@ -290,7 +314,7 @@ class OptaLoader(EventDataLoader):
                 parsers[feed] = available_parsers[feed]
             else:
                 warnings.warn(
-                    'No parser available for {} feeds. This feed is ignored.'.format(feed)
+                    "No parser available for {} feeds. This feed is ignored.".format(feed)
                 )
         return parsers
 
@@ -305,7 +329,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[int, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id='*')
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id="*")
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -332,7 +356,7 @@ class OptaLoader(EventDataLoader):
         data: Dict[int, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(
-                competition_id=competition_id, season_id=season_id, game_id='*'
+                competition_id=competition_id, season_id=season_id, game_id="*"
             )
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
@@ -357,7 +381,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[int, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id=game_id)
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -381,14 +405,14 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[int, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id=game_id)
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_players())
         df_players = pd.DataFrame(list(data.values()))
-        df_players['game_id'] = game_id
+        df_players["game_id"] = game_id
         return df_players.pipe(DataFrame[OptaPlayerSchema])
 
     def events(self, game_id: int) -> DataFrame[OptaEventSchema]:
@@ -407,7 +431,7 @@ class OptaLoader(EventDataLoader):
         """
         data: Dict[int, Dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
-            glob_pattern = feed_pattern.format(competition_id='*', season_id='*', game_id=game_id)
+            glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
@@ -415,8 +439,8 @@ class OptaLoader(EventDataLoader):
                 _deepupdate(data, parser.extract_events())
         events = (
             pd.DataFrame(list(data.values()))
-            .merge(_eventtypesdf, on='type_id', how='left')
-            .sort_values(['game_id', 'period_id', 'minute', 'second', 'timestamp'])
+            .merge(_eventtypesdf, on="type_id", how="left")
+            .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
             .reset_index(drop=True)
         )
         return events.pipe(DataFrame[OptaEventSchema])

@@ -21,6 +21,7 @@ contains the following components:
 
    documentation/intro
    documentation/install
+   documentation/providers
    documentation/SPADL
    documentation/valuing_actions
    documentation/faq
