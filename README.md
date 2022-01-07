@@ -30,7 +30,7 @@ https://user-images.githubusercontent.com/2175271/136857714-1d2c8706-7f2f-449d-8
 
 Socceraction contains the following components:
 
-- Loaders for StatsBomb, Opta, Wyscout, StatsPerform and WhoScored data that enable **loading events and corresponding metadata** as Pandas DataFrames using a unified data model. [Read more »](https://socceraction.readthedocs.io/en/latest/modules/data.html)
+- Loaders for StatsBomb, Opta, Wyscout, StatsPerform and WhoScored data that enable **loading events and corresponding metadata** as Pandas DataFrames using a unified data model. [Read more »](https://socceraction.readthedocs.io/en/latest/documentation/providers.html)
 - Converters for event stream data to the **SPADL** and **atomic-SPADL** formats, which are unified and expressive languages for on-the-ball player actions. [Read more »](https://socceraction.readthedocs.io/en/latest/documentation/SPADL.html)
 - An implementation of the **xT** framework to value ball-progressing actions using a possession-based Markov model. [Read more »](https://socceraction.readthedocs.io/en/latest/documentation/xT.html)
 - An implementation of the **VAEP** and **Atomic-VAEP** frameworks to value actions on their expected impact on the score line. [Read more »](https://socceraction.readthedocs.io/en/latest/documentation/VAEP.html)
