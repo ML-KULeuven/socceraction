@@ -88,8 +88,7 @@ class StatsBombEventSchema(EventSchema):
     position_name: Series[str] = pa.Field(nullable=True)
     """The name of the position the player was in at the time of this event."""
     location: Series[Object] = pa.Field(nullable=True)
-    """Array containing the x and y coordinates of the event.
-    """
+    """Array containing the x and y coordinates of the event."""
     under_pressure: Series[bool] = pa.Field(nullable=True)
     """Whether the action was performed while being pressured by an opponent."""
     counterpress: Series[bool] = pa.Field(nullable=True)

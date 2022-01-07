@@ -131,6 +131,7 @@ _eventtypesdf = pd.DataFrame(
         (75, 'delayed start'),
         (76, 'early end'),
         (77, 'player off pitch'),
+        (10000, 'offside given'),  # Seems specific to WhoScored
     ],
     columns=['type_id', 'type_name'],
 )

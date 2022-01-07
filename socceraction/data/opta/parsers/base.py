@@ -8,7 +8,7 @@ encoded in the file.
 """
 import json  # type: ignore
 from abc import ABC
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from lxml import objectify
 
@@ -25,18 +25,18 @@ class OptaParser(ABC):
     def __init__(self, path: str, **kwargs: Any) -> None:
         raise NotImplementedError
 
-    def extract_competitions(self) -> Dict[int, Dict[str, Any]]:
+    def extract_competitions(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
         -------
         dict
-            A mapping between competion IDs and the information available about
-            each competition in the data stream.
+            A mapping between (competion ID, season ID) tuples and the
+            information available about each competition in the data stream.
         """
         return {}
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> Dict[Any, Dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -47,7 +47,7 @@ class OptaParser(ABC):
         """
         return {}
 
-    def extract_teams(self) -> Dict[int, Dict[str, Any]]:
+    def extract_teams(self) -> Dict[Any, Dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -58,18 +58,18 @@ class OptaParser(ABC):
         """
         return {}
 
-    def extract_players(self) -> Dict[int, Dict[str, Any]]:
+    def extract_players(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
         """Return a dictionary with all available players.
 
         Returns
         -------
         dict
-            A mapping between player IDs and the information available about
-            each player in the data stream.
+            A mapping between (game ID, player ID) tuples and the information
+            available about each player in the data stream.
         """
         return {}
 
-    def extract_lineups(self) -> Dict[int, Dict[str, Any]]:
+    def extract_lineups(self) -> Dict[Any, Dict[str, Any]]:
         """Return a dictionary with the lineup of each team.
 
         Returns
@@ -80,14 +80,14 @@ class OptaParser(ABC):
         """
         return {}
 
-    def extract_events(self) -> Dict[int, Dict[str, Any]]:
+    def extract_events(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
         -------
         dict
-            A mapping between event IDs and the information available about
-            each event in the data stream.
+            A mapping between (game ID, event ID) tuples and the information
+            available about each event in the data stream.
         """
         return {}
 
