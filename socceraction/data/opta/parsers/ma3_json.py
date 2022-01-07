@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
-import unidecode
 
 from ...base import MissingDataError
 from .base import OptaJSONParser, _get_end_x, _get_end_y, assertget
@@ -182,7 +181,7 @@ class MA3JSONParser(OptaJSONParser):
             player_id = event.get("playerId")
             if player_id is None:
                 continue
-            player_name = unidecode.unidecode(assertget(event, "playerName"))
+            player_name = assertget(event, "playerName")
             if player_id not in playerid_to_name:
                 playerid_to_name[player_id] = player_name
 

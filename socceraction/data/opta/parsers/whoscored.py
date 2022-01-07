@@ -4,8 +4,6 @@ import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional, Tuple
 
-from unidecode import unidecode  # type: ignore
-
 from ...base import MissingDataError
 from .base import OptaParser, _get_end_x, _get_end_y, assertget
 
@@ -146,7 +144,7 @@ class WhoScoredParser(OptaParser):
             teams[team_id] = dict(
                 # Fields required by the base schema
                 team_id=team_id,
-                team_name=unidecode(assertget(side, "name")),
+                team_name=assertget(side, "name"),
             )
         return teams
 
@@ -171,7 +169,7 @@ class WhoScoredParser(OptaParser):
                     game_id=game_id,
                     team_id=team_id,
                     player_id=player_id,
-                    player_name=unidecode(assertget(p, "name")),
+                    player_name=assertget(p, "name"),
                     is_starter=bool(p.get("isFirstEleven", False)),
                     minutes_played=player_gamestats[(game_id, player_id)]["minutes_played"],
                     jersey_number=player_gamestats[(game_id, player_id)]["jersey_number"],

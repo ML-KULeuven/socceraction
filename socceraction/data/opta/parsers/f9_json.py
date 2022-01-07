@@ -2,8 +2,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from unidecode import unidecode  # type: ignore
-
 from ...base import MissingDataError
 from .base import OptaJSONParser, assertget
 
@@ -134,7 +132,7 @@ class F9JSONParser(OptaJSONParser):
                 teams[team_id] = dict(
                     # Fields required by the base schema
                     team_id=team_id,
-                    team_name=unidecode(nameobj.get("name")),
+                    team_name=nameobj.get("name"),
                 )
         return teams
 
