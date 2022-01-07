@@ -5,6 +5,7 @@ included in these base schemas. Each serializer can add different additional
 fields on top.
 
 """
+import pandas as pd
 import pandera as pa
 from pandera.typing import DateTime, Object, Series
 
@@ -35,7 +36,7 @@ class GameSchema(pa.SchemaModel):
     """The unique identifier for the season."""
     competition_id: Series[Object] = pa.Field()
     """The unique identifier for the competition."""
-    game_day: Series[int] = pa.Field()
+    game_day: Series[pd.Int64Dtype] = pa.Field(nullable=True)
     """Number corresponding to the weeks or rounds into the competition this game is."""
     game_date: Series[DateTime] = pa.Field()
     """The date when the game was played."""

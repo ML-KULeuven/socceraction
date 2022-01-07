@@ -302,7 +302,6 @@ class StatsBombLoader(EventDataLoader):
             "player_id",
             "type_id",
             "type_name",
-            "event_id",
             "index",
             "timestamp",
             "minute",
@@ -332,8 +331,9 @@ class StatsBombLoader(EventDataLoader):
             raise ParseError("The retrieved data should contain a list of events")
         if len(obj) == 0:
             return pd.DataFrame(columns=cols).pipe(DataFrame[StatsBombEventSchema])
+
         eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
-        eventsdf["game_id"] = game_id
+        eventsdf["match_id"] = game_id
         eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"], format="%H:%M:%S.%f")
         eventsdf["related_events"] = eventsdf["related_events"].apply(
             lambda d: d if isinstance(d, list) else []
@@ -341,15 +341,14 @@ class StatsBombLoader(EventDataLoader):
         eventsdf["under_pressure"] = eventsdf["under_pressure"].fillna(False).astype(bool)
         eventsdf["counterpress"] = eventsdf["counterpress"].fillna(False).astype(bool)
         eventsdf.rename(
-            columns={
-                "id": "event_id",
-                "period": "period_id",
-            },
+            columns={"id": "event_id", "period": "period_id", "match_id": "game_id"},
             inplace=True,
         )
         if not load_360:
-            return eventsdf.pipe(DataFrame[StatsBombEventSchema])
+            return eventsdf[cols].pipe(DataFrame[StatsBombEventSchema])
+
         # Load the 360 data
+        cols_360 = ["visible_area_360", "freeze_frame_360"]
         if self._local:
             obj = _localloadjson(str(os.path.join(self._root, f"three-sixty/{game_id}.json")))
         else:
@@ -359,7 +358,7 @@ class StatsBombLoader(EventDataLoader):
         if len(obj) == 0:
             eventsdf["visible_area_360"] = None
             eventsdf["freeze_frame_360"] = None
-            return eventsdf.pipe(DataFrame[StatsBombEventSchema])
+            return eventsdf[cols + cols_360].pipe(DataFrame[StatsBombEventSchema])
         framesdf = pd.DataFrame(obj).rename(
             columns={
                 "event_uuid": "event_id",
@@ -367,7 +366,7 @@ class StatsBombLoader(EventDataLoader):
                 "freeze_frame": "freeze_frame_360",
             },
         )[["event_id", "visible_area_360", "freeze_frame_360"]]
-        return pd.merge(eventsdf, framesdf, on="event_id", how="left").pipe(
+        return pd.merge(eventsdf, framesdf, on="event_id", how="left")[cols + cols_360].pipe(
             DataFrame[StatsBombEventSchema]
         )
 
