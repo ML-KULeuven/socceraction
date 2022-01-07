@@ -35,6 +35,7 @@ class TestPublicWyscoutLoader:
     def test_players(self) -> None:
         df_players = self.WSL.players(2058007)
         assert len(df_players) == 26
+        assert df_players.minutes_played.sum() == 22 * 96
         WyscoutPlayerSchema.validate(df_players)
 
     def test_events(self) -> None:

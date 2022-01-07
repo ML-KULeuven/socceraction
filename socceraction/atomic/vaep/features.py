@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the feature tranformers of the VAEP framework."""
-from typing import Callable, List, Union
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import pandas as pd
@@ -40,7 +40,7 @@ __all__ = [
 
 Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]
 GameStates = List[Actions]
-Features = pd.DataFrame
+Features = DataFrame[Any]
 FeatureTransfomer = Callable[[GameStates], Features]
 
 
