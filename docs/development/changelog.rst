@@ -7,6 +7,33 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.2.0_ - 2022-01-07
+===================
+
+Added
+-----
+- Add support for loading StatsBomb 360 data
+- Add support for loading StatsBomb data directly from the paid API
+- Add documentation for the data module
+- Add documentation for the StatsBomb data schemas
+- Add documentation for the Opta data schemas
+
+Changed
+-------
+- Remove the requests dependency
+- Remove the Unicode dependency
+- Some fields in the Opta data schema were removed or renamed to make them
+  more uniform with the other data loaders
+- The ``referee_id`` and ``venue_id`` fields were replaced by a ``referee`` and
+  ``venue`` field, respectively
+
+Fixed
+-----
+- Fix a bug in the "minutes_played" field of the dataframe returned by the socceraction.data.wyscout.PublicWyscoutLoader.players method. (`GH153 <https://github.com/ML-KULeuven/socceraction/issues/153>`_)
+- Add missing WhoScored type ID (`GH143 <https://github.com/ML-KULeuven/socceraction/issues/143>`_)
+- Update the MA1 and MA3 Stats Perform parsers to make them compatible with the latest API version
+- Several small fixes in the Opta parsers
+
 1.1.3_ - 2021-12-20
 ===================
 
@@ -246,7 +273,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.0...HEAD
+.. _1.2.0: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...v1.2.0
 .. _1.1.3: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...v1.1.3
 .. _1.1.2: https://github.com/ML-KULeuven/socceraction/compare/v1.1.1...v1.1.2
 .. _1.1.1: https://github.com/ML-KULeuven/socceraction/compare/v1.1.0...v1.1.1
