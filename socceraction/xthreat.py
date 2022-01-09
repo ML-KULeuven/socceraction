@@ -28,8 +28,8 @@ def _get_cell_indexes(
 ) -> Tuple[Series[int], Series[int]]:
     xi = x.divide(spadlconfig.field_length).multiply(l)
     yj = y.divide(spadlconfig.field_width).multiply(w)
-    xi = xi.astype(int).clip(0, l - 1)
-    yj = yj.astype(int).clip(0, w - 1)
+    xi = xi.astype('int64').clip(0, l - 1)
+    yj = yj.astype('int64').clip(0, w - 1)
     return xi, yj
 
 

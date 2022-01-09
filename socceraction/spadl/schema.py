@@ -30,3 +30,4 @@ class SPADLSchema(pa.SchemaModel):
 
     class Config:  # noqa: D106
         strict = True
+        coerce = True

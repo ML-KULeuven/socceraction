@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+Fixed
+-----
+- SchemaErrors on Windows (`GH157 <https://github.com/ML-KULeuven/socceraction/issues/157>`_)
+
 1.2.0_ - 2022-01-07
 ===================
 

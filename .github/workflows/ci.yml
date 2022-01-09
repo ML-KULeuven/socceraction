@@ -6,7 +6,10 @@ on:
 
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - name: Cache StatsBomb test data
         id: cache-statsbomb
@@ -77,6 +80,7 @@ jobs:
           - { python-version: 3.9, os: ubuntu-latest, session: "tests" }
           - { python-version: 3.8, os: ubuntu-latest, session: "tests" }
           - { python-version: 3.7, os: ubuntu-latest, session: "tests" }
+          - { python-version: 3.9, os: windows-latest, session: "tests" }
           - { python-version: 3.9, os: ubuntu-latest, session: "docs-build" }
 
     env:
@@ -151,7 +155,7 @@ jobs:
           nox --force-color --python=${{ matrix.python-version }}
 
       - name: Upload coverage data
-        if: always() && matrix.session == 'tests'
+        if: always() && matrix.session == 'tests' && matrix.os == 'ubuntu-latest'
         uses: "actions/upload-artifact@v2.3.1"
         with:
           name: coverage-data
