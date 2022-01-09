@@ -7,9 +7,13 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.2.1_ - 2022-01-09
+===================
+
 Fixed
 -----
 - SchemaErrors on Windows (`GH157 <https://github.com/ML-KULeuven/socceraction/issues/157>`_)
+
 
 1.2.0_ - 2022-01-07
 ===================
@@ -277,7 +281,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.0...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.1...HEAD
+.. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.0...v1.2.1
 .. _1.2.0: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...v1.2.0
 .. _1.1.3: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...v1.1.3
 .. _1.1.2: https://github.com/ML-KULeuven/socceraction/compare/v1.1.1...v1.1.2
