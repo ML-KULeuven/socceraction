@@ -44,7 +44,7 @@ tqdm = "^4.62.3"
 coverage = { version="^6.2", extras=["toml"] }
 pytest-cov = "^3.0.0"
 flake8-black = "^0.2.3"
-flake8-bugbear = "^21.11.29"
+flake8-bugbear = "^22.1.11"
 flake8-annotations = "^2.7.0"
 flake8-docstrings = "^1.6.0"
 darglint = "^1.8.1"
