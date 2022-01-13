@@ -101,8 +101,8 @@ def goal_from_shot(actions: DataFrame[AtomicSPADLSchema]) -> pd.DataFrame:
         A dataframe with a column 'goal' and a row for each action set to
         True if a goal was scored from the current action; otherwise False.
     """
-    goals = (actions['type_id'] == atomicspadl.actiontypes.index('shot')) & (
-        actions['type_id'] == atomicspadl.actiontypes.index('goal')
+    goals = (actions["type_id"] == atomicspadl.actiontypes.index("shot")) & (
+        actions["type_id"].shift(-1) == atomicspadl.actiontypes.index("goal")
     )
 
-    return pd.DataFrame(goals, columns=['goal'])
+    return pd.DataFrame(goals.rename("goal"))
