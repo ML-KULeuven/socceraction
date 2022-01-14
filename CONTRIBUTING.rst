@@ -128,6 +128,12 @@ When contributing code, you'll want to follow this checklist:
 Testing the project
 ~~~~~~~~~~~~~~~~~~~
 
+Download the test data:
+
+.. code:: console
+
+   $ poetry run python tests/datasets/download.py
+
 Run the full test suite:
 
 .. code:: console

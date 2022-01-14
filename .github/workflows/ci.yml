@@ -59,11 +59,11 @@ jobs:
 
       - name: Download StatsBomb test data
         if: steps.cache-statsbomb.outputs.cache-hit != 'true'
-        run: poetry run python tests/datasets/download.py statsbomb
+        run: poetry run python tests/datasets/download.py --download-statsbomb
 
       - name: Download Wyscout test data
         if: steps.cache-public-wyscout.outputs.cache-hit != 'true'
-        run: poetry run python tests/datasets/download.py wyscout
+        run: poetry run python tests/datasets/download.py --download-wyscout
 
   tests:
     name: ${{ matrix.session }} ${{ matrix.python-version }} / ${{ matrix.os }}
