@@ -14,7 +14,7 @@ class SPADLSchema(pa.SchemaModel):
     original_event_id: Series[Any] = pa.Field(nullable=True)
     action_id: Series[int] = pa.Field()
     period_id: Series[int] = pa.Field(ge=1, le=5)
-    time_seconds: Series[float] = pa.Field(ge=0, le=60 * 60)  # assuming overtime < 15 min
+    time_seconds: Series[float] = pa.Field(ge=0)
     team_id: Series[Any] = pa.Field()
     player_id: Series[Any] = pa.Field()
     start_x: Series[float] = pa.Field(ge=0, le=spadlconfig.field_length)
