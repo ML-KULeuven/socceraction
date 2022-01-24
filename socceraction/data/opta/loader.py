@@ -131,6 +131,12 @@ _eventtypesdf = pd.DataFrame(
         (75, "delayed start"),
         (76, "early end"),
         (77, "player off pitch"),
+        (78, "temp card"),
+        (79, "coverage interruption"),
+        (80, "drop of ball"),
+        (81, "obstacle",
+        (83, "attempted tackle"),
+        (84, "deleted after review"),
         (10000, "offside given"),  # Seems specific to WhoScored
     ],
     columns=["type_id", "type_name"],
