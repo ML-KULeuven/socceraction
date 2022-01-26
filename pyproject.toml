@@ -42,7 +42,7 @@ tables = "^3.6.1"
 Sphinx = "^4.3.2"
 furo = "^2022.1.2"
 tqdm = "^4.62.3"
-coverage = { version="^6.2", extras=["toml"] }
+coverage = { version="^6.3", extras=["toml"] }
 pytest-cov = "^3.0.0"
 flake8-black = "^0.2.3"
 flake8-bugbear = "^22.1.11"
