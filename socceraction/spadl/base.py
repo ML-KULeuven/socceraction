@@ -43,8 +43,8 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
 
     dx = actions.end_x - next_actions.start_x
     dy = actions.end_y - next_actions.start_y
-    far_enough = dx ** 2 + dy ** 2 >= min_dribble_length ** 2
-    not_too_far = dx ** 2 + dy ** 2 <= max_dribble_length ** 2
+    far_enough = dx**2 + dy**2 >= min_dribble_length**2
+    not_too_far = dx**2 + dy**2 <= max_dribble_length**2
 
     dt = next_actions.time_seconds - actions.time_seconds
     same_phase = dt < max_dribble_duration
