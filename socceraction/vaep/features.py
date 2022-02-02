@@ -372,7 +372,7 @@ def startpolar(actions: SPADLActions) -> Features:
     polardf = pd.DataFrame()
     dx = (_goal_x - actions['start_x']).abs().values
     dy = (_goal_y - actions['start_y']).abs().values
-    polardf['start_dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
+    polardf['start_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
     with np.errstate(divide='ignore', invalid='ignore'):
         polardf['start_angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
@@ -397,7 +397,7 @@ def endpolar(actions: SPADLActions) -> Features:
     polardf = pd.DataFrame()
     dx = (_goal_x - actions['end_x']).abs().values
     dy = (_goal_y - actions['end_y']).abs().values
-    polardf['end_dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
+    polardf['end_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
     with np.errstate(divide='ignore', invalid='ignore'):
         polardf['end_angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
@@ -421,7 +421,7 @@ def movement(actions: SPADLActions) -> Features:
     mov = pd.DataFrame()
     mov['dx'] = actions.end_x - actions.start_x
     mov['dy'] = actions.end_y - actions.start_y
-    mov['movement'] = np.sqrt(mov.dx ** 2 + mov.dy ** 2)
+    mov['movement'] = np.sqrt(mov.dx**2 + mov.dy**2)
     return mov
 
 
@@ -496,7 +496,7 @@ def space_delta(gamestates: GameStates) -> Features:
         spaced['dx_a0' + (str(i + 1))] = dx
         dy = a.end_y - a0.start_y
         spaced['dy_a0' + (str(i + 1))] = dy
-        spaced['mov_a0' + (str(i + 1))] = np.sqrt(dx ** 2 + dy ** 2)
+        spaced['mov_a0' + (str(i + 1))] = np.sqrt(dx**2 + dy**2)
     return spaced
 
 

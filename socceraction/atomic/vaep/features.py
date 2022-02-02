@@ -173,7 +173,7 @@ def polar(actions: Actions) -> Features:
     polardf = pd.DataFrame()
     dx = (_goal_x - actions['x']).abs().values
     dy = (_goal_y - actions['y']).abs().values
-    polardf['dist_to_goal'] = np.sqrt(dx ** 2 + dy ** 2)
+    polardf['dist_to_goal'] = np.sqrt(dx**2 + dy**2)
     with np.errstate(divide='ignore', invalid='ignore'):
         polardf['angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
@@ -194,7 +194,7 @@ def movement_polar(actions: Actions) -> Features:
         The distance covered ('mov_d') and direction ('mov_angle') of each action.
     """
     mov = pd.DataFrame()
-    mov['mov_d'] = np.sqrt(actions.dx ** 2 + actions.dy ** 2)
+    mov['mov_d'] = np.sqrt(actions.dx**2 + actions.dy**2)
     with np.errstate(divide='ignore', invalid='ignore'):
         mov['mov_angle'] = np.arctan2(actions.dy, actions.dx)
         mov.loc[actions.dy == 0, 'mov_angle'] = 0  # fix float errors
@@ -217,7 +217,7 @@ def direction(actions: Actions) -> Features:
         vector of each action.
     """
     mov = pd.DataFrame()
-    totald = np.sqrt(actions.dx ** 2 + actions.dy ** 2)
+    totald = np.sqrt(actions.dx**2 + actions.dy**2)
     for d in ['dx', 'dy']:
         # we don't want to give away the end location,
         # just the direction of the ball
