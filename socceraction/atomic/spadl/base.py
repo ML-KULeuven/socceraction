@@ -124,7 +124,7 @@ def _extra_from_shots(actions: pd.DataFrame) -> pd.DataFrame:
 
     shot = actions.type_id.isin(shot_ids)
     goal = shot & (actions.result_id == _spadl.results.index('success'))
-    owngoal = (actions.result_id == _spadl.results.index('owngoal'))
+    owngoal = shot & (actions.result_id == _spadl.results.index('owngoal'))
     next_corner_goalkick = next_actions.type_id.isin(
         [
             _atomicspadl.actiontypes.index('corner_crossed'),
