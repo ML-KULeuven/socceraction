@@ -67,10 +67,10 @@ def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:
     sameperiod = actions.period_id == next_actions.period_id
     # samephase = next_actions.time_seconds - actions.time_seconds < max_pass_duration
     extra_idx = (
-        actions.type_id.isin(pass_ids)
-        & samegame
-        & sameperiod  # & samephase
-        & ~next_actions.type_id.isin(interception_ids)
+            actions.type_id.isin(pass_ids)
+            & samegame
+            & sameperiod  # & samephase
+            & ~next_actions.type_id.isin(interception_ids)
     )
 
     prev = actions[extra_idx]
@@ -91,15 +91,15 @@ def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:
 
     offside = prev.result_id == _spadl.results.index('offside')
     out = ((nex.type_id == _atomicspadl.actiontypes.index('goalkick')) & (~same_team)) | (
-        nex.type_id == _atomicspadl.actiontypes.index('throw_in')
+            nex.type_id == _atomicspadl.actiontypes.index('throw_in')
     )
     ar = _atomicspadl.actiontypes
     extra['type_id'] = -1
     extra['type_id'] = (
         extra.type_id.mask(same_team, ar.index('receival'))
-        .mask(~same_team, ar.index('interception'))
-        .mask(out, ar.index('out'))
-        .mask(offside, ar.index('offside'))
+            .mask(~same_team, ar.index('interception'))
+            .mask(out, ar.index('out'))
+            .mask(offside, ar.index('offside'))
     )
     is_interception = extra['type_id'] == ar.index('interception')
     extra['team_id'] = prev.team_id.mask(is_interception, nex.team_id)
@@ -156,9 +156,9 @@ def _extra_from_shots(actions: pd.DataFrame) -> pd.DataFrame:
     ar = _atomicspadl.actiontypes
     extra['type_id'] = -1
     extra['type_id'] = (
-        extra.type_id.mask(goal, ar.index('goal'))
-        .mask(owngoal, ar.index('owngoal'))
-        .mask(out, ar.index('out'))
+        extra.type_id.mask(out, ar.index('out')
+        .mask(goal, ar.index('goal'))
+        .mask(owngoal, ar.index('owngoal')))
     )
     actions = pd.concat([actions, extra], ignore_index=True, sort=False)
     actions = actions.sort_values(['game_id', 'period_id', 'action_id']).reset_index(drop=True)
