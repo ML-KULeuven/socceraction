@@ -156,9 +156,9 @@ def _extra_from_shots(actions: pd.DataFrame) -> pd.DataFrame:
     ar = _atomicspadl.actiontypes
     extra['type_id'] = -1
     extra['type_id'] = (
-        extra.type_id.mask(goal, ar.index('goal'))
+        extra.type_id.mask(out, ar.index('out'))
+        .mask(goal, ar.index('goal'))
         .mask(owngoal, ar.index('owngoal'))
-        .mask(out, ar.index('out'))
     )
     actions = pd.concat([actions, extra], ignore_index=True, sort=False)
     actions = actions.sort_values(['game_id', 'period_id', 'action_id']).reset_index(drop=True)
