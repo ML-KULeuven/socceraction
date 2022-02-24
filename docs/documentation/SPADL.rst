@@ -61,8 +61,8 @@ action is a tuple of the same twelve attributes:
 
 Start and End Locations
   SPADL uses a standardized coordinate system with the origin on the bottom
-  left of the pitch, and a uniform field of 105m x 68m. The direction of play
-  corresponds to the direction in the original event stream data, but can be
+  left of the pitch, and a uniform field of 105m x 68m. For direction of play,
+  SPADL uses the "home team attacks to the right" convention, but this can be
   converted conveniently with the :func:`~socceraction.spadl.play_left_to_right`
   function such that the lower x-coordinates represent the own half of the team
   performing the action.
