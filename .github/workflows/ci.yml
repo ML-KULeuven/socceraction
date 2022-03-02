@@ -27,7 +27,7 @@ jobs:
 
       - name: Check out the repository
         if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
@@ -88,7 +88,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2.3.2
@@ -173,7 +173,7 @@ jobs:
     needs: tests
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2.3.2
