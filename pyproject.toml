@@ -40,7 +40,7 @@ unify = "^0.5"
 xgboost = "^1.5.2"
 tables = "^3.6.1"
 Sphinx = "^4.3.2"
-furo = "^2022.2.23"
+furo = "^2022.3.4"
 tqdm = "^4.63.0"
 coverage = { version="^6.3", extras=["toml"] }
 pytest-cov = "^3.0.0"
