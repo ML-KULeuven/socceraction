@@ -1,5 +1,6 @@
 """Implements serializers for Opta data."""
 import copy
+import datetime
 import glob
 import os
 import re
@@ -449,4 +450,18 @@ class OptaLoader(EventDataLoader):
             .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
             .reset_index(drop=True)
         )
+
+        # sometimes pre-match events has -3, -2 and -1 seconds
+        events.loc[events.second < 0, "second"] = 0
+        events = events.sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
+
+        # deleted events has wrong datetime which occurs OutOfBoundsDatetime error
+        events = events[events.type_id != 43]
+        events = events[
+            ~(
+                (events.timestamp < datetime.datetime(1900, 1, 1))
+                | (events.timestamp > datetime.datetime(2100, 1, 1))
+            )
+        ]
+
         return events.pipe(DataFrame[OptaEventSchema])
