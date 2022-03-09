@@ -293,7 +293,7 @@ def bodypart_detailed(actions: Actions) -> Features:
 
 @simple
 def bodypart_onehot(actions: Actions) -> Features:
-    """Get the one-hot-encoded bodypart with split by foot of each action.
+    """Get the one-hot-encoded bodypart of each action.
 
     Parameters
     ----------
@@ -319,7 +319,7 @@ def bodypart_onehot(actions: Actions) -> Features:
 
 @simple
 def bodypart_detailed_onehot(actions: Actions) -> Features:
-    """Get the one-hot-encoded bodypart of each action.
+    """Get the one-hot-encoded bodypart with split by foot of each action.
 
     Parameters
     ----------
