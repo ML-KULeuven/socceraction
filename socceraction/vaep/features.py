@@ -262,11 +262,63 @@ def bodypart(actions: Actions) -> Features:
     Features
         The 'bodypart_id' of each action.
     """
+    foot_index = spadlconfig.bodyparts.index("foot")
+    bodyparts = actions[['bodypart_id']]
+    bodyparts.loc[
+        bodyparts['bodypart_id'].isin(
+            [spadlconfig.bodyparts.index('foot_left'), spadlconfig.bodyparts.index('foot_right')]
+        ),
+        'bodypart_id',
+    ] = foot_index
+
+    return bodyparts
+
+
+@simple
+def bodypart_detailed(actions: Actions) -> Features:
+    """Get the body part with split by foot used to perform each action.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The 'bodypart_id' of each action.
+    """
     return actions[['bodypart_id']]
 
 
 @simple
 def bodypart_onehot(actions: Actions) -> Features:
+    """Get the one-hot-encoded bodypart with split by foot of each action.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The one-hot encoding of each action's bodypart.
+    """
+    X = pd.DataFrame()
+    for bodypart_name in spadlconfig.bodyparts:
+        if bodypart_name in ('foot_left', 'foot_right'):
+            continue
+        col = 'bodypart_' + bodypart_name
+        if bodypart_name == 'foot':
+            X[col] = actions['bodypart_name'].isin(['foot', 'foot_left', 'foot_right'])
+        else:
+            X[col] = actions['bodypart_name'] == bodypart_name
+    return X
+
+
+@simple
+def bodypart_detailed_onehot(actions: Actions) -> Features:
     """Get the one-hot-encoded bodypart of each action.
 
     Parameters
