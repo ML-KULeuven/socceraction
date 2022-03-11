@@ -5,7 +5,7 @@ import glob
 import os
 import re
 import warnings
-from typing import Any, Dict, Mapping, Optional, Type, Union
+from typing import Any, Dict, Mapping, Optional, Type, Union, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -340,7 +340,7 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_competitions())
-        return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaCompetitionSchema])
+        return cast(DataFrame[OptaCompetitionSchema], pd.DataFrame(list(data.values())))
 
     def games(self, competition_id: int, season_id: int) -> DataFrame[OptaGameSchema]:
         """Return a dataframe with all available games in a season.
@@ -368,7 +368,7 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_games())
-        return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaGameSchema])
+        return cast(DataFrame[OptaGameSchema], pd.DataFrame(list(data.values())))
 
     def teams(self, game_id: int) -> DataFrame[OptaTeamSchema]:
         """Return a dataframe with both teams that participated in a game.
@@ -392,7 +392,7 @@ class OptaLoader(EventDataLoader):
                 ids = _extract_ids_from_path(ffp, feed_pattern)
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_teams())
-        return pd.DataFrame(list(data.values())).pipe(DataFrame[OptaTeamSchema])
+        return cast(DataFrame[OptaTeamSchema], pd.DataFrame(list(data.values())))
 
     def players(self, game_id: int) -> DataFrame[OptaPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
@@ -418,7 +418,7 @@ class OptaLoader(EventDataLoader):
                 _deepupdate(data, parser.extract_players())
         df_players = pd.DataFrame(list(data.values()))
         df_players["game_id"] = game_id
-        return df_players.pipe(DataFrame[OptaPlayerSchema])
+        return cast(DataFrame[OptaPlayerSchema], df_players)
 
     def events(self, game_id: int) -> DataFrame[OptaEventSchema]:
         """Return a dataframe with the event stream of a game.
@@ -462,4 +462,4 @@ class OptaLoader(EventDataLoader):
             )
         ]
 
-        return events.pipe(DataFrame[OptaEventSchema])
+        return cast(DataFrame[OptaEventSchema], events)
