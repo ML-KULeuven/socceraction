@@ -1,22 +1,12 @@
 """Implements serializers for StatsBomb data."""
 import os
-import warnings
 from typing import Any, Dict, List, Optional, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
 try:
-    from statsbombpy import api_client, sb
-
-    def my_has_auth(creds: Dict[str, str]) -> bool:
-        """Monkeypatch to hide the repeated print messages."""
-        if creds.get("user") in [None, ""] or creds.get("passwd") in [None, ""]:
-            warnings.warn("credentials were not supplied. open data access only")
-            return False
-        return True
-
-    api_client.has_auth = my_has_auth
+    from statsbombpy import sb
 except ImportError:
     sb = None
 
