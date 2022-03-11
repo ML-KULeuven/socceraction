@@ -7,6 +7,24 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.2.2_ - 2022-03-11
+===================
+
+Fixed
+-----
+- Fix the atomic version of the ``goal_from_shot`` labeling function
+- Added missing opta event types 78 - 84
+- Fixes conversion of owngoals in Atomic-SPADL (`GH198 <https://github.com/ML-KULeuven/socceraction/issues/198>`_)
+- Fixes the result of shots when subsequent events are not registered due to replays (`GH199 <https://github.com/ML-KULeuven/socceraction/issues/199>`_)
+- Handle incorrect timestamps in Stats Perform event data
+
+
+Documentation
+--------------
+- Added instruction for downloading test data to the contributor guide. Also,
+  the download script was improved.
+- Fixed the description on how SPADL handles the direction of play
+
 1.2.1_ - 2022-01-09
 ===================
 
@@ -281,7 +299,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.1...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.2...HEAD
+.. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.1...v1.2.2
 .. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.0...v1.2.1
 .. _1.2.0: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...v1.2.0
 .. _1.1.3: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...v1.1.3
