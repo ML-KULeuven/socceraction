@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """StatsBomb event stream data to SPADL converter."""
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -74,7 +74,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    return actions.pipe(DataFrame[SPADLSchema])
+    return cast(DataFrame[SPADLSchema], actions)
 
 
 Location = Tuple[float, float]

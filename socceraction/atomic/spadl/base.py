@@ -33,7 +33,7 @@ def convert_to_atomic(actions: DataFrame[SPADLSchema]) -> DataFrame[AtomicSPADLS
     atomic_actions = _extra_from_fouls(atomic_actions)
     atomic_actions = _convert_columns(atomic_actions)
     atomic_actions = _simplify(atomic_actions)
-    return atomic_actions.pipe(DataFrame[AtomicSPADLSchema])
+    return cast(DataFrame[AtomicSPADLSchema], atomic_actions)
 
 
 def _extra_from_passes(actions: pd.DataFrame) -> pd.DataFrame:
