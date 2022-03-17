@@ -70,7 +70,7 @@ SPADL actions.
    import socceraction.spadl as spadl
 
    home_team_id = df_games.at[game_id, "home_team_id"]
-   df_actions = spad.statsbomb.convert_to_actions(df_events, home_team_id)
+   df_actions = spadl.statsbomb.convert_to_actions(df_events, home_team_id)
 
 With the `matplotsoccer package <https://github.com/TomDecroos/matplotsoccer>`_, you can try plotting some of these
 actions:
