@@ -725,6 +725,16 @@ def _convert_events(raw_events: pd.DataFrame) -> pd.DataFrame:
     return events.rename(columns=eventmapping)[cols]
 
 
+def _get_injury_time(time_in_min: int, periods_duration: List[int]) -> int:
+    injury_time = 0
+    for period in range(len(periods) - 1):
+        if time_in_min > sum(periods[: period + 1]):
+            injury_time += periods_duration[period] - periods[period]
+        else:
+            break
+    return injury_time
+
+
 def _get_minutes_played(
     teamsData: List[Dict[str, Any]], events: List[Dict[str, Any]]
 ) -> pd.DataFrame:
@@ -754,12 +764,7 @@ def _get_minutes_played(
 
         if substitutions != 'null':
             for substitution in substitutions:
-                injury_time = 0
-                for period in range(len(periods) - 1):
-                    if substitution['minute'] > sum(periods[: period + 1]):
-                        injury_time += periods_duration[period] - periods[period]
-                    else:
-                        break
+                injury_time = _get_injury_time(substitution['minute'], periods_duration)
                 substitute = {
                     'team_id': teamData['teamId'],
                     'player_id': substitution['playerIn'],
@@ -775,6 +780,21 @@ def _get_minutes_played(
                 pg[substitution['playerOut']]['minutes_played'] = (
                     substitution['minute'] + injury_time
                 )
+
+        for key in ['bench', 'lineup']:
+            for player in formation.get(key, []):
+                if player['redCards'] != "0":
+                    red_card = int(player['redCards'])
+                    injury_time = _get_injury_time(red_card, periods_duration)
+                    if key == 'lineup':
+                        pg[player['playerId']]['minutes_played'] = red_card + injury_time
+                    else:
+                        pg[player['playerId']]['minutes_played'] = (
+                            red_card
+                            + injury_time
+                            - (duration - pg[player['playerId']]['minutes_played'])
+                        )
+
         playergames = {**playergames, **pg}
     return pd.DataFrame(playergames.values())
 
