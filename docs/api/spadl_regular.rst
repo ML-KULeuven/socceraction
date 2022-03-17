@@ -15,6 +15,7 @@ Converters
    socceraction.spadl.statsbomb.convert_to_actions
    socceraction.spadl.opta.convert_to_actions
    socceraction.spadl.wyscout.convert_to_actions
+   socceraction.spadl.kloppy.convert_to_actions
 
 
 Schema
