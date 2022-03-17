@@ -732,7 +732,8 @@ def _get_minutes_played(
     for e in events:
         period_id = wyscout_periods[e['matchPeriod']]
         periods_ts[period_id].append(e['eventSec'])
-    duration = int(sum([max(periods_ts[i]) / 60 for i in range(5)]))
+    periods_duration = [round(max(periods_ts[i]) / 60) for i in range(1, 5)]
+    duration = int(sum(periods_duration))
     playergames: Dict[int, Dict[str, Any]] = {}
     if isinstance(teamsData, dict):
         teamsData = list(teamsData.values())
@@ -753,6 +754,12 @@ def _get_minutes_played(
 
         if substitutions != 'null':
             for substitution in substitutions:
+                injury_time = 0
+                for period in range(len(periods) - 1):
+                    if substitution['minute'] > sum(periods[: period + 1]):
+                        injury_time += periods_duration[period] - periods[period]
+                    else:
+                        break
                 substitute = {
                     'team_id': teamData['teamId'],
                     'player_id': substitution['playerIn'],
@@ -761,13 +768,16 @@ def _get_minutes_played(
                         for p in formation.get('bench', [])
                         if p['playerId'] == substitution['playerIn']
                     ),
-                    'minutes_played': duration - substitution['minute'],
+                    'minutes_played': duration - substitution['minute'] - injury_time,
                     'is_starter': False,
                 }
                 pg[substitution['playerIn']] = substitute
-                pg[substitution['playerOut']]['minutes_played'] = substitution['minute']
+                pg[substitution['playerOut']]['minutes_played'] = (
+                    substitution['minute'] + injury_time
+                )
         playergames = {**playergames, **pg}
     return pd.DataFrame(playergames.values())
 
 
 wyscout_periods = {'1H': 1, '2H': 2, 'E1': 3, 'E2': 4, 'P': 5}
+periods = [45, 45, 15, 15]
