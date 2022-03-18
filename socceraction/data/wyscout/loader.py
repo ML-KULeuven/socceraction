@@ -788,13 +788,15 @@ def _get_minutes_played(
                     red_card = int(player['redCards'])
                     injury_time = _get_injury_time(red_card, periods_duration)
                     if (key == 'lineup') and (
-                    not player['playerId'] in [s['playerOut'] for s in formation.get('substitutions', [])]):
+                        not player['playerId']
+                        in [s['playerOut'] for s in formation.get('substitutions', [])]
+                    ):
                         pg[player['playerId']]['minutes_played'] = red_card + injury_time
                     if (key == 'bench') and (player['playerId'] in pg):
                         pg[player['playerId']]['minutes_played'] = (
-                                red_card
-                                + injury_time
-                                - (duration - pg[player['playerId']]['minutes_played'])
+                            red_card
+                            + injury_time
+                            - (duration - pg[player['playerId']]['minutes_played'])
                         )
 
         playergames = {**playergames, **pg}
