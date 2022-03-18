@@ -257,14 +257,15 @@ class PublicWyscoutLoader(EventDataLoader):
         players_match = []
         for team in lineups:
             playerlist = team['formation']['lineup']
-            for p in team['formation']['substitutions']:
-                playerlist.append(
-                    next(
-                        item
-                        for item in team['formation']['bench']
-                        if item['playerId'] == p['playerIn']
+            if team['formation']['substitutions'] != "null":
+                for p in team['formation']['substitutions']:
+                    playerlist.append(
+                        next(
+                            item
+                            for item in team['formation']['bench']
+                            if item['playerId'] == p['playerIn']
+                        )
                     )
-                )
             df = pd.DataFrame(playerlist)
             df['side'] = team['side']
             df['team_id'] = team['teamId']
