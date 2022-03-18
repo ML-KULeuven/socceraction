@@ -728,12 +728,37 @@ def _convert_events(raw_events: pd.DataFrame) -> pd.DataFrame:
 
 def _get_injury_time(time_in_min: int, periods_duration: List[int]) -> int:
     injury_time = 0
-    for period in range(len(periods) - 1):
+    for period in range(len(periods_duration) - 1):
         if time_in_min > sum(periods[: period + 1]):
             injury_time += periods_duration[period] - periods[period]
         else:
             break
     return injury_time
+
+
+def _check_for_red_cards(
+    formation: Dict[str, List[Dict[str, Any]]],
+    periods_duration: List[int],
+    pg: Dict[int, Dict[str, Any]],
+) -> Dict[int, Dict[str, Any]]:
+    duration = int(sum(periods_duration))
+    for key in ['bench', 'lineup']:
+        for player in formation.get(key, []):
+            if player['redCards'] != "0":
+                red_card = int(player['redCards'])
+                injury_time = _get_injury_time(red_card, periods_duration)
+                if (key == 'lineup') and (
+                    not player['playerId']
+                    in [s['playerOut'] for s in formation.get('substitutions', [])]
+                ):
+                    pg[player['playerId']]['minutes_played'] = red_card + injury_time
+                if (key == 'bench') and (player['playerId'] in pg):
+                    pg[player['playerId']]['minutes_played'] = (
+                        red_card
+                        + injury_time
+                        - (duration - pg[player['playerId']]['minutes_played'])
+                    )
+    return pg
 
 
 def _get_minutes_played(
@@ -783,23 +808,7 @@ def _get_minutes_played(
                 pg[substitution['playerOut']]['minutes_played'] = (
                     substitution['minute'] + injury_time
                 )
-
-        for key in ['bench', 'lineup']:
-            for player in formation.get(key, []):
-                if player['redCards'] != "0":
-                    red_card = int(player['redCards'])
-                    injury_time = _get_injury_time(red_card, periods_duration)
-                    if (key == 'lineup') and (
-                        not player['playerId']
-                        in [s['playerOut'] for s in formation.get('substitutions', [])]
-                    ):
-                        pg[player['playerId']]['minutes_played'] = red_card + injury_time
-                    if (key == 'bench') and (player['playerId'] in pg):
-                        pg[player['playerId']]['minutes_played'] = (
-                            red_card
-                            + injury_time
-                            - (duration - pg[player['playerId']]['minutes_played'])
-                        )
+        pg = _check_for_red_cards(formation, periods_duration, pg)
 
         playergames = {**playergames, **pg}
     return pd.DataFrame(playergames.values())
