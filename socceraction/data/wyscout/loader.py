@@ -743,7 +743,9 @@ def _get_minutes_played(
     for e in events:
         period_id = wyscout_periods[e['matchPeriod']]
         periods_ts[period_id].append(e['eventSec'])
-    periods_duration = [round(max(periods_ts[i]) / 60) for i in range(1, 5)]
+    periods_duration = [
+        round(max(periods_ts[i]) / 60) for i in range(5) if max(periods_ts[i]) != 0
+    ]
     duration = int(sum(periods_duration))
     playergames: Dict[int, Dict[str, Any]] = {}
     if isinstance(teamsData, dict):
