@@ -51,8 +51,33 @@ def _localloadjson(path: str) -> JSONType:
     JSONType
         A dictionary with the data loaded.
     """
-    with open(path, 'rt', encoding='utf-8') as fh:
+    with open(path, "rt", encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def _expand_minute(minute: int, periods_duration: List[int]) -> int:
+    """Expand a timestamp with injury time of previous periods.
+
+    Parameters
+    ----------
+    minute : int
+        Timestamp in minutes.
+    periods_duration : List[int]
+        Total duration of each period in minutes.
+
+    Returns
+    -------
+    int
+        Timestamp expanded with injury time.
+    """
+    expanded_minute = minute
+    periods_regular = [45, 45, 15, 15, 0]
+    for period in range(len(periods_duration) - 1):
+        if minute > sum(periods_regular[: period + 1]):
+            expanded_minute += periods_duration[period] - periods_regular[period]
+        else:
+            break
+    return expanded_minute
 
 
 class EventDataLoader(ABC):

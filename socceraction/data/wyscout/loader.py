@@ -16,6 +16,7 @@ from ..base import (
     EventDataLoader,
     MissingDataError,
     ParseError,
+    _expand_minute,
     _localloadjson,
     _remoteloadjson,
 )
@@ -257,14 +258,15 @@ class PublicWyscoutLoader(EventDataLoader):
         players_match = []
         for team in lineups:
             playerlist = team['formation']['lineup']
-            for p in team['formation']['substitutions']:
-                playerlist.append(
-                    next(
-                        item
-                        for item in team['formation']['bench']
-                        if item['playerId'] == p['playerIn']
+            if team['formation']['substitutions'] != "null":
+                for p in team['formation']['substitutions']:
+                    playerlist.append(
+                        next(
+                            item
+                            for item in team['formation']['bench']
+                            if item['playerId'] == p['playerIn']
+                        )
                     )
-                )
             df = pd.DataFrame(playerlist)
             df['side'] = team['side']
             df['team_id'] = team['teamId']
@@ -728,31 +730,45 @@ def _convert_events(raw_events: pd.DataFrame) -> pd.DataFrame:
 def _get_minutes_played(
     teamsData: List[Dict[str, Any]], events: List[Dict[str, Any]]
 ) -> pd.DataFrame:
+    # get duration of each period
     periods_ts = {i: [0] for i in range(6)}
     for e in events:
         period_id = wyscout_periods[e['matchPeriod']]
         periods_ts[period_id].append(e['eventSec'])
-    duration = int(sum([max(periods_ts[i]) / 60 for i in range(5)]))
+    periods_duration = [
+        round(max(periods_ts[i]) / 60) for i in range(5) if max(periods_ts[i]) != 0
+    ]
+    # get duration of entire match
+    duration = sum(periods_duration)
+
+    # get stats for each player
     playergames: Dict[int, Dict[str, Any]] = {}
     if isinstance(teamsData, dict):
         teamsData = list(teamsData.values())
     for teamData in teamsData:
         formation = teamData.get('formation', {})
+        substitutions = formation.get('substitutions', [])
+        red_cards = {
+            player['playerId']: _expand_minute(int(player['redCards']), periods_duration)
+            for key in ['bench', 'lineup']
+            for player in formation.get(key, [])
+            if player['redCards'] != "0"
+        }
         pg = {
             player['playerId']: {
                 'team_id': teamData['teamId'],
                 'player_id': player['playerId'],
                 'jersey_number': player.get('shirtNumber', 0),
-                'minutes_played': duration,
+                'minutes_played': red_cards.get(player['playerId'], duration),
                 'is_starter': True,
             }
             for player in formation.get('lineup', [])
         }
 
-        substitutions = formation.get('substitutions', [])
-
+        # correct minutes played for substituted players
         if substitutions != 'null':
             for substitution in substitutions:
+                expanded_minute_sub = _expand_minute(substitution['minute'], periods_duration)
                 substitute = {
                     'team_id': teamData['teamId'],
                     'player_id': substitution['playerIn'],
@@ -761,11 +777,16 @@ def _get_minutes_played(
                         for p in formation.get('bench', [])
                         if p['playerId'] == substitution['playerIn']
                     ),
-                    'minutes_played': duration - substitution['minute'],
+                    'minutes_played': duration - expanded_minute_sub,
                     'is_starter': False,
                 }
+                if substitution['playerIn'] in red_cards:
+                    substitute['minutes_played'] = (
+                        red_cards[substitution['playerIn']] - expanded_minute_sub
+                    )
                 pg[substitution['playerIn']] = substitute
-                pg[substitution['playerOut']]['minutes_played'] = substitution['minute']
+                pg[substitution['playerOut']]['minutes_played'] = expanded_minute_sub
+
         playergames = {**playergames, **pg}
     return pd.DataFrame(playergames.values())
 

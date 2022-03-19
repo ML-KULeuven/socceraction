@@ -38,6 +38,21 @@ class TestPublicWyscoutLoader:
         assert df_players.minutes_played.sum() == 22 * 96
         WyscoutPlayerSchema.validate(df_players)
 
+    def test_minutes_played(self) -> None:
+        # Injury time should be added
+        df_players = self.WSL.players(2058007).set_index("player_id")
+        assert df_players.at[122, "minutes_played"] == 66
+        assert df_players.at[8249, "minutes_played"] == 96 - 66
+        # Penalty shoot-outs should no be added
+        df_players = self.WSL.players(2058005).set_index("player_id")
+        assert df_players.minutes_played.sum() / 22 == 127
+        # COL - JAP: red card in '3
+        df_players = self.WSL.players(2057997).set_index("player_id")
+        assert df_players.at[26518, "minutes_played"] == 3
+        # GER - SWE: double yellow card in '82 + 2' injury time
+        df_players = self.WSL.players(2057986).set_index("player_id")
+        assert df_players.at[14716, "minutes_played"] == 84
+
     def test_events(self) -> None:
         df_events = self.WSL.events(2058007)
         assert len(df_events) > 0
