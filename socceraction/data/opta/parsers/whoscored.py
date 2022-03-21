@@ -358,6 +358,11 @@ class WhoScoredParser(OptaParser):
         players_gamestats = {}
         for team in [self.root["home"], self.root["away"]]:
             team_id = int(assertget(team, "teamId"))
+            red_cards = {
+                e["playerId"]: e["expandedMinute"]
+                for e in team.get("incidentEvents", [])
+                if "cardType" in e and e["cardType"]["displayName"] in ["Red", "SecondYellow"]
+            }
             for player in team["players"]:
                 statsdict = {
                     _camel_to_snake(name): sum(stat.values())
@@ -380,6 +385,8 @@ class WhoScoredParser(OptaParser):
                     p["minute_start"] = player["subbedInExpandedMinute"]
                 if "subbedOutExpandedMinute" in player:
                     p["minute_end"] = player["subbedOutExpandedMinute"]
+                if player_id in red_cards:
+                    p["minute_end"] = red_cards[player_id]
 
                 # Did not play
                 p["minutes_played"] = 0
