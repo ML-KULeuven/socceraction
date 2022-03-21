@@ -266,7 +266,7 @@ def test_extract_player_games(SBL: sb.StatsBombLoader) -> None:
     assert len(df_player_games) == 26
     assert len(df_player_games.player_name.unique()) == 26
     assert set(df_player_games.team_name) == {"Belgium", "Japan"}
-    assert df_player_games.minutes_played.sum() == 22 * 95
+    assert df_player_games.minutes_played.sum() == 22 * 96
 
 
 def test_minutes_played(SBL: sb.StatsBombLoader) -> None:
