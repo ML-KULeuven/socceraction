@@ -267,3 +267,19 @@ def test_extract_player_games(SBL: sb.StatsBombLoader) -> None:
     assert len(df_player_games.player_name.unique()) == 26
     assert set(df_player_games.team_name) == {"Belgium", "Japan"}
     assert df_player_games.minutes_played.sum() == 22 * 95
+
+
+def test_minutes_played(SBL: sb.StatsBombLoader) -> None:
+    # Injury time should be added
+    df_players = SBL.players(7584).set_index("player_id")
+    assert df_players.at[5630, "minutes_played"] == 64 + 1
+    assert df_players.at[3296, "minutes_played"] == 96 - (64 + 1)
+    # Penalty shoot-outs should no be added
+    df_players = SBL.players(7581).set_index("player_id")
+    assert df_players.minutes_played.sum() / 22 == 127
+    # COL - JAP: red card in '2
+    df_players = SBL.players(7541).set_index("player_id")
+    assert df_players.at[5685, "minutes_played"] == 2
+    # GER - SWE: double yellow card in '80 + 2' injury time
+    df_players = SBL.players(7551).set_index("player_id")
+    assert df_players.at[5578, "minutes_played"] == 82

@@ -20,7 +20,12 @@ try:
 except ImportError:
     sb = None
 
-from socceraction.data.base import EventDataLoader, ParseError, _localloadjson
+from socceraction.data.base import (
+    EventDataLoader,
+    ParseError,
+    _expand_minute,
+    _localloadjson,
+)
 
 from .schema import (
     StatsBombCompetitionSchema,
@@ -384,10 +389,45 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     player_games : pd.DataFrame
         A DataFrame with the number of minutes played by each player during the game.
     """
-    game_minutes = max(events[events.type_name == "Half End"].minute)
+    # get duration of each period
+    periods = pd.DataFrame(
+        [
+            {"period_id": 1, "minute": 45},
+            {"period_id": 2, "minute": 45},
+            {"period_id": 3, "minute": 15},
+            {"period_id": 4, "minute": 15},
+            # Shoot-outs should not contritbute to minutes played
+            # {"period_id": 5, "minute": 0},
+        ]
+    ).set_index("period_id")
+    periods_minutes = (
+        events.loc[events.type_name == "Half End", ["period_id", "minute"]]
+        .drop_duplicates()
+        .set_index("period_id")
+        .sort_index()
+        .subtract(periods.cumsum().shift(1).fillna(0))
+        .minute.dropna()
+        .astype(int)
+        .tolist()
+    )
+    # get duration of entire match
+    game_minutes = sum(periods_minutes)
 
     game_id = events.game_id.mode().values[0]
     players = {}
+    # Red cards
+    red_cards = events[
+        events.apply(
+            lambda x: any(
+                e in x.extra
+                and "card" in x.extra[e]
+                and x.extra[e]["card"]["name"] in ["Second Yellow", "Red Card"]
+                for e in ["foul_committed", "bad_behaviour"]
+            ),
+            axis=1,
+        )
+    ]
+    # stats for starting XI
     for startxi in events[events.type_name == "Starting XI"].itertuples():
         team_id, team_name = startxi.team_id, startxi.team_name
         for player in startxi.extra["tactics"]["lineup"]:
@@ -401,20 +441,30 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
                     "minutes_played": game_minutes,
                 },
             }
+            player_red_card = red_cards[red_cards.player_id == player["player_id"]]
+            if len(player_red_card) > 0:
+                red_card_minute = player_red_card.iloc[0].minute
+                player["minutes_played"] = _expand_minute(red_card_minute, periods_minutes)
             players[player["player_id"]] = player
+    # stats for substitutions
     for substitution in events[events.type_name == "Substitution"].itertuples():
-        replacement = substitution.extra["substitution"]["replacement"]
+        exp_sub_minute = _expand_minute(substitution.minute, periods_minutes)
         replacement = {
-            "player_id": replacement["id"],
-            "player_name": replacement["name"],
-            "minutes_played": game_minutes - substitution.minute,
+            "player_id": substitution.extra["substitution"]["replacement"]["id"],
+            "player_name": substitution.extra["substitution"]["replacement"]["name"],
+            "minutes_played": game_minutes - exp_sub_minute,
             "team_id": substitution.team_id,
             "game_id": game_id,
             "team_name": substitution.team_name,
         }
+        player_red_card = red_cards[red_cards.player_id == replacement["player_id"]]
+        if len(player_red_card) > 0:
+            red_card_minute = player_red_card.iloc[0].minute
+            replacement["minutes_played"] = (
+                _expand_minute(red_card_minute, periods_minutes) - exp_sub_minute
+            )
         players[replacement["player_id"]] = replacement
-        # minutes_played = substitution.minute
-        players[substitution.player_id]["minutes_played"] = substitution.minute
+        players[substitution.player_id]["minutes_played"] = exp_sub_minute
     pg = pd.DataFrame(players.values()).fillna(0)
     for col in pg.columns:
         if "_id" in col:
