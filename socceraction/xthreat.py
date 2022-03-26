@@ -444,7 +444,7 @@ class ExpectedThreat:
         ratings = np.empty(len(actions))
         ratings[:] = np.NaN
 
-        move_actions = get_successful_move_actions(actions)
+        move_actions = get_successful_move_actions(actions.reset_index())
 
         startxc, startyc = _get_cell_indexes(move_actions.start_x, move_actions.start_y, l, w)
         endxc, endyc = _get_cell_indexes(move_actions.end_x, move_actions.end_y, l, w)
