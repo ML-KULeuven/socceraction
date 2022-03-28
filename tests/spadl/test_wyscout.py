@@ -120,3 +120,97 @@ class TestSpadlConvertor:
         assert len(actions) == 4
         assert actions.at[1, 'type_id'] == spadl.actiontypes.index('bad_touch')
         assert actions.at[1, 'result_id'] == spadl.results.index('owngoal')
+
+    def test_convert_simulations_precede_by_take_on(self) -> None:
+        events = pd.DataFrame(
+            [
+                {
+                    "type_id": 1,
+                    "subtype_name": "Ground attacking duel",
+                    "tags": [{"id": 503}, {"id": 701}, {"id": 1802}],
+                    "player_id": 8327,
+                    "positions": [{"y": 48, "x": 82}, {"y": 47, "x": 83}],
+                    "game_id": 2576263,
+                    "type_name": "Duel",
+                    "team_id": 3158,
+                    "period_id": 2,
+                    "milliseconds": 706.309475 * 1000,
+                    "subtype_id": 11,
+                    "event_id": 240828365,
+                },
+                {
+                    "type_id": 2,
+                    "subtype_name": "Simulation",
+                    "tags": [{"id": 1702}],
+                    "player_id": 8327,
+                    "positions": [{"y": 47, "x": 83}, {"y": 0, "x": 0}],
+                    "game_id": 2576263,
+                    "type_name": "Foul",
+                    "team_id": 3158,
+                    "period_id": 2,
+                    "milliseconds": 709.1020480000002 * 1000,
+                    "subtype_id": 25,
+                    "event_id": 240828368,
+                },
+            ]
+        )
+
+        actions = wy.convert_to_actions(events, 3158)
+
+        assert len(actions) == 1
+        assert actions.at[0, 'type_id'] == spadl.actiontypes.index('take_on')
+        assert actions.at[0, 'result_id'] == spadl.results.index('fail')
+
+    def test_convert_simulations(self) -> None:
+        events = pd.DataFrame(
+            [
+                {
+                    "type_id": 8,
+                    "subtype_name": "Cross",
+                    "tags": [{"id": 402}, {"id": 801}, {"id": 1801}],
+                    "player_id": 20472,
+                    "positions": [{"y": 76, "x": 92}, {"y": 92, "x": 98}],
+                    "game_id": 2575974,
+                    "type_name": "Pass",
+                    "team_id": 3173,
+                    "period_id": 1,
+                    "milliseconds": 1010.5460250000001 * 1000,
+                    "subtype_id": 80,
+                    "event_id": 182640540,
+                },
+                {
+                    "type_id": 1,
+                    "subtype_name": "Ground loose ball duel",
+                    "tags": [{"id": 701}, {"id": 1802}],
+                    "player_id": 116171,
+                    "positions": [{"y": 92, "x": 98}, {"y": 43, "x": 87}],
+                    "game_id": 2575974,
+                    "type_name": "Duel",
+                    "team_id": 3173,
+                    "period_id": 1,
+                    "milliseconds": 1012.8018770000001 * 1000,
+                    "subtype_id": 13,
+                    "event_id": 182640541,
+                },
+                {
+                    "type_id": 2,
+                    "subtype_name": "Simulation",
+                    "tags": [{"id": 1702}],
+                    "player_id": 116171,
+                    "positions": [{"y": 43, "x": 87}, {"y": 100, "x": 100}],
+                    "game_id": 2575974,
+                    "type_name": "Foul",
+                    "team_id": 3173,
+                    "period_id": 1,
+                    "milliseconds": 1014.7540220000001 * 1000,
+                    "subtype_id": 25,
+                    "event_id": 182640542,
+                },
+            ]
+        )
+
+        actions = wy.convert_to_actions(events, 3157)
+
+        assert len(actions) == 3
+        assert actions.at[2, 'type_id'] == spadl.actiontypes.index('take_on')
+        assert actions.at[2, 'result_id'] == spadl.results.index('fail')

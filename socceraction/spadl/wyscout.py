@@ -200,6 +200,7 @@ def fix_wyscout_events(df_events: pd.DataFrame) -> pd.DataFrame:
     df_events = insert_interception_passes(df_events)
     df_events = add_offside_variable(df_events)
     df_events = convert_touches(df_events)
+    df_events = convert_simulations(df_events)
     return df_events
 
 
@@ -445,6 +446,52 @@ def add_offside_variable(df_events: pd.DataFrame) -> pd.DataFrame:
     return df_events
 
 
+def convert_simulations(df_events: pd.DataFrame) -> pd.DataFrame:
+    """Convert simulations to failed take-ons.
+
+    Parameters
+    ----------
+    df_events : pd.DataFrame
+        Wyscout event dataframe
+
+
+    Returns
+    -------
+        pd.DataFrame
+        Wyscout event dataframe in which simulation events are either
+        transformed into a failed take-on
+    """
+    prev_events = df_events.shift(1)
+
+    # Select simulations
+    selector_simulation = df_events["subtype_id"] == 25
+
+    # Select actions preceded by a failed take-on
+    selector_previous_is_failed_take_on = (prev_events["take_on_left"]) | (
+        prev_events["take_on_right"]
+    ) & prev_events["not_accurate"]
+
+    # Transform simulations not preceded by a failed take-on to a failed take-on
+    df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "type_id"] = 0
+    df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "subtype_id"] = 0
+    df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "accurate"] = False
+    df_events.loc[
+        selector_simulation & ~selector_previous_is_failed_take_on, "not_accurate"
+    ] = True
+    # Set take_on_left or take_on_right to True
+    df_events.loc[
+        selector_simulation & ~selector_previous_is_failed_take_on, "take_on_left"
+    ] = True
+
+    # Remove simulation events which are preceded by a failed take-on
+    df_events = df_events[~(selector_simulation & selector_previous_is_failed_take_on)]
+
+    # Reset index
+    df_events = df_events.reset_index(drop=True)
+
+    return df_events
+
+
 def convert_touches(df_events: pd.DataFrame) -> pd.DataFrame:
     """Convert touch events to dribbles or passes.
 
@@ -590,7 +637,7 @@ def determine_type_id(event: pd.DataFrame) -> int:  # noqa: C901
         action_type = "freekick_short"
     elif event["subtype_id"] == 34:
         action_type = "goalkick"
-    elif event["type_id"] == 2:
+    elif event["type_id"] == 2 and (event["subtype_id"] not in [22, 23, 24, 26]):
         action_type = "foul"
     elif event["type_id"] == 10:
         action_type = "shot"
