@@ -29,7 +29,7 @@ requests-cache = {version = "^0.9.1", optional = true}
 statsbomb = ["statsbombpy", "requests-cache"]
 
 [tool.poetry.dev-dependencies]
-black = "^22.1"
+black = "^22.3"
 bumpversion = "^0.6.0"
 flake8 = "^4.0.1"
 mypy = "^0.942"
