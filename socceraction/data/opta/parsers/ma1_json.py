@@ -171,6 +171,13 @@ class MA1JSONParser(OptaJSONParser):
             live_data = self._get_live_data(match)
             if "lineUp" not in live_data:
                 continue
+            red_cards = {
+                e["playerId"]: e["timeMin"]
+                for e in live_data.get("card", [])
+                if "type" in e
+                and e["type"] in ["Y2C", "RC"]
+                and "playerId" in e  # not defined if a coach receives a red card
+            }
             lineups = assertget(live_data, 'lineUp')
             for lineup in lineups:
                 team_id = assertget(lineup, 'contestantId')
@@ -193,29 +200,35 @@ class MA1JSONParser(OptaJSONParser):
                         match_details = assertget(live_data, "matchDetails")
                         if "matchLengthMin" not in match_details:
                             continue
+                        # Determine when player entered the pitch
                         is_starter = assertget(individual, 'position') != "Substitute"
-                        duration = assertget(match_details, "matchLengthMin")
                         sub_in = [
                             s
                             for s in subs.values()
                             if s["game_id"] == game_id and s["player_in_id"] == player_id
                         ]
+                        if is_starter:
+                            minute_start = 0
+                        elif len(sub_in) == 1:
+                            minute_start = sub_in[0]["minute"]
+                        else:
+                            minute_start = None
+                        # Determine when player left the pitch
                         sub_out = [
                             s
                             for s in subs.values()
                             if s["game_id"] == game_id and s["player_out_id"] == player_id
                         ]
-                        if is_starter and len(sub_out) == 0:
-                            players[(game_id, player_id)]["minutes_played"] = duration
-                        elif is_starter and len(sub_out) == 1:
-                            players[(game_id, player_id)]["minutes_played"] = sub_out[0]["minute"]
-                        elif len(sub_in) == 1 and len(sub_out) == 0:
+                        duration = assertget(match_details, "matchLengthMin")
+                        minute_end = duration
+                        if len(sub_out) == 1:
+                            minute_end = sub_out[0]["minute"]
+                        elif player_id in red_cards:
+                            minute_end = red_cards[player_id]
+                        # Determin time on the pitch
+                        if is_starter or minute_start is not None:
                             players[(game_id, player_id)]["minutes_played"] = (
-                                duration - sub_in[0]["minute"]
-                            )
-                        elif len(sub_in) == 1 and len(sub_out) == 1:
-                            players[(game_id, player_id)]["minutes_played"] = (
-                                sub_out[0]["minute"] - sub_in[0]["minute"]
+                                minute_end - minute_start
                             )
                         else:
                             players[(game_id, player_id)]["minutes_played"] = 0
