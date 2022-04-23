@@ -361,7 +361,9 @@ class WhoScoredParser(OptaParser):
             red_cards = {
                 e["playerId"]: e["expandedMinute"]
                 for e in team.get("incidentEvents", [])
-                if "cardType" in e and e["cardType"]["displayName"] in ["Red", "SecondYellow"]
+                if "cardType" in e
+                and e["cardType"]["displayName"] in ["Red", "SecondYellow"]
+                and "playerId" in e  # not defined if a coach receives a red card
             }
             for player in team["players"]:
                 statsdict = {
