@@ -223,6 +223,14 @@ class F9JSONParser(OptaJSONParser):
             lineups[team_id] = dict(players=dict())
             # substitutes
             subst = [s["@attributes"] for s in team["Substitution"]]
+            # red cards
+            red_cards = {
+                int(e["@attributes"]["PlayerRef"].replace("p", "")): e["@attributes"]["Time"]
+                for e in team.get("Booking", [])
+                if "CardType" in e["@attributes"]
+                and e["@attributes"]["CardType"] in ["Red", "SecondYellow"]
+                and "PlayerRef" in e["@attributes"]  # not defined if a coach receives a red card
+            }
             for player in team["PlayerLineUp"]["MatchPlayer"]:
                 attr = player["@attributes"]
                 player_id = int(attr["PlayerRef"].replace("p", ""))
@@ -239,7 +247,9 @@ class F9JSONParser(OptaJSONParser):
                 )
                 sub_off = next(
                     (item["Time"] for item in subst if item["SubOff"] == f"p{player_id}"),
-                    matchstatsdict["match_time"],
+                    matchstatsdict["match_time"]
+                    if player_id not in red_cards
+                    else red_cards[player_id],
                 )
                 minutes_played = sub_off - sub_on
                 lineups[team_id]["players"][player_id] = dict(
