@@ -10,4 +10,4 @@ Full documentation is at <https://ml-kuleuven.github.io/socceraction/>.
 :copyright: (c) 2020 by DTAI KU Leuven.
 :license: MIT, see LICENSE for more details.
 """
-__version__ = '1.2.2'
+__version__ = '1.2.3'
