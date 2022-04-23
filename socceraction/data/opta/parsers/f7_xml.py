@@ -163,6 +163,15 @@ class F7XMLParser(OptaXMLParser):
             # substitutes
             subst_elms = team_elm.iterchildren('Substitution')
             subst = [subst_elm.attrib for subst_elm in subst_elms]
+            # red_cards
+            booking_elms = team_elm.iterchildren('Booking')
+            red_cards = {
+                int(booking_elm.attrib["PlayerRef"][1:]): int(booking_elm.attrib["Min"])
+                for booking_elm in booking_elms
+                if "CardType" in booking_elm.attrib
+                and booking_elm.attrib["CardType"] in ["Red", "SecondYellow"]
+                and "PlayerRef" in booking_elm.attrib  # not defined if a coach receives a red card
+            }
             # players
             player_elms = team_elm.PlayerLineUp.iterchildren('MatchPlayer')
             for player_elm in player_elms:
@@ -180,7 +189,9 @@ class F7XMLParser(OptaXMLParser):
                 sub_off = int(
                     next(
                         (item['Time'] for item in subst if item['SubOff'] == f'p{player_id}'),
-                        stats['match_time'],
+                        stats['match_time']
+                        if player_id not in red_cards
+                        else red_cards[player_id],
                     )
                 )
                 minutes_played = sub_off - sub_on
