@@ -86,6 +86,8 @@ def test_extract_players(ma3json_parser: MA3JSONParser) -> None:
         "starting_position": "Substitute",
         "is_starter": False,
     }
+    # red card
+    assert players[("bl2020-21-0000000066", "2175hvbfk4jn4lnj3cetfpp1")]["minutes_played"] == 59
     OptaPlayerSchema.validate(pd.DataFrame.from_dict(players, orient="index"))
 
 

@@ -154,6 +154,7 @@ class MA3JSONParser(OptaJSONParser):
             "position_in_formation": [],
             "jersey_number": [],
         }
+        red_cards = {}
 
         for event in events:
             event_type = assertget(event, "typeId")
@@ -177,6 +178,12 @@ class MA3JSONParser(OptaJSONParser):
                     elif qualifier_id == 59:
                         value = [int(v) for v in value]
                         players_data["jersey_number"] += value
+            elif event_type == 17 and "playerId" in event:
+                qualifiers = assertget(event, "qualifier")
+                for q in qualifiers:
+                    qualifier_id = assertget(q, "qualifierId")
+                    if qualifier_id in [32, 33]:
+                        red_cards[event["playerId"]] = event["timeMin"]
 
             player_id = event.get("playerId")
             if player_id is None:
@@ -201,6 +208,12 @@ class MA3JSONParser(OptaJSONParser):
             df_players_data = df_players_data.merge(
                 df_substitutions, on=["team_id", "player_id"], how="left"
             )
+        df_players_data["minute_end"] = df_players_data.apply(
+            lambda row: red_cards[row["player_id"]]
+            if row["player_id"] in red_cards
+            else row["minute_end"],
+            axis=1,
+        )
 
         df_players_data["is_starter"] = df_players_data["position_in_formation"] > 0
         df_players_data.loc[
