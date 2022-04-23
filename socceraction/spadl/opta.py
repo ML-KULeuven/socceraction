@@ -45,9 +45,9 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['player_id'] = events.player_id
 
     for col in ['start_x', 'end_x']:
-        actions[col] = events[col] / 100 * spadlconfig.field_length
+        actions[col] = events[col].clip(0, 100) / 100 * spadlconfig.field_length
     for col in ['start_y', 'end_y']:
-        actions[col] = events[col] / 100 * spadlconfig.field_width
+        actions[col] = events[col].clip(0, 100) / 100 * spadlconfig.field_width
 
     actions['type_id'] = events[['type_name', 'outcome', 'qualifiers']].apply(_get_type_id, axis=1)
     actions['result_id'] = events[['type_name', 'outcome', 'qualifiers']].apply(
