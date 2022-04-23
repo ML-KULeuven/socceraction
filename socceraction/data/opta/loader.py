@@ -190,9 +190,9 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, Union[str, int]
     regex = re.compile(
         ".+?"
         + re.escape(pattern)
-        .replace(r"\{competition_id\}", r"(?P<competition_id>[a-zA-Z0-9]+)")
-        .replace(r"\{season_id\}", r"(?P<season_id>[a-zA-Z0-9]+)")
-        .replace(r"\{game_id\}", r"(?P<game_id>[a-zA-Z0-9]+)")
+        .replace(r"\{competition_id\}", r"(?P<competition_id>[a-zA-Z0-9-_ ]+)")
+        .replace(r"\{season_id\}", r"(?P<season_id>[a-zA-Z0-9-_ ]+)")
+        .replace(r"\{game_id\}", r"(?P<game_id>[a-zA-Z0-9-_ ]+)")
     )
     m = re.match(regex, path)
     if m is None:
