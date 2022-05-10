@@ -1338,7 +1338,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
 [[package]]
 name = "xgboost"
-version = "1.6.0"
+version = "1.6.1"
 description = "XGBoost Python Package"
 category = "dev"
 optional = false
@@ -1373,7 +1373,7 @@ statsbomb = ["statsbombpy", "requests-cache"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.11"
-content-hash = "661a54f9617add5598c30e0026ffeab5db82762a30f3a8b4f12f14b06cb8a45f"
+content-hash = "8518a8281d2be6011d10f1b4e70116cfea844a4a2271c57ec5366567549d0bd7"
 
 [metadata.files]
 alabaster = [
@@ -2413,12 +2413,12 @@ wrapt = [
     {file = "wrapt-1.13.3.tar.gz", hash = "sha256:1fea9cd438686e6682271d36f3481a9f3636195578bab9ca3382e2f5f01fc185"},
 ]
 xgboost = [
-    {file = "xgboost-1.6.0-py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:5f7fd61024c41d0c424a8272dfd27797a0393a616b717c05c0f981a49a47b4fd"},
-    {file = "xgboost-1.6.0-py3-none-macosx_12_0_arm64.whl", hash = "sha256:ad27c6a72f6abef6d20e67f957fb25553bb09a6d1c4eaf08cb8ee7efca288255"},
-    {file = "xgboost-1.6.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:b1d532b8d548dd3acb4bd5f56632339e48167d9e2ec0eda2d8d6b4cd772e03b4"},
-    {file = "xgboost-1.6.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:640b9649104f22f0dc43c7202d22cde5531cc303801a9c75cad3f2b6e413dcf7"},
-    {file = "xgboost-1.6.0-py3-none-win_amd64.whl", hash = "sha256:e2f9baca0b7cbc208ad4fbafa4cd70b50b292717ee8ba817a3ba7a0fe49de958"},
-    {file = "xgboost-1.6.0.tar.gz", hash = "sha256:9c944c2495cb426b8a365021565755c39ee0b53156cf5e53a4346bdad2e3b734"},
+    {file = "xgboost-1.6.1-py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:2b3d4ee105f8434873b40edc511330b8276bf3a8d9d42fb0319973079df30b07"},
+    {file = "xgboost-1.6.1-py3-none-macosx_12_0_arm64.whl", hash = "sha256:bd3e59a5490e010004106d8ea1d07aa8e048be51a0974fca6b4f00988f087ab8"},
+    {file = "xgboost-1.6.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:bbf16af8bf72e8761fcf69fdb5798bd5add6ecb48049198551b13c1d7abeabb5"},
+    {file = "xgboost-1.6.1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:6207c77f611b54d9f056edede819ead03f0235615675f88030ff9fe10d359551"},
+    {file = "xgboost-1.6.1-py3-none-win_amd64.whl", hash = "sha256:3adcb7e4ccf774d5e0128c01e5c381303c3799910ab0f2e996160fe3cd23b7fc"},
+    {file = "xgboost-1.6.1.tar.gz", hash = "sha256:24072028656f3428e7b8aabf77340ece057f273e41f7f85d67ccaefb7454bb18"},
 ]
 zipp = [
     {file = "zipp-3.7.0-py3-none-any.whl", hash = "sha256:b47250dd24f92b7dd6a0a8fc5244da14608f3ca90a5efcd37a3b1642fac9a375"},
