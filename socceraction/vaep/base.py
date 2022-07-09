@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the VAEP framework.
 
 Attributes
@@ -188,7 +187,7 @@ class VAEP:
         cols = self._fs.feature_column_names(self.xfns, self.nb_prev_actions)
         if not set(cols).issubset(set(X.columns)):
             missing_cols = ' and '.join(set(cols).difference(X.columns))
-            raise ValueError('{} are not available in the features dataframe'.format(missing_cols))
+            raise ValueError(f'{missing_cols} are not available in the features dataframe')
 
         # split train and validation data
         X_train, y_train = X.iloc[train_idx][cols], y.iloc[train_idx]
@@ -210,7 +209,7 @@ class VAEP:
                     X_train, y_train[col], eval_set, tree_params, fit_params
                 )
             else:
-                raise ValueError('A {} learner is not supported'.format(learner))
+                raise ValueError(f'A {learner} learner is not supported')
         return self
 
     def _fit_xgboost(
@@ -287,7 +286,7 @@ class VAEP:
         cols = self._fs.feature_column_names(self.xfns, self.nb_prev_actions)
         if not set(cols).issubset(set(X.columns)):
             missing_cols = ' and '.join(set(cols).difference(X.columns))
-            raise ValueError('{} are not available in the features dataframe'.format(missing_cols))
+            raise ValueError(f'{missing_cols} are not available in the features dataframe')
 
         Y_hat = pd.DataFrame()
         for col in self.__models:

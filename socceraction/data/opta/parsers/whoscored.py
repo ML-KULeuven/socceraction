@@ -40,7 +40,7 @@ class WhoScoredParser(OptaParser):
         season_id: Optional[int] = None,
         game_id: Optional[int] = None,
     ) -> None:
-        with open(path, "rt", encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             self.root = json.load(fh)
 
         if competition_id is None:

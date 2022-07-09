@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Base class for all Opta(-derived) event stream parsers.
 
 A parser reads a single data file and should extend the 'OptaParser' class to
@@ -102,7 +101,7 @@ class OptaJSONParser(OptaParser):
     """
 
     def __init__(self, path: str, **kwargs: Any) -> None:
-        with open(path, 'rt', encoding='utf-8') as fh:
+        with open(path, encoding='utf-8') as fh:
             self.root = json.load(fh)
 
 

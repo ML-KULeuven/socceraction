@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the label tranformers of the VAEP framework."""
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame

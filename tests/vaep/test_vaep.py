@@ -25,7 +25,7 @@ def vaep_model(sb_worldcup_data: pd.HDFStore) -> VAEP:
             for game in games.iloc[:-1].itertuples()
         ]
     )
-    expected_labels = set(['scores', 'concedes'])
+    expected_labels = {'scores', 'concedes'}
     assert set(labels.columns) == expected_labels
     assert len(features) == len(labels)
     # fit the model

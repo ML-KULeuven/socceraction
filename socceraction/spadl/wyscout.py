@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Wyscout event stream data to SPADL converter."""
 from typing import Any, Dict, List, Optional, Set
 

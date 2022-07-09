@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the formula of the Atomic-VAEP framework."""
 import pandas as pd
 from pandera.typing import DataFrame, Series

@@ -196,7 +196,7 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, Union[str, int]
     )
     m = re.match(regex, path)
     if m is None:
-        raise ValueError("The filepath {} does not match the format {}.".format(path, pattern))
+        raise ValueError(f"The filepath {path} does not match the format {pattern}.")
     ids = m.groupdict()
     return {k: int(v) if v.isdigit() else v for k, v in ids.items()}
 
@@ -320,9 +320,7 @@ class OptaLoader(EventDataLoader):
             if feed in available_parsers:
                 parsers[feed] = available_parsers[feed]
             else:
-                warnings.warn(
-                    "No parser available for {} feeds. This feed is ignored.".format(feed)
-                )
+                warnings.warn(f"No parser available for {feed} feeds. This feed is ignored.")
         return parsers
 
     def competitions(self) -> DataFrame[OptaCompetitionSchema]:

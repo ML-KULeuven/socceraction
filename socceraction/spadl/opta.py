@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Opta event stream data to SPADL converter."""
 from typing import Any, Dict, Tuple
 

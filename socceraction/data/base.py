@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Base class and utility functions for all event stream data serializers.
 
 A serializer should extend the 'EventDataLoader' class to (down)load event
@@ -51,7 +50,7 @@ def _localloadjson(path: str) -> JSONType:
     JSONType
         A dictionary with the data loaded.
     """
-    with open(path, "rt", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         return json.load(fh)
 
 

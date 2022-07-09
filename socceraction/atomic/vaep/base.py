@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the Atomic-VAEP framework.
 
 Attributes

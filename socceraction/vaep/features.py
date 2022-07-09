@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the feature tranformers of the VAEP framework."""
 from functools import wraps
 from typing import Any, Callable, List, Union, no_type_check

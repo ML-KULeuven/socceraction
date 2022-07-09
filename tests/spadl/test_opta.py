@@ -97,9 +97,9 @@ def test_extract_lineups_f7xml() -> None:
     lineups = parser.extract_lineups()
     for _, lineup in lineups.items():
         # each team should have 11 starters
-        assert sum([p['is_starter'] for p in lineup['players'].values()]) == 11
+        assert sum(p['is_starter'] for p in lineup['players'].values()) == 11
         # the summed match time of all players should equal the total time available
-        assert sum([p['minutes_played'] for p in lineup['players'].values()]) == 11 * 96
+        assert sum(p['minutes_played'] for p in lineup['players'].values()) == 11 * 96
 
 
 def test_extract_lineups_f9json() -> None:
@@ -109,9 +109,9 @@ def test_extract_lineups_f9json() -> None:
     for _, lineup in lineups.items():
         print([p['minutes_played'] for p in lineup['players'].values()])
         # each team should have 11 starters
-        assert sum([p['is_starter'] for p in lineup['players'].values()]) == 11
+        assert sum(p['is_starter'] for p in lineup['players'].values()) == 11
         # the summed match time of all players should equal the total time available
-        assert sum([p['minutes_played'] for p in lineup['players'].values()]) == 11 * 96
+        assert sum(p['minutes_played'] for p in lineup['players'].values()) == 11 * 96
 
 
 def test_extract_ids_from_path() -> None:

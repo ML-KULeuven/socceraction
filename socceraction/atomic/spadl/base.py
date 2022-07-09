@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements a converter for regular SPADL actions to atomic actions."""
 from typing import cast
 

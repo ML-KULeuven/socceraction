@@ -425,7 +425,7 @@ class WyscoutLoader(EventDataLoader):
             path = os.path.join(self.root, competitions_url)
             obj = self.get(path)
             if not isinstance(obj, dict) or 'competitions' not in obj:
-                raise ParseError('{} should contain a list of competitions'.format(path))
+                raise ParseError(f'{path} should contain a list of competitions')
             seasons_urls = [
                 self._get_file_or_url('seasons', competition_id=c['wyId'])[0]
                 for c in obj['competitions']
@@ -441,12 +441,12 @@ class WyscoutLoader(EventDataLoader):
                 obj = self.get(path)
                 if not isinstance(obj, dict) or 'competition' not in obj or 'seasons' not in obj:
                     raise ParseError(
-                        '{} should contain a list of competition and list of seasons'.format(path)
+                        f'{path} should contain a list of competition and list of seasons'
                     )
                 competitions.append(obj['competition'])
                 seasons.extend([s['season'] for s in obj['seasons']])
             except FileNotFoundError:
-                warnings.warn('File not found: {}'.format(seasons_url))
+                warnings.warn(f'File not found: {seasons_url}')
         df_competitions = _convert_competitions(pd.DataFrame(competitions))
         df_seasons = _convert_seasons(pd.DataFrame(seasons))
         # Merge into a single dataframe
@@ -483,7 +483,7 @@ class WyscoutLoader(EventDataLoader):
             path = os.path.join(self.root, games_url)
             obj = self.get(path)
             if not isinstance(obj, dict) or 'matches' not in obj:
-                raise ParseError('{} should contain a list of teams'.format(path))
+                raise ParseError(f'{path} should contain a list of teams')
             gamedetails_urls = [
                 self._get_file_or_url(
                     'events',
@@ -503,10 +503,10 @@ class WyscoutLoader(EventDataLoader):
                 path = os.path.join(self.root, gamedetails_url)
                 obj = self.get(path)
                 if not isinstance(obj, dict) or 'match' not in obj:
-                    raise ParseError('{} should contain a match'.format(path))
+                    raise ParseError(f'{path} should contain a match')
                 games.append(obj['match'])
             except FileNotFoundError:
-                warnings.warn('File not found: {}'.format(gamedetails_url))
+                warnings.warn(f'File not found: {gamedetails_url}')
         df_games = _convert_games(pd.DataFrame(games))
         return df_games.pipe(DataFrame[WyscoutGameSchema])
 
@@ -533,7 +533,7 @@ class WyscoutLoader(EventDataLoader):
         path = os.path.join(self.root, events_url)
         obj = self.get(path)
         if not isinstance(obj, dict) or 'teams' not in obj:
-            raise ParseError('{} should contain a list of matches'.format(path))
+            raise ParseError(f'{path} should contain a list of matches')
         teams = [t['team'] for t in obj['teams'].values() if t.get('team')]
         df_teams = _convert_teams(pd.DataFrame(teams))
         return df_teams.pipe(DataFrame[WyscoutTeamSchema])
@@ -561,7 +561,7 @@ class WyscoutLoader(EventDataLoader):
         path = os.path.join(self.root, events_url)
         obj = self.get(path)
         if not isinstance(obj, dict) or 'players' not in obj:
-            raise ParseError('{} should contain a list of players'.format(path))
+            raise ParseError(f'{path} should contain a list of players')
         players = [
             player['player']
             for team in obj['players'].values()
@@ -602,7 +602,7 @@ class WyscoutLoader(EventDataLoader):
         path = os.path.join(self.root, events_url)
         obj = self.get(path)
         if not isinstance(obj, dict) or 'events' not in obj:
-            raise ParseError('{} should contain a list of events'.format(path))
+            raise ParseError(f'{path} should contain a list of events')
         df_events = _convert_events(pd.DataFrame(obj['events']))
         return df_events.pipe(DataFrame[WyscoutEventSchema])
 

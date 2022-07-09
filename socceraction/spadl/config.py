@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Configuration of the SPADL language.
 
 Attributes

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utility functions for all event stream to SPADL converters.
 
 A converter should implement 'convert_to_actions' to convert the events to the

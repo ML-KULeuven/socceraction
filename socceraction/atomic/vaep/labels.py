@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements the label tranformers of the Atomic-VAEP framework."""
 import pandas as pd
 from pandera.typing import DataFrame
