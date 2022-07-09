@@ -152,9 +152,9 @@ def action_prob(
     ----------
     actions : pd.DataFrame
         Actions, in SPADL format.
-    l : pd.DataFrame
+    l : int
         Amount of grid cells in the x-dimension of the grid.
-    w : pd.DataFrame
+    w : int
         Amount of grid cells in the y-dimension of the grid.
 
     Returns
@@ -353,8 +353,13 @@ class ExpectedThreat:
 
         Parameters
         ----------
-        kind : {'linear', 'cubic', 'quintic'}, optional
+        kind : {'linear', 'cubic', 'quintic'}  # noqa: DAR103
             The kind of spline interpolation to use. Default is ‘linear’.
+
+        Raises
+        ------
+        ImportError
+            If scipy is not installed.
 
         Returns
         -------
@@ -418,6 +423,11 @@ class ExpectedThreat:
             values. Note that this requires Scipy to be installed (pip install
             scipy).
 
+        Raises
+        ------
+        NotFittedError
+            If the model has not been fitted yet.
+
         Returns
         -------
         np.ndarray
@@ -465,11 +475,19 @@ class ExpectedThreat:
         retain the transition, shot probability, move probability and scoring
         probability matrices.
 
+        Raises
+        ------
+        NotFittedError
+            If the model has not been fitted yet.
+        ValueError
+            If the specified output file already exists and "overwrite" is set
+            to False.
+
         Parameters
         ----------
-        filepath : String or PathLike
+        filepath : str
             Path to the file to save the value surface to.
-        overwrite :
+        overwrite : bool
             Whether to silently overwrite any existing file at the target
             location.
         """
@@ -486,7 +504,7 @@ class ExpectedThreat:
             json.dump(self.xT.tolist(), f)
 
 
-def load_model(path_or_buf: str) -> ExpectedThreat:
+def load_model(path: str) -> ExpectedThreat:
     """Create a model from a pre-computed xT value surface.
 
     The value surface should be provided as a JSON file containing a 2D
@@ -495,7 +513,7 @@ def load_model(path_or_buf: str) -> ExpectedThreat:
 
     Parameters
     ----------
-    path_or_buf : a valid JSON str, path object or file-like object
+    path : str
         Any valid string path is acceptable. The string could be a URL. Valid
         URL schemes include http, ftp, s3, and file.
 
@@ -504,7 +522,7 @@ def load_model(path_or_buf: str) -> ExpectedThreat:
     ExpectedThreat
         An xT model that uses the given value surface to value actions.
     """
-    grid = pd.read_json(path_or_buf)
+    grid = pd.read_json(path)
     model = ExpectedThreat()
     model.xT = grid.values
     model.w, model.l = model.xT.shape
