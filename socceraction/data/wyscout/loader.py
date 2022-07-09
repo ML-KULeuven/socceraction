@@ -617,6 +617,7 @@ class WyscoutLoader(EventDataLoader):
         df_events = _convert_events(pd.DataFrame(obj["events"]))
         return cast(DataFrame[WyscoutEventSchema], df_events)
 
+
 def _convert_competitions(competitions: pd.DataFrame) -> pd.DataFrame:
     competitionsmapping = {
         "wyId": "competition_id",
