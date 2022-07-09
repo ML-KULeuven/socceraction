@@ -83,7 +83,7 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
     states = [actions]
     for i in range(1, nb_prev_actions):
         prev_actions = actions.copy().shift(i, fill_value=0)
-        prev_actions.loc[: i - 1, :] = pd.concat([actions[:1]] * i, ignore_index=True)
+        prev_actions.iloc[:i] = pd.concat([actions[:1]] * i, ignore_index=True)
         states.append(prev_actions)  # type: ignore
     return states
 
@@ -179,7 +179,7 @@ def actiontype_onehot(actions: SPADLActions) -> Features:
     Features
         A one-hot encoding of each action's type.
     """
-    X = pd.DataFrame()
+    X = pd.DataFrame(index=actions.index)
     for type_name in spadlconfig.actiontypes:
         col = 'type_' + type_name
         X[col] = actions['type_name'] == type_name
@@ -217,7 +217,7 @@ def result_onehot(actions: SPADLActions) -> Features:
     Features
         The one-hot encoding of each action's result.
     """
-    X = pd.DataFrame()
+    X = pd.DataFrame(index=actions.index)
     for result_name in spadlconfig.results:
         col = 'result_' + result_name
         X[col] = actions['result_name'] == result_name
@@ -240,7 +240,7 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
     """
     res = result_onehot.__wrapped__(actions)  # type: ignore
     tys = actiontype_onehot.__wrapped__(actions)  # type: ignore
-    df = pd.DataFrame()
+    df = pd.DataFrame(index=actions.index)
     for tyscol in list(tys.columns):
         for rescol in list(res.columns):
             df[tyscol + '_' + rescol] = tys[tyscol] & res[rescol]
@@ -278,7 +278,7 @@ def bodypart_onehot(actions: Actions) -> Features:
     Features
         The one-hot encoding of each action's bodypart.
     """
-    X = pd.DataFrame()
+    X = pd.DataFrame(index=actions.index)
     for bodypart_name in spadlconfig.bodyparts:
         col = 'bodypart_' + bodypart_name
         if bodypart_name == 'head/other':
@@ -371,7 +371,7 @@ def startpolar(actions: SPADLActions) -> Features:
     Features
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
-    polardf = pd.DataFrame()
+    polardf = pd.DataFrame(index=actions.index)
     dx = (_goal_x - actions['start_x']).abs().values
     dy = (_goal_y - actions['start_y']).abs().values
     polardf['start_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
@@ -396,7 +396,7 @@ def endpolar(actions: SPADLActions) -> Features:
     Features
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
-    polardf = pd.DataFrame()
+    polardf = pd.DataFrame(index=actions.index)
     dx = (_goal_x - actions['end_x']).abs().values
     dy = (_goal_y - actions['end_y']).abs().values
     polardf['end_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
@@ -420,7 +420,7 @@ def movement(actions: SPADLActions) -> Features:
         The horizontal ('dx'), vertical ('dy') and total ('movement') distance
         covered by each action.
     """
-    mov = pd.DataFrame()
+    mov = pd.DataFrame(index=actions.index)
     mov['dx'] = actions.end_x - actions.start_x
     mov['dy'] = actions.end_y - actions.start_y
     mov['movement'] = np.sqrt(mov.dx**2 + mov.dy**2)
@@ -449,7 +449,7 @@ def team(gamestates: GameStates) -> Features:
         whether the team that performed action a0 is in possession.
     """
     a0 = gamestates[0]
-    teamdf = pd.DataFrame()
+    teamdf = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         teamdf['team_' + (str(i + 1))] = a.team_id == a0.team_id
     return teamdf
@@ -470,7 +470,7 @@ def time_delta(gamestates: GameStates) -> Features:
         containing the number of seconds between action ai and action a0.
     """
     a0 = gamestates[0]
-    dt = pd.DataFrame()
+    dt = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         dt['time_delta_' + (str(i + 1))] = a0.time_seconds - a.time_seconds
     return dt
@@ -492,7 +492,7 @@ def space_delta(gamestates: GameStates) -> Features:
         <nb_prev_actions> action ai and action a0.
     """
     a0 = gamestates[0]
-    spaced = pd.DataFrame()
+    spaced = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         dx = a.end_x - a0.start_x
         spaced['dx_a0' + (str(i + 1))] = dx
@@ -535,7 +535,7 @@ def goalscore(gamestates: GameStates) -> Features:
     goalscoreteamA = goalsteamA.cumsum() - goalsteamA
     goalscoreteamB = goalsteamB.cumsum() - goalsteamB
 
-    scoredf = pd.DataFrame()
+    scoredf = pd.DataFrame(index=actions.index)
     scoredf['goalscore_team'] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
     scoredf['goalscore_opponent'] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
     scoredf['goalscore_diff'] = scoredf['goalscore_team'] - scoredf['goalscore_opponent']

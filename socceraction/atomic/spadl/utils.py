@@ -25,7 +25,8 @@ def add_names(actions: DataFrame[AtomicSPADLSchema]) -> DataFrame[AtomicSPADLSch
         DataFrame[AtomicSPADLSchema],
         actions.drop(columns=['type_name', 'bodypart_name'], errors='ignore')
         .merge(spadlconfig.actiontypes_df(), how='left')
-        .merge(spadlconfig.bodyparts_df(), how='left'),
+        .merge(spadlconfig.bodyparts_df(), how='left')
+        .set_index(actions.index),
     )
 
 
