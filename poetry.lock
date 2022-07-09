@@ -251,7 +251,7 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "filelock"
-version = "3.4.2"
+version = "3.7.1"
 description = "A platform independent file lock."
 category = "dev"
 optional = false
