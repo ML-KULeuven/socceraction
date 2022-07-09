@@ -281,7 +281,10 @@ def bodypart_onehot(actions: Actions) -> Features:
     X = pd.DataFrame()
     for bodypart_name in spadlconfig.bodyparts:
         col = 'bodypart_' + bodypart_name
-        X[col] = actions['bodypart_name'] == bodypart_name
+        if bodypart_name == 'head/other':
+            X[col] = actions['bodypart_name'].isin(['head', 'other', 'head/other'])
+        else:
+            X[col] = actions['bodypart_name'] == bodypart_name
     return X
 
 
