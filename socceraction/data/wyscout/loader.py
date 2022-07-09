@@ -120,6 +120,7 @@ class PublicWyscoutLoader(EventDataLoader):
             ]
         ).set_index(["competition_id", "season_id"])
         self._match_index = self._create_match_index().set_index("match_id")
+        self._cache: Optional[Dict[str, Any]] = None
 
     def _download_repo(self) -> None:
         dataset_urls = dict(
@@ -167,7 +168,8 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing all available competitions and seasons. See
             :class:`~socceraction.spadl.wyscout.WyscoutCompetitionSchema` for the schema.
         """
-        df_competitions = pd.DataFrame(self.get(os.path.join(self.root, "competitions.json")))
+        path = os.path.join(self.root, "competitions.json")
+        df_competitions = pd.DataFrame(self.get(path))
         df_competitions.rename(
             columns={"wyId": "competition_id", "name": "competition_name"}, inplace=True
         )
@@ -235,7 +237,8 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing both teams. See
             :class:`~socceraction.spadl.wyscout.WyscoutTeamSchema` for the schema.
         """
-        df_teams = pd.DataFrame(self.get(os.path.join(self.root, "teams.json"))).set_index("wyId")
+        path = os.path.join(self.root, "teams.json")
+        df_teams = pd.DataFrame(self.get(path)).set_index("wyId")
         df_teams_match_id = pd.DataFrame(self._lineups(game_id))["teamId"]
         df_teams_match = df_teams.loc[df_teams_match_id].reset_index()
         return cast(DataFrame[WyscoutTeamSchema], _convert_teams(df_teams_match))
@@ -254,9 +257,8 @@ class PublicWyscoutLoader(EventDataLoader):
             A dataframe containing all players. See
             :class:`~socceraction.spadl.wyscout.WyscoutPlayerSchema` for the schema.
         """
-        df_players = pd.DataFrame(self.get(os.path.join(self.root, "players.json"))).set_index(
-            "wyId"
-        )
+        path = os.path.join(self.root, "players.json")
+        df_players = pd.DataFrame(self.get(path)).set_index("wyId")
         lineups = self._lineups(game_id)
         players_match = []
         for team in lineups:
@@ -275,7 +277,7 @@ class PublicWyscoutLoader(EventDataLoader):
                         warnings.warn(
                             f'A player with ID={p["playerIn"]} was substituted '
                             f'in the {p["minute"]}th minute of game {game_id}, but '
-                            'could not be found on the bench.'
+                            "could not be found on the bench."
                         )
             df = pd.DataFrame(playerlist)
             df["side"] = team["side"]
@@ -323,7 +325,13 @@ class PublicWyscoutLoader(EventDataLoader):
         """
         competition_id, season_id = self._match_index.loc[game_id, ["competition_id", "season_id"]]
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), "db_events"])
-        df_events = pd.DataFrame(self.get(path)).set_index("matchId")
+        if self._cache is not None and self._cache["path"] == path:
+            df_events = self._cache["events"]
+        else:
+            df_events = pd.DataFrame(self.get(path)).set_index("matchId")
+            # avoid that this large json file has to be parsed again for
+            # each game when loading a batch of games from the same season
+            self._cache = {"path": path, "events": df_events}
         return cast(
             DataFrame[WyscoutEventSchema], _convert_events(df_events.loc[game_id].reset_index())
         )
