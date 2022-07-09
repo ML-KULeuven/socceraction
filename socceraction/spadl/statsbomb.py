@@ -156,6 +156,10 @@ def _parse_pass_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C
         b = 'foot'
     elif 'Head' in bp:
         b = 'head'
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
     elif 'Foot' in bp or bp == 'Drop Kick':
         b = 'foot'
     else:
@@ -254,7 +258,11 @@ def _parse_shot_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
         b = 'foot'
     elif 'Head' in bp:
         b = 'head'
-    elif 'Foot' in bp or bp == 'Drop Kick':
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
+    elif 'Foot' in bp:
         b = 'foot'
     else:
         b = 'other'
@@ -300,6 +308,10 @@ def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # n
         b = 'foot'
     elif 'Head' in bp:
         b = 'head'
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
     elif 'Foot' in bp or bp == 'Drop Kick':
         b = 'foot'
     else:
@@ -308,10 +320,22 @@ def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # n
     return a, r, b
 
 
-def _parse_clearance_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_clearance_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'clearance'
     r = 'success'
-    b = 'foot'
+    bp = extra.get('clearance', {}).get('body_part', {}).get('name')
+    if bp is None:
+        b = 'foot'
+    elif 'Head' in bp:
+        b = 'head'
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
+    elif 'Foot' in bp:
+        b = 'foot'
+    else:
+        b = 'other'
     return a, r, b
 
 

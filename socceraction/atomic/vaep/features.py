@@ -11,6 +11,8 @@ from socceraction.spadl import SPADLSchema
 from socceraction.vaep.features import (
     actiontype,
     bodypart,
+    bodypart_detailed,
+    bodypart_detailed_onehot,
     bodypart_onehot,
     gamestates,
     simple,
@@ -26,7 +28,9 @@ __all__ = [
     'actiontype',
     'actiontype_onehot',
     'bodypart',
+    'bodypart_detailed',
     'bodypart_onehot',
+    'bodypart_detailed_onehot',
     'team',
     'time',
     'time_delta',

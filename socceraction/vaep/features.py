@@ -251,6 +251,8 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
 def bodypart(actions: Actions) -> Features:
     """Get the body part used to perform each action.
 
+    This feature generator does not distinguish between the left and right foot.
+
     Parameters
     ----------
     actions : Actions
@@ -260,6 +262,39 @@ def bodypart(actions: Actions) -> Features:
     -------
     Features
         The 'bodypart_id' of each action.
+
+    See Also
+    --------
+    bodypart_detailed :
+        An alternative version that splits between the left and right foot.
+    """
+    foot_id = spadlconfig.bodyparts.index("foot")
+    left_foot_id = spadlconfig.bodyparts.index("foot_left")
+    right_foot_id = spadlconfig.bodyparts.index("foot_right")
+    return actions[['bodypart_id']].replace([left_foot_id, right_foot_id], foot_id)
+
+
+@simple
+def bodypart_detailed(actions: Actions) -> Features:
+    """Get the body part with split by foot used to perform each action.
+
+    This feature generator distinguishes between the left and right foot, if
+    supported by the dataprovider.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The 'bodypart_id' of each action.
+
+    See Also
+    --------
+    bodypart :
+        An alternative version that does not split between the left and right foot.
     """
     return actions[['bodypart_id']]
 
@@ -267,6 +302,8 @@ def bodypart(actions: Actions) -> Features:
 @simple
 def bodypart_onehot(actions: Actions) -> Features:
     """Get the one-hot-encoded bodypart of each action.
+
+    This feature generator does not distinguish between the left and right foot.
 
     Parameters
     ----------
@@ -277,11 +314,54 @@ def bodypart_onehot(actions: Actions) -> Features:
     -------
     Features
         The one-hot encoding of each action's bodypart.
+
+    See Also
+    --------
+    bodypart_detailed_onehot :
+        An alternative version that splits between the left and right foot.
+    """
+    X = pd.DataFrame(index=actions.index)
+    for bodypart_name in spadlconfig.bodyparts:
+        if bodypart_name in ('foot_left', 'foot_right'):
+            continue
+        col = 'bodypart_' + bodypart_name
+        if bodypart_name == 'foot':
+            X[col] = actions['bodypart_name'].isin(['foot', 'foot_left', 'foot_right'])
+        elif bodypart_name == 'head/other':
+            X[col] = actions['bodypart_name'].isin(['head', 'other', 'head/other'])
+        else:
+            X[col] = actions['bodypart_name'] == bodypart_name
+    return X
+
+
+@simple
+def bodypart_detailed_onehot(actions: Actions) -> Features:
+    """Get the one-hot-encoded bodypart with split by foot of each action.
+
+    This feature generator distinguishes between the left and right foot, if
+    supported by the dataprovider.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The one-hot encoding of each action's bodypart.
+
+    See Also
+    --------
+    bodypart_onehot :
+        An alternative version that does not split between the left and right foot.
     """
     X = pd.DataFrame(index=actions.index)
     for bodypart_name in spadlconfig.bodyparts:
         col = 'bodypart_' + bodypart_name
-        if bodypart_name == 'head/other':
+        if bodypart_name == 'foot':
+            X[col] = actions['bodypart_name'].isin(['foot', 'foot_left', 'foot_right'])
+        elif bodypart_name == 'head/other':
             X[col] = actions['bodypart_name'].isin(['head', 'other', 'head/other'])
         else:
             X[col] = actions['bodypart_name'] == bodypart_name
