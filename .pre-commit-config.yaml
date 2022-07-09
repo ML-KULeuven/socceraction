@@ -40,9 +40,17 @@ repos:
         types: [python]
         require_serial: true
         args: [--darglint-ignore-regex, .*]
+      - id: pyupgrade
+        name: pyupgrade
+        description: Automatically upgrade syntax for newer versions.
+        entry: pyupgrade
+        language: system
+        types: [python]
+        args: [--py37-plus]
       - id: isort
         name: Reorder python imports
         entry: isort
+        require_serial: true
         language: system
         types: [python]
       - id: trailing-whitespace
