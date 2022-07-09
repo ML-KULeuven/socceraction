@@ -7,6 +7,32 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.2.3_ - 2022-04-23
+===================
+
+Changed
+-------
+- Spaces, dashes and underscores are now allowed in Opta filenames.
+- Wyscout considers a few off the ball fouls, namely "Out of play foul",
+  "Protest", "Time lost foul" and "Late card foul". These are now excluded
+  from the SPADL representation. (`GH240 <https://github.com/ML-KULeuven/socceraction/issues/240>`_)
+- The Wyscout converter converted simulations to regular fouls. Now, we check
+  if the preceding event was a take-on or a dribble. If so, we set the outcome
+  to "failed" and drop the "Simulation". Otherwise, we replace the
+  "simulation" with a failed take-on. (`GH240 <https://github.com/ML-KULeuven/socceraction/issues/240>`_)
+
+Fixed
+-----
+- Fixed a bug where the WhoScored parser crashed when a coach received a red
+  card.
+- Fixed a bug where the WhoScored parser crashed on events with out-of-bounds
+  coordinates.
+- The "minutes_played" column in the "players" dataframe did not take red
+  cards into account. This was fixed for all data providers.
+- The ``ExpectedThreat.rate`` method gave incorrect results when applied on a SPADL dataframe with duplicate index. (`GH237 <https://github.com/ML-KULeuven/socceraction/issues/237>`_)
+
+
+
 1.2.2_ - 2022-03-11
 ===================
 
@@ -299,7 +325,8 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.2...HEAD
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.3...HEAD
+.. _1.2.2: https://github.com/ML-KULeuven/socceraction/compare/v1.2.2...v1.2.3
 .. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.1...v1.2.2
 .. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.0...v1.2.1
 .. _1.2.0: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...v1.2.0
