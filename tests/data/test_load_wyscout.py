@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from socceraction.data import wyscout as wy
 from socceraction.data.wyscout import (
     WyscoutCompetitionSchema,
@@ -37,6 +39,12 @@ class TestPublicWyscoutLoader:
         assert len(df_players) == 26
         assert df_players.minutes_played.sum() == 22 * 96
         WyscoutPlayerSchema.validate(df_players)
+
+    def test_players_with_missing_id(self) -> None:
+        # The substituted player(s) are sometimes missing
+        # See https://github.com/ML-KULeuven/socceraction/issues/276
+        with pytest.warns(UserWarning):
+            self.WSL.players(2576016)
 
     def test_minutes_played(self) -> None:
         # Injury time should be added
