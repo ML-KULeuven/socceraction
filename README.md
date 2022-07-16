@@ -1,7 +1,7 @@
 <div align="center">
 	<img src="https://socceraction.readthedocs.io/en/latest/_static/logo_white.png" height="200">
 	<p>
-	<b>Convert soccer event stream data to the SPADL format<br/>and value on-the-ball player actions.</b>
+	<b>Convert soccer event stream data to the SPADL format<br/>and value on-the-ball player actions</b>
 	</p>
 	<br/>
 
