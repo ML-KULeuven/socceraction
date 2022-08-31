@@ -1174,7 +1174,7 @@ test = ["pytest"]
 
 [[package]]
 name = "statsbombpy"
-version = "1.4.3"
+version = "1.5.0"
 description = "easily stream StatsBomb data into Python"
 category = "main"
 optional = true
@@ -2258,8 +2258,8 @@ sphinxcontrib-serializinghtml = [
     {file = "sphinxcontrib_serializinghtml-1.1.5-py2.py3-none-any.whl", hash = "sha256:352a9a00ae864471d3a7ead8d7d79f5fc0b57e8b3f95e9867eb9eb28999b92fd"},
 ]
 statsbombpy = [
-    {file = "statsbombpy-1.4.3-py3-none-any.whl", hash = "sha256:7ed011dc09fd79b755d93d898bdd35cecc97e3f450f65c1590b61ff44b06d0b0"},
-    {file = "statsbombpy-1.4.3.tar.gz", hash = "sha256:5444038c396946aca2772a4cf64e1fbb2c6cb95057e7766818ad0d19f37eea55"},
+    {file = "statsbombpy-1.5.0-py3-none-any.whl", hash = "sha256:0f0e0334c57b68e7941a69b55178fd349c52b4149933a4f388f95e287663dc9e"},
+    {file = "statsbombpy-1.5.0.tar.gz", hash = "sha256:7070aeea252373e0ae63b15d35ae207728ec1e80eba9fe8b70c0df34eaaec031"},
 ]
 tables = [
     {file = "tables-3.7.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2262d400fd0a29b11414e95a85817e987056543f25d62d80cac730d7b3567bf3"},
