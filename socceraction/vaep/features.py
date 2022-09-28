@@ -179,11 +179,11 @@ def actiontype_onehot(actions: SPADLActions) -> Features:
     Features
         A one-hot encoding of each action's type.
     """
-    X = pd.DataFrame()
-    for type_name in spadlconfig.actiontypes:
+    X = {}
+    for type_id, type_name in enumerate(spadlconfig.actiontypes):
         col = 'type_' + type_name
-        X[col] = actions['type_name'] == type_name
-    return X
+        X[col] = actions['type_id'] == type_id
+    return pd.DataFrame(X)
 
 
 @simple
@@ -217,11 +217,11 @@ def result_onehot(actions: SPADLActions) -> Features:
     Features
         The one-hot encoding of each action's result.
     """
-    X = pd.DataFrame()
-    for result_name in spadlconfig.results:
+    X = {}
+    for result_id, result_name in enumerate(spadlconfig.results):
         col = 'result_' + result_name
-        X[col] = actions['result_name'] == result_name
-    return X
+        X[col] = actions['result_id'] == result_id
+    return pd.DataFrame(X)
 
 
 @simple
@@ -240,11 +240,11 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
     """
     res = result_onehot.__wrapped__(actions)  # type: ignore
     tys = actiontype_onehot.__wrapped__(actions)  # type: ignore
-    df = pd.DataFrame()
+    df = {}
     for tyscol in list(tys.columns):
         for rescol in list(res.columns):
             df[tyscol + '_' + rescol] = tys[tyscol] & res[rescol]
-    return df
+    return pd.DataFrame(df)
 
 
 @simple
@@ -278,11 +278,11 @@ def bodypart_onehot(actions: Actions) -> Features:
     Features
         The one-hot encoding of each action's bodypart.
     """
-    X = pd.DataFrame()
-    for bodypart_name in spadlconfig.bodyparts:
+    X = {}
+    for bodypart_id, bodypart_name in enumerate(spadlconfig.bodyparts):
         col = 'bodypart_' + bodypart_name
-        X[col] = actions['bodypart_name'] == bodypart_name
-    return X
+        X[col] = actions['bodypart_id'] == bodypart_id
+    return pd.DataFrame(X)
 
 
 @simple
