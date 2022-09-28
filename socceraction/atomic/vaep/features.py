@@ -129,11 +129,11 @@ def actiontype_onehot(actions: Actions) -> Features:
     Features
         A one-hot encoding of each action's type.
     """
-    X = pd.DataFrame(index=actions.index)
-    for type_name in atomicspadl.actiontypes:
+    X = {}
+    for type_id, type_name in enumerate(atomicspadl.actiontypes):
         col = 'type_' + type_name
-        X[col] = actions['type_name'] == type_name
-    return X
+        X[col] = actions['type_id'] == type_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple

@@ -179,11 +179,11 @@ def actiontype_onehot(actions: SPADLActions) -> Features:
     Features
         A one-hot encoding of each action's type.
     """
-    X = pd.DataFrame(index=actions.index)
-    for type_name in spadlconfig.actiontypes:
+    X = {}
+    for type_id, type_name in enumerate(spadlconfig.actiontypes):
         col = 'type_' + type_name
-        X[col] = actions['type_name'] == type_name
-    return X
+        X[col] = actions['type_id'] == type_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -217,11 +217,11 @@ def result_onehot(actions: SPADLActions) -> Features:
     Features
         The one-hot encoding of each action's result.
     """
-    X = pd.DataFrame(index=actions.index)
-    for result_name in spadlconfig.results:
+    X = {}
+    for result_id, result_name in enumerate(spadlconfig.results):
         col = 'result_' + result_name
-        X[col] = actions['result_name'] == result_name
-    return X
+        X[col] = actions['result_id'] == result_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -240,11 +240,11 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
     """
     res = result_onehot.__wrapped__(actions)  # type: ignore
     tys = actiontype_onehot.__wrapped__(actions)  # type: ignore
-    df = pd.DataFrame(index=actions.index)
+    df = {}
     for tyscol in list(tys.columns):
         for rescol in list(res.columns):
             df[tyscol + '_' + rescol] = tys[tyscol] & res[rescol]
-    return df
+    return pd.DataFrame(df, index=actions.index)
 
 
 @simple
@@ -320,18 +320,24 @@ def bodypart_onehot(actions: Actions) -> Features:
     bodypart_detailed_onehot :
         An alternative version that splits between the left and right foot.
     """
-    X = pd.DataFrame(index=actions.index)
-    for bodypart_name in spadlconfig.bodyparts:
+    X = {}
+    for bodypart_id, bodypart_name in enumerate(spadlconfig.bodyparts):
         if bodypart_name in ('foot_left', 'foot_right'):
             continue
         col = 'bodypart_' + bodypart_name
         if bodypart_name == 'foot':
-            X[col] = actions['bodypart_name'].isin(['foot', 'foot_left', 'foot_right'])
+            foot_id = spadlconfig.bodyparts.index("foot")
+            left_foot_id = spadlconfig.bodyparts.index("foot_left")
+            right_foot_id = spadlconfig.bodyparts.index("foot_right")
+            X[col] = actions['bodypart_id'].isin([foot_id, left_foot_id, right_foot_id])
         elif bodypart_name == 'head/other':
-            X[col] = actions['bodypart_name'].isin(['head', 'other', 'head/other'])
+            head_id = spadlconfig.bodyparts.index("head")
+            other_id = spadlconfig.bodyparts.index("other")
+            head_other_id = spadlconfig.bodyparts.index("head/other")
+            X[col] = actions['bodypart_id'].isin([head_id, other_id, head_other_id])
         else:
-            X[col] = actions['bodypart_name'] == bodypart_name
-    return X
+            X[col] = actions['bodypart_id'] == bodypart_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -356,16 +362,22 @@ def bodypart_detailed_onehot(actions: Actions) -> Features:
     bodypart_onehot :
         An alternative version that does not split between the left and right foot.
     """
-    X = pd.DataFrame(index=actions.index)
-    for bodypart_name in spadlconfig.bodyparts:
+    X = {}
+    for bodypart_id, bodypart_name in enumerate(spadlconfig.bodyparts):
         col = 'bodypart_' + bodypart_name
         if bodypart_name == 'foot':
-            X[col] = actions['bodypart_name'].isin(['foot', 'foot_left', 'foot_right'])
+            foot_id = spadlconfig.bodyparts.index("foot")
+            left_foot_id = spadlconfig.bodyparts.index("foot_left")
+            right_foot_id = spadlconfig.bodyparts.index("foot_right")
+            X[col] = actions['bodypart_id'].isin([foot_id, left_foot_id, right_foot_id])
         elif bodypart_name == 'head/other':
-            X[col] = actions['bodypart_name'].isin(['head', 'other', 'head/other'])
+            head_id = spadlconfig.bodyparts.index("head")
+            other_id = spadlconfig.bodyparts.index("other")
+            head_other_id = spadlconfig.bodyparts.index("head/other")
+            X[col] = actions['bodypart_id'].isin([head_id, other_id, head_other_id])
         else:
-            X[col] = actions['bodypart_name'] == bodypart_name
-    return X
+            X[col] = actions['bodypart_id'] == bodypart_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
