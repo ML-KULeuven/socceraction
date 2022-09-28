@@ -80,6 +80,8 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
     GameStates
          The <nb_prev_actions> previous actions for each action.
     """
+    if nb_prev_actions < 1:
+        raise ValueError('The game state should include at least one preceding action.')
     states = [actions]
     for i in range(1, nb_prev_actions):
         prev_actions = actions.copy().shift(i, fill_value=0)
