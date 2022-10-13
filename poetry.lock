@@ -352,7 +352,7 @@ restructuredtext-lint = "*"
 
 [[package]]
 name = "furo"
-version = "2022.9.15"
+version = "2022.9.29"
 description = "A clean customisable Sphinx documentation theme."
 category = "dev"
 optional = false
@@ -1593,8 +1593,8 @@ flake8-rst-docstrings = [
     {file = "flake8_rst_docstrings-0.2.7-py3-none-any.whl", hash = "sha256:5d56075dce360bcc9c6775bfe7cb431aa395de600ca7e8d40580a28d50b2a803"},
 ]
 furo = [
-    {file = "furo-2022.9.15-py3-none-any.whl", hash = "sha256:9129dead1f75e9fb4fa407612f1d5a0d0320767e6156c925aafe36f362f9b11a"},
-    {file = "furo-2022.9.15.tar.gz", hash = "sha256:4a7ef1c8a3b615171592da4d2ad8a53cc4aacfbe111958890f5f9ff7279066ab"},
+    {file = "furo-2022.9.29-py3-none-any.whl", hash = "sha256:559ee17999c0f52728481dcf6b1b0cf8c9743e68c5e3a18cb45a7992747869a9"},
+    {file = "furo-2022.9.29.tar.gz", hash = "sha256:d4238145629c623609c2deb5384f8d036e2a1ee2a101d64b67b4348112470dbd"},
 ]
 identify = [
     {file = "identify-2.4.1-py2.py3-none-any.whl", hash = "sha256:0192893ff68b03d37fed553e261d4a22f94ea974093aefb33b29df2ff35fed3c"},
