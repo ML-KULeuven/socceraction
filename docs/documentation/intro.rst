@@ -208,7 +208,7 @@ much did the action decrease the probability of conceding) of the action:
 .. code-block:: python
 
     # rate a game
-    ratings = VAEP_model.rate(games.loc[game_id], actions)
+    ratings = VAEP_model.rate(df_games.loc[game_id], actions)
 
 
 .. image:: eden_hazard_goal_vaep.png
