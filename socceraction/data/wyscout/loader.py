@@ -4,7 +4,8 @@ import os
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, Union, cast
+from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import urlopen, urlretrieve
 from zipfile import ZipFile, is_zipfile
@@ -14,9 +15,12 @@ from pandera.typing import DataFrame
 
 from ..base import (
     EventDataLoader,
+    JSONType,
     MissingDataError,
     ParseError,
+    _auth_remoteloadjson,
     _expand_minute,
+    _has_auth,
     _localloadjson,
     _remoteloadjson,
 )
@@ -344,20 +348,20 @@ class WyscoutLoader(EventDataLoader):
     ----------
     root : str
         Root-path of the data.
-    getter : str
-        "remote", "local" or None. If None, custom feeds should be provided.
+    getter : str or callable, default: "remote"
+        "remote", "local" or a function that returns loads JSON data from a path.
     feeds : dict(str, str)
-        Glob pattern for each feed that should be parsed. The fefault feeds for
+        Glob pattern for each feed that should be parsed. The default feeds for
         a "remote" getter are::
 
             {
                 'competitions': 'competitions',
                 'seasons': 'competitions/{season_id}/seasons',
                 'games': 'seasons/{season_id}/matches',
-                'events': 'matches/{game_id}/events'
+                'events': 'matches/{game_id}/events?fetch=teams,players,match,substitutions'
             }
 
-        The fefault feeds for a "local" getter are::
+        The default feeds for a "local" getter are::
 
             {
                 'competitions': 'competitions.json',
@@ -366,6 +370,9 @@ class WyscoutLoader(EventDataLoader):
                 'events': 'matches/events_{game_id}.json',
             }
 
+    creds: dict, optional
+        Login credentials in the format {"user": "", "passwd": ""}. Only used
+        when getter is "remote".
     """
 
     _wyscout_api: str = "https://apirest.wyscout.com/v2/"
@@ -373,25 +380,37 @@ class WyscoutLoader(EventDataLoader):
     def __init__(
         self,
         root: str = _wyscout_api,
-        getter: str = "remote",
+        getter: Union[str, Callable[[str], JSONType]] = "remote",
         feeds: Optional[Dict[str, str]] = None,
+        creds: Optional[Dict[str, str]] = None,
     ) -> None:
         self.root = root
+
+        # Init credentials
+        if creds is None:
+            creds = {
+                "user": os.environ.get("WY_USERNAME", ""),
+                "passwd": os.environ.get("WY_PASSWORD", ""),
+            }
+
+        # Init getter
         if getter == "remote":
             self.get = _remoteloadjson
+            if _has_auth(creds):
+                _auth_remoteloadjson(creds["user"], creds["passwd"])
         elif getter == "local":
             self.get = _localloadjson
         else:
-            raise ValueError("Invalid getter specified")
+            self.get = getter
 
+        # Set up feeds
         if feeds is not None:
             self.feeds = feeds
         elif getter == "remote":
             self.feeds = {
-                "competitions": "competitions",
-                "seasons": "competitions/{season_id}/seasons",
+                "seasons": "competitions/{competition_id}/seasons?fetch=competition",
                 "games": "seasons/{season_id}/matches",
-                "events": "matches/{game_id}/events",
+                "events": "matches/{game_id}/events?fetch=teams,players,match,coaches,referees,formations,substitutions",  # noqa: B950
             }
         elif getter == "local":
             self.feeds = {
@@ -401,7 +420,7 @@ class WyscoutLoader(EventDataLoader):
                 "events": "matches/events_{game_id}.json",
             }
         else:
-            raise ValueError("Invalid getter specified")
+            raise ValueError("No feeds specified.")
 
     def _get_file_or_url(
         self,
@@ -423,8 +442,15 @@ class WyscoutLoader(EventDataLoader):
             return files
         return [glob_pattern]
 
-    def competitions(self) -> DataFrame[WyscoutCompetitionSchema]:
+    def competitions(
+        self, competition_id: Optional[int] = None
+    ) -> DataFrame[WyscoutCompetitionSchema]:
         """Return a dataframe with all available competitions and seasons.
+
+        Parameters
+        ----------
+        competition_id : int, optional
+            The ID of the competition.
 
         Raises
         ------
@@ -449,7 +475,7 @@ class WyscoutLoader(EventDataLoader):
                 for c in obj["competitions"]
             ]
         else:
-            seasons_urls = self._get_file_or_url("seasons")
+            seasons_urls = self._get_file_or_url("seasons", competition_id=competition_id)
         # Get seasons in each competition
         competitions = []
         seasons = []
@@ -502,7 +528,7 @@ class WyscoutLoader(EventDataLoader):
             path = os.path.join(self.root, games_url)
             obj = self.get(path)
             if not isinstance(obj, dict) or "matches" not in obj:
-                raise ParseError(f"{path} should contain a list of teams")
+                raise ParseError(f"{path} should contain a list of matches")
             gamedetails_urls = [
                 self._get_file_or_url(
                     "events",
@@ -526,6 +552,8 @@ class WyscoutLoader(EventDataLoader):
                 games.append(obj["match"])
             except FileNotFoundError:
                 warnings.warn(f"File not found: {gamedetails_url}")
+            except HTTPError:
+                warnings.warn(f"Resource not found: {gamedetails_url}")
         df_games = _convert_games(pd.DataFrame(games))
         return cast(DataFrame[WyscoutGameSchema], df_games)
 

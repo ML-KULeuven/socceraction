@@ -75,6 +75,11 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
     nb_prev_actions : int, default=3  # noqa: DAR103
         The number of previous actions included in the game state.
 
+    Raises
+    ------
+    ValueError
+        If the number of actions is smaller 1.
+
     Returns
     -------
     GameStates

@@ -3,10 +3,12 @@
 A serializer should extend the 'EventDataLoader' class to (down)load event
 stream data.
 """
+import base64
 import json
+import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Union
-from urllib.request import urlopen
+from urllib import request
 
 from pandera.typing import DataFrame
 
@@ -19,6 +21,12 @@ class ParseError(Exception):
 
 class MissingDataError(Exception):
     """Exception raised when a field is missing in the input data."""
+
+
+class NoAuthWarning(UserWarning):
+    """Warning raised when no user credentials are provided."""
+
+    pass
 
 
 def _remoteloadjson(path: str) -> JSONType:
@@ -34,7 +42,23 @@ def _remoteloadjson(path: str) -> JSONType:
     JSONType
         A dictionary with the loaded JSON data.
     """
-    return json.loads(urlopen(path).read())
+    return json.loads(request.urlopen(path).read())
+
+
+def _auth_remoteloadjson(user, passwd) -> None:
+    """Add a Authorization header to all requests.
+
+    Parameters
+    ----------
+    user : str
+        Username.
+    passwd : str
+        Password.
+    """
+    auth = base64.b64encode(f"{user}:{passwd}".encode())
+    opener = request.build_opener()
+    opener.addheaders = [("Authorization", f"Basic {auth.decode()}")]
+    request.install_opener(opener)
 
 
 def _localloadjson(path: str) -> JSONType:
@@ -52,6 +76,26 @@ def _localloadjson(path: str) -> JSONType:
     """
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def _has_auth(creds):
+    """Check if user credentials are provided.
+
+    Parameters
+    ----------
+    creds : dict
+        A dictionary with user credentials. It should contain "user" and
+        "passwd" keys.
+
+    Returns
+    -------
+    bool
+        True if user credentials are provided, False otherwise.
+    """
+    if creds.get("user") in [None, ""] or creds.get("passwd") in [None, ""]:
+        warnings.warn("Credentials were not supplied. Public data access only.", NoAuthWarning)
+        return False
+    return True
 
 
 def _expand_minute(minute: int, periods_duration: List[int]) -> int:
