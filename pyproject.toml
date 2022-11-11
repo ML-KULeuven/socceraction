@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "socceraction"
-version = "1.2.3"
+version = "1.3.0"
 description = "Convert soccer event stream data to the SPADL format and value on-the-ball player actions"
 authors = ["Tom Decroos <tom.decroos.be@gmail.com>", "Pieter Robberechts <pieter.robberechts@kuleuven.be>"]
 license = "MIT"
