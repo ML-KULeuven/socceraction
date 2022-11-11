@@ -54,7 +54,7 @@ To learn more on how to contribute, see the [Contributor Guide](https://soccerac
 
 If you make use of this package in your research, please consider citing the following papers:
 
-- Decroos, Tom, Lotte Bransen, Jan Van Haaren, and Jesse Davis. **Actions speak louder than goals: Valuing player actions in soccer.** In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 1851-1861. 2019. <br/>[ [pdf](http://doi.acm.org/10.1145/3292500.3330758) | [bibtex](https://github.com/ML-KULeuven/socceraction/blob/master/docs/_static/decroos19.bibtex) ]
+- Tom Decroos, Lotte Bransen, Jan Van Haaren, and Jesse Davis. **Actions speak louder than goals: Valuing player actions in soccer.** In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 1851-1861. 2019. <br/>[ [pdf](http://doi.acm.org/10.1145/3292500.3330758) | [bibtex](https://github.com/ML-KULeuven/socceraction/blob/master/docs/_static/decroos19.bibtex) ]
 
 - Maaike Van Roy, Pieter Robberechts, Tom Decroos, and Jesse Davis. **Valuing on-the-ball actions in soccer: a critical comparison of XT and VAEP.** In Proceedings of the AAAI-20 Workshop on Artifical Intelligence in Team Sports. AI in Team Sports Organising Committee, 2020. <br/>[ [pdf](https://limo.libis.be/primo-explore/fulldisplay?docid=LIRIAS2913207&context=L&vid=KULeuven&search_scope=ALL_CONTENT&tab=all_content_tab&lang=en_US) | [bibtex](https://github.com/ML-KULeuven/socceraction/blob/master/docs/_static/vanroy20.bibtex) ]
 
