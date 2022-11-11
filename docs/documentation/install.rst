@@ -10,7 +10,7 @@ Install Python
 ==============
 
 Being a Python library, socceraction requires Python.
-Currently, socceraction supports Python version 3.5 -- 3.8.
+Currently, socceraction supports Python version 3.7.1 -- 3.9.
 Get the latest version of Python at https://www.python.org/downloads/ or with
 your operating system's package manager.
 
@@ -52,8 +52,13 @@ Installing the development version
 
 Socceraction is actively developed on GitHub, where the code is
 `always available <https://github.com/ML-KULeuven/socceraction>`_.
+You can easily install the development version with
 
-You can either clone the public repository:
+.. code-block:: console
+
+		$ pip install git+https://github.com/ML-KULeuven/socceraction.git
+
+If you want to make modifications in the code, you can either clone the public repository:
 
 .. code-block:: console
 
@@ -71,7 +76,7 @@ package, or install it into your site-packages easily:
 .. code-block:: console
 
 	$ cd socceraction
-	$ python -m pip install .
+	$ python -m pip install -e .
 
 Verifying
 =========
@@ -82,3 +87,4 @@ Then at the Python prompt, try to import socceraction:
 .. parsed-literal::
 
     >>> import socceraction
+    >>> print(socceraction.__version__)
