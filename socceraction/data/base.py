@@ -26,8 +26,6 @@ class MissingDataError(Exception):
 class NoAuthWarning(UserWarning):
     """Warning raised when no user credentials are provided."""
 
-    pass
-
 
 def _remoteloadjson(path: str) -> JSONType:
     """Load JSON data from a URL.
@@ -45,7 +43,7 @@ def _remoteloadjson(path: str) -> JSONType:
     return json.loads(request.urlopen(path).read())
 
 
-def _auth_remoteloadjson(user, passwd) -> None:
+def _auth_remoteloadjson(user: str, passwd: str) -> None:
     """Add a Authorization header to all requests.
 
     Parameters
@@ -78,7 +76,7 @@ def _localloadjson(path: str) -> JSONType:
         return json.load(fh)
 
 
-def _has_auth(creds):
+def _has_auth(creds: Dict[str, str]) -> bool:
     """Check if user credentials are provided.
 
     Parameters

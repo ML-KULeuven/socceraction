@@ -401,7 +401,7 @@ class WyscoutLoader(EventDataLoader):
         elif getter == "local":
             self.get = _localloadjson
         else:
-            self.get = getter
+            self.get = getter  # type: ignore
 
         # Set up feeds
         if feeds is not None:
