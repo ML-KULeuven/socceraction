@@ -52,13 +52,13 @@ Installing the development version
 
 Socceraction is actively developed on GitHub, where the code is
 `always available <https://github.com/ML-KULeuven/socceraction>`_.
-You can easily install the development version with
+You can easily install the development version with:
 
 .. code-block:: console
 
 		$ pip install git+https://github.com/ML-KULeuven/socceraction.git
 
-If you want to make modifications in the code, you can either clone the public repository:
+However, to be able to make modifications in the code, you should either clone the public repository:
 
 .. code-block:: console
 
