@@ -118,7 +118,7 @@ Research
 If you make use of this package in your research, please consider citing the
 following papers.
 
-- Decroos, Tom, Lotte Bransen, Jan Van Haaren, and Jesse Davis. **"Actions speak
+- Tom Decroos, Lotte Bransen, Jan Van Haaren, and Jesse Davis. **"Actions speak
   louder than goals: Valuing player actions in soccer."** In Proceedings of the
   25th ACM SIGKDD International Conference on Knowledge Discovery & Data
   Mining, pp. 1851-1861. 2019. `[link]`__
