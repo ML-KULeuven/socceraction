@@ -22,6 +22,9 @@ data model. Currently, the following data sources are supported:
    * - StatsBomb local data
      - :class:`~socceraction.data.statsbomb.StatsBombLoader`
      - ``StatsBombLoader(getter="local", root="data/statsbomb")``
+   * - Wyscout API
+     - :class:`~socceraction.data.wyscout.WyscoutLoader`
+     - ``WyscoutLoader(getter="remote", creds={"user": "", "passwd": ""})``
    * - Wyscout local data
      - :class:`~socceraction.data.wyscout.WyscoutLoader`
      - ``WyscoutLoader(getter="local", root="data/wyscout")``
