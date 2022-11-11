@@ -7,6 +7,56 @@ All notable changes to this project will be documented in this file.
 Unreleased_
 ============
 
+1.3.0_ - 2022-11-11
+===================
+
+Changed
+-------
+- Runtime scheme validation of pandas dataframes is now disabled. This
+  increases performance, but also means that the user is responsible for
+  ensuring that the dataframes are valid.
+
+Added
+-----
+- Implement caching for the ``PublicWyscoutLoader``. (`GH277 <https://github.com/ML-KULeuven/socceraction/issues/277>`_)
+- Distinguish between left/right foot in bodyparts  (`GH220 <https://github.com/ML-KULeuven/socceraction/issues/220>`_)
+- The ``WyscoutLoader`` now also supports accessing the API. It is no longer
+  needed to download the JSON files first.
+
+Fixed
+-----
+- Handle missing players in the public Wyscout data. (`GH276 <https://github.com/ml-kuleuven/socceraction/issues/276>`_)
+- The ``bodypart_onehot`` feature generator now sets "bodypart_head/other" to True
+  for "head", "other" and "head/other". (`GH275 <https://github.com/ml-kuleuven/socceraction/issues/275>`_)
+- All feature generators now keep the original index of the input actions DataFrame.(`GH273 <https://github.com/ml-kuleuven/socceraction/issues/273>`_)
+- Fixed a PerformanceWarning in the ``actiontype_onehot``, ``result_onehot``,
+  ``actiontype_result_onehot`` and ``bodypart_onehot`` feature generators.
+  The efficiency of these generators should have been improved too.
+  (`GH370 <https://github.com/ml-kuleuven/socceraction/issues/370>`_)
+
+
+Removed
+-------
+- ``ExpectedThreat.predict`` was renamed to ``ExpectedThreat.rate``.
+- ``OptaLoader``, ``OptaCompetitionSchema``, ``OptaGameSchema``,
+  ``OptaPlayerSchema``, ``OptaTeamSchema`` and ``OptaEventSchema`` were moved
+  to ``socceraction.data.opta``.
+- ``StatsBombLoader``, ``extract_player_games``,
+  ``StatsBombCompetitionSchema``, ``StatsBombGameSchema``,
+  ``StatsBombPlayerSchema``, ``StatsBombTeamSchema`` and ``StatsBombEventSchema`` were
+  moved to ``socceraction.data.statsbomb``.
+- ``WyscoutLoader``, ``PublicWyscoutLoader``, ``WyscoutCompetitionSchema``,
+  ``WyscoutGameSchema``, ``WyscoutPlayerSchema``, ``WyscoutTeamSchema`` and
+  ``WyscoutEventSchema`` were moved to ``socceraction.data.wyscout``.
+
+CI
+--
+- Added PyUpgrade to the CI pipeline to automatically update Python syntax.
+- Moved darglint to its own manual pre-commit hook.
+- Reduced merge conflicts using the lockfile-only strategy for Depandabot
+
+
+
 1.2.3_ - 2022-04-23
 ===================
 
@@ -325,9 +375,10 @@ Added
 
 Initial release.
 
-.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.2.3...HEAD
-.. _1.2.2: https://github.com/ML-KULeuven/socceraction/compare/v1.2.2...v1.2.3
-.. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.1...v1.2.2
+.. _Unreleased: https://github.com/ML-KULeuven/socceraction/compare/v1.3.0...HEAD
+.. _1.3.0: https://github.com/ML-KULeuven/socceraction/compare/v1.2.3...v1.3.0
+.. _1.2.3: https://github.com/ML-KULeuven/socceraction/compare/v1.2.2...v1.2.3
+.. _1.2.2: https://github.com/ML-KULeuven/socceraction/compare/v1.2.1...v1.2.2
 .. _1.2.1: https://github.com/ML-KULeuven/socceraction/compare/v1.2.0...v1.2.1
 .. _1.2.0: https://github.com/ML-KULeuven/socceraction/compare/v1.1.3...v1.2.0
 .. _1.1.3: https://github.com/ML-KULeuven/socceraction/compare/v1.1.2...v1.1.3
