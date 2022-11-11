@@ -82,7 +82,7 @@ class TestSpadlConvertor:
         assert pass_action['player_id'] == 3289
         assert pass_action['type_id'] == spadl.actiontypes.index('pass')
         assert pass_action['result_id'] == spadl.results.index('success')
-        assert pass_action['bodypart_id'] == spadl.bodyparts.index('foot')
+        assert pass_action['bodypart_id'] == spadl.bodyparts.index('foot_right')
 
     def test_convert_own_goal(self) -> None:
         events_morira = self.SBL.events(7577)

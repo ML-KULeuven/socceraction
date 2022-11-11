@@ -1,5 +1,5 @@
 """Opta event stream data to SPADL converter."""
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -65,12 +65,18 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    return actions.pipe(DataFrame[SPADLSchema])
+    return cast(DataFrame[SPADLSchema], actions)
 
 
 def _get_bodypart_id(qualifiers: Dict[int, Any]) -> int:
-    if 15 in qualifiers:
+    if 15 in qualifiers or 3 in qualifiers:
         b = 'head'
+    elif 21 in qualifiers:
+        b = 'other'
+    elif 20 in qualifiers:
+        b = 'foot_right'
+    elif 72 in qualifiers:
+        b = 'foot_left'
     elif 21 in qualifiers:
         b = 'other'
     else:
@@ -168,81 +174,3 @@ def _fix_owngoals(actions: pd.DataFrame) -> pd.DataFrame:
     )
     actions.loc[owngoals_idx, 'type_id'] = spadlconfig.actiontypes.index('bad_touch')
     return actions
-
-
-def OptaLoader(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.opta import OptaLoader  # type: ignore
-
-    warn(
-        """socceraction.spadl.opta.OptaLoader is depecated,
-        use socceraction.data.opta.OptaLoader instead""",
-        DeprecationWarning,
-    )
-    return OptaLoader(*args, **kwargs)
-
-
-def OptaCompetitionSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.opta import OptaCompetitionSchema
-
-    warn(
-        """socceraction.spadl.opta.OptaCompetitionSchema is depecated,
-        use socceraction.data.opta.OptaCompetitionSchema instead""",
-        DeprecationWarning,
-    )
-    return OptaCompetitionSchema(*args, **kwargs)
-
-
-def OptaGameSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.opta import OptaGameSchema
-
-    warn(
-        """socceraction.spadl.opta.OptaGameSchema is depecated,
-        use socceraction.data.opta.OptaGameSchema instead""",
-        DeprecationWarning,
-    )
-    return OptaGameSchema(*args, **kwargs)
-
-
-def OptaPlayerSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.opta import OptaPlayerSchema
-
-    warn(
-        """socceraction.spadl.opta.OptaPlayerSchema is depecated,
-        use socceraction.data.opta.OptaPlayerSchema instead""",
-        DeprecationWarning,
-    )
-    return OptaPlayerSchema(*args, **kwargs)
-
-
-def OptaTeamSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.opta import OptaTeamSchema
-
-    warn(
-        """socceraction.spadl.opta.OptaTeamSchema is depecated,
-        use socceraction.data.opta.OptaTeamSchema instead""",
-        DeprecationWarning,
-    )
-    return OptaTeamSchema(*args, **kwargs)
-
-
-def OptaEventSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.opta import OptaEventSchema
-
-    warn(
-        """socceraction.spadl.opta.OptaEventSchema is depecated,
-        use socceraction.data.opta.OptaEventSchema instead""",
-        DeprecationWarning,
-    )
-    return OptaEventSchema(*args, **kwargs)

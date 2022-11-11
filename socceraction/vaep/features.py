@@ -75,15 +75,22 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
     nb_prev_actions : int, default=3  # noqa: DAR103
         The number of previous actions included in the game state.
 
+    Raises
+    ------
+    ValueError
+        If the number of actions is smaller 1.
+
     Returns
     -------
     GameStates
          The <nb_prev_actions> previous actions for each action.
     """
+    if nb_prev_actions < 1:
+        raise ValueError('The game state should include at least one preceding action.')
     states = [actions]
     for i in range(1, nb_prev_actions):
         prev_actions = actions.copy().shift(i, fill_value=0)
-        prev_actions.loc[: i - 1, :] = pd.concat([actions[:1]] * i, ignore_index=True)
+        prev_actions.iloc[:i] = pd.concat([actions[:1]] * i, ignore_index=True)
         states.append(prev_actions)  # type: ignore
     return states
 
@@ -179,11 +186,11 @@ def actiontype_onehot(actions: SPADLActions) -> Features:
     Features
         A one-hot encoding of each action's type.
     """
-    X = pd.DataFrame()
-    for type_name in spadlconfig.actiontypes:
+    X = {}
+    for type_id, type_name in enumerate(spadlconfig.actiontypes):
         col = 'type_' + type_name
-        X[col] = actions['type_name'] == type_name
-    return X
+        X[col] = actions['type_id'] == type_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -217,11 +224,11 @@ def result_onehot(actions: SPADLActions) -> Features:
     Features
         The one-hot encoding of each action's result.
     """
-    X = pd.DataFrame()
-    for result_name in spadlconfig.results:
+    X = {}
+    for result_id, result_name in enumerate(spadlconfig.results):
         col = 'result_' + result_name
-        X[col] = actions['result_name'] == result_name
-    return X
+        X[col] = actions['result_id'] == result_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -240,16 +247,18 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
     """
     res = result_onehot.__wrapped__(actions)  # type: ignore
     tys = actiontype_onehot.__wrapped__(actions)  # type: ignore
-    df = pd.DataFrame()
+    df = {}
     for tyscol in list(tys.columns):
         for rescol in list(res.columns):
             df[tyscol + '_' + rescol] = tys[tyscol] & res[rescol]
-    return df
+    return pd.DataFrame(df, index=actions.index)
 
 
 @simple
 def bodypart(actions: Actions) -> Features:
     """Get the body part used to perform each action.
+
+    This feature generator does not distinguish between the left and right foot.
 
     Parameters
     ----------
@@ -260,6 +269,39 @@ def bodypart(actions: Actions) -> Features:
     -------
     Features
         The 'bodypart_id' of each action.
+
+    See Also
+    --------
+    bodypart_detailed :
+        An alternative version that splits between the left and right foot.
+    """
+    foot_id = spadlconfig.bodyparts.index("foot")
+    left_foot_id = spadlconfig.bodyparts.index("foot_left")
+    right_foot_id = spadlconfig.bodyparts.index("foot_right")
+    return actions[['bodypart_id']].replace([left_foot_id, right_foot_id], foot_id)
+
+
+@simple
+def bodypart_detailed(actions: Actions) -> Features:
+    """Get the body part with split by foot used to perform each action.
+
+    This feature generator distinguishes between the left and right foot, if
+    supported by the dataprovider.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The 'bodypart_id' of each action.
+
+    See Also
+    --------
+    bodypart :
+        An alternative version that does not split between the left and right foot.
     """
     return actions[['bodypart_id']]
 
@@ -267,6 +309,8 @@ def bodypart(actions: Actions) -> Features:
 @simple
 def bodypart_onehot(actions: Actions) -> Features:
     """Get the one-hot-encoded bodypart of each action.
+
+    This feature generator does not distinguish between the left and right foot.
 
     Parameters
     ----------
@@ -277,12 +321,70 @@ def bodypart_onehot(actions: Actions) -> Features:
     -------
     Features
         The one-hot encoding of each action's bodypart.
+
+    See Also
+    --------
+    bodypart_detailed_onehot :
+        An alternative version that splits between the left and right foot.
     """
-    X = pd.DataFrame()
-    for bodypart_name in spadlconfig.bodyparts:
+    X = {}
+    for bodypart_id, bodypart_name in enumerate(spadlconfig.bodyparts):
+        if bodypart_name in ('foot_left', 'foot_right'):
+            continue
         col = 'bodypart_' + bodypart_name
-        X[col] = actions['bodypart_name'] == bodypart_name
-    return X
+        if bodypart_name == 'foot':
+            foot_id = spadlconfig.bodyparts.index("foot")
+            left_foot_id = spadlconfig.bodyparts.index("foot_left")
+            right_foot_id = spadlconfig.bodyparts.index("foot_right")
+            X[col] = actions['bodypart_id'].isin([foot_id, left_foot_id, right_foot_id])
+        elif bodypart_name == 'head/other':
+            head_id = spadlconfig.bodyparts.index("head")
+            other_id = spadlconfig.bodyparts.index("other")
+            head_other_id = spadlconfig.bodyparts.index("head/other")
+            X[col] = actions['bodypart_id'].isin([head_id, other_id, head_other_id])
+        else:
+            X[col] = actions['bodypart_id'] == bodypart_id
+    return pd.DataFrame(X, index=actions.index)
+
+
+@simple
+def bodypart_detailed_onehot(actions: Actions) -> Features:
+    """Get the one-hot-encoded bodypart with split by foot of each action.
+
+    This feature generator distinguishes between the left and right foot, if
+    supported by the dataprovider.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The one-hot encoding of each action's bodypart.
+
+    See Also
+    --------
+    bodypart_onehot :
+        An alternative version that does not split between the left and right foot.
+    """
+    X = {}
+    for bodypart_id, bodypart_name in enumerate(spadlconfig.bodyparts):
+        col = 'bodypart_' + bodypart_name
+        if bodypart_name == 'foot':
+            foot_id = spadlconfig.bodyparts.index("foot")
+            left_foot_id = spadlconfig.bodyparts.index("foot_left")
+            right_foot_id = spadlconfig.bodyparts.index("foot_right")
+            X[col] = actions['bodypart_id'].isin([foot_id, left_foot_id, right_foot_id])
+        elif bodypart_name == 'head/other':
+            head_id = spadlconfig.bodyparts.index("head")
+            other_id = spadlconfig.bodyparts.index("other")
+            head_other_id = spadlconfig.bodyparts.index("head/other")
+            X[col] = actions['bodypart_id'].isin([head_id, other_id, head_other_id])
+        else:
+            X[col] = actions['bodypart_id'] == bodypart_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -368,7 +470,7 @@ def startpolar(actions: SPADLActions) -> Features:
     Features
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
-    polardf = pd.DataFrame()
+    polardf = pd.DataFrame(index=actions.index)
     dx = (_goal_x - actions['start_x']).abs().values
     dy = (_goal_y - actions['start_y']).abs().values
     polardf['start_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
@@ -393,7 +495,7 @@ def endpolar(actions: SPADLActions) -> Features:
     Features
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
-    polardf = pd.DataFrame()
+    polardf = pd.DataFrame(index=actions.index)
     dx = (_goal_x - actions['end_x']).abs().values
     dy = (_goal_y - actions['end_y']).abs().values
     polardf['end_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
@@ -417,7 +519,7 @@ def movement(actions: SPADLActions) -> Features:
         The horizontal ('dx'), vertical ('dy') and total ('movement') distance
         covered by each action.
     """
-    mov = pd.DataFrame()
+    mov = pd.DataFrame(index=actions.index)
     mov['dx'] = actions.end_x - actions.start_x
     mov['dy'] = actions.end_y - actions.start_y
     mov['movement'] = np.sqrt(mov.dx**2 + mov.dy**2)
@@ -446,7 +548,7 @@ def team(gamestates: GameStates) -> Features:
         whether the team that performed action a0 is in possession.
     """
     a0 = gamestates[0]
-    teamdf = pd.DataFrame()
+    teamdf = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         teamdf['team_' + (str(i + 1))] = a.team_id == a0.team_id
     return teamdf
@@ -467,7 +569,7 @@ def time_delta(gamestates: GameStates) -> Features:
         containing the number of seconds between action ai and action a0.
     """
     a0 = gamestates[0]
-    dt = pd.DataFrame()
+    dt = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         dt['time_delta_' + (str(i + 1))] = a0.time_seconds - a.time_seconds
     return dt
@@ -489,7 +591,7 @@ def space_delta(gamestates: GameStates) -> Features:
         <nb_prev_actions> action ai and action a0.
     """
     a0 = gamestates[0]
-    spaced = pd.DataFrame()
+    spaced = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         dx = a.end_x - a0.start_x
         spaced['dx_a0' + (str(i + 1))] = dx
@@ -532,7 +634,7 @@ def goalscore(gamestates: GameStates) -> Features:
     goalscoreteamA = goalsteamA.cumsum() - goalsteamA
     goalscoreteamB = goalsteamB.cumsum() - goalsteamB
 
-    scoredf = pd.DataFrame()
+    scoredf = pd.DataFrame(index=actions.index)
     scoredf['goalscore_team'] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
     scoredf['goalscore_opponent'] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
     scoredf['goalscore_diff'] = scoredf['goalscore_team'] - scoredf['goalscore_opponent']

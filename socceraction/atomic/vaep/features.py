@@ -11,6 +11,8 @@ from socceraction.spadl import SPADLSchema
 from socceraction.vaep.features import (
     actiontype,
     bodypart,
+    bodypart_detailed,
+    bodypart_detailed_onehot,
     bodypart_onehot,
     gamestates,
     simple,
@@ -26,7 +28,9 @@ __all__ = [
     'actiontype',
     'actiontype_onehot',
     'bodypart',
+    'bodypart_detailed',
     'bodypart_onehot',
+    'bodypart_detailed_onehot',
     'team',
     'time',
     'time_delta',
@@ -125,11 +129,11 @@ def actiontype_onehot(actions: Actions) -> Features:
     Features
         A one-hot encoding of each action's type.
     """
-    X = pd.DataFrame()
-    for type_name in atomicspadl.actiontypes:
+    X = {}
+    for type_id, type_name in enumerate(atomicspadl.actiontypes):
         col = 'type_' + type_name
-        X[col] = actions['type_name'] == type_name
-    return X
+        X[col] = actions['type_id'] == type_id
+    return pd.DataFrame(X, index=actions.index)
 
 
 @simple
@@ -169,7 +173,7 @@ def polar(actions: Actions) -> Features:
     Features
         The 'dist_to_goal' and 'angle_to_goal' of each action.
     """
-    polardf = pd.DataFrame()
+    polardf = pd.DataFrame(index=actions.index)
     dx = (_goal_x - actions['x']).abs().values
     dy = (_goal_y - actions['y']).abs().values
     polardf['dist_to_goal'] = np.sqrt(dx**2 + dy**2)
@@ -192,7 +196,7 @@ def movement_polar(actions: Actions) -> Features:
     Features
         The distance covered ('mov_d') and direction ('mov_angle') of each action.
     """
-    mov = pd.DataFrame()
+    mov = pd.DataFrame(index=actions.index)
     mov['mov_d'] = np.sqrt(actions.dx**2 + actions.dy**2)
     with np.errstate(divide='ignore', invalid='ignore'):
         mov['mov_angle'] = np.arctan2(actions.dy, actions.dx)
@@ -215,7 +219,7 @@ def direction(actions: Actions) -> Features:
         The x-component ('dx') and y-compoment ('mov_angle') of the unit
         vector of each action.
     """
-    mov = pd.DataFrame()
+    mov = pd.DataFrame(index=actions.index)
     totald = np.sqrt(actions.dx**2 + actions.dy**2)
     for d in ['dx', 'dy']:
         # we don't want to give away the end location,
@@ -253,7 +257,7 @@ def goalscore(gamestates: GameStates) -> Features:
     goalscoreteamA = goalsteamA.cumsum() - goalsteamA
     goalscoreteamB = goalsteamB.cumsum() - goalsteamB
 
-    scoredf = pd.DataFrame()
+    scoredf = pd.DataFrame(index=actions.index)
     scoredf['goalscore_team'] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
     scoredf['goalscore_opponent'] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
     scoredf['goalscore_diff'] = scoredf['goalscore_team'] - scoredf['goalscore_opponent']

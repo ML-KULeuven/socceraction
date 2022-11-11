@@ -1,5 +1,5 @@
 """Wyscout event stream data to SPADL converter."""
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -48,7 +48,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions["action_id"] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    return actions.pipe(DataFrame[SPADLSchema])
+    return cast(DataFrame[SPADLSchema], actions)
 
 
 def _get_tag_set(tags: List[Dict[str, Any]]) -> Set[int]:
@@ -896,94 +896,3 @@ def adjust_goalkick_result(df_actions: pd.DataFrame) -> pd.DataFrame:
     df_actions.loc[not_accurate, "result_id"] = 0
 
     return df_actions
-
-
-def WyscoutLoader(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import WyscoutLoader  # type: ignore
-
-    warn(
-        """socceraction.spadl.wyscout.WyscoutLoader is depecated,
-        use socceraction.data.wyscout.WyscoutLoader instead""",
-        DeprecationWarning,
-    )
-    return WyscoutLoader(*args, **kwargs)
-
-
-def PublicWyscoutLoader(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import PublicWyscoutLoader  # type: ignore
-
-    warn(
-        """socceraction.spadl.wyscout.PublicWyscoutLoader is depecated,
-        use socceraction.data.wyscout.PublicWyscoutLoader instead""",
-        DeprecationWarning,
-    )
-    return PublicWyscoutLoader(*args, **kwargs)
-
-
-def WyscoutCompetitionSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import WyscoutCompetitionSchema
-
-    warn(
-        """socceraction.spadl.wyscout.WyscoutCompetitionSchema is depecated,
-        use socceraction.data.wyscout.WyscoutCompetitionSchema instead""",
-        DeprecationWarning,
-    )
-    return WyscoutCompetitionSchema(*args, **kwargs)
-
-
-def WyscoutGameSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import WyscoutGameSchema
-
-    warn(
-        """socceraction.spadl.wyscout.WyscoutGameSchema is depecated,
-        use socceraction.data.wyscout.WyscoutGameSchema instead""",
-        DeprecationWarning,
-    )
-    return WyscoutGameSchema(*args, **kwargs)
-
-
-def WyscoutPlayerSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import WyscoutPlayerSchema
-
-    warn(
-        """socceraction.spadl.wyscout.WyscoutPlayerSchema is depecated,
-        use socceraction.data.wyscout.WyscoutPlayerSchema instead""",
-        DeprecationWarning,
-    )
-    return WyscoutPlayerSchema(*args, **kwargs)
-
-
-def WyscoutTeamSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import WyscoutTeamSchema
-
-    warn(
-        """socceraction.spadl.wyscout.WyscoutTeamSchema is depecated,
-        use socceraction.data.wyscout.WyscoutTeamSchema instead""",
-        DeprecationWarning,
-    )
-    return WyscoutTeamSchema(*args, **kwargs)
-
-
-def WyscoutEventSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.wyscout import WyscoutEventSchema
-
-    warn(
-        """socceraction.spadl.wyscout.WyscoutEventSchema is depecated,
-        use socceraction.data.wyscout.WyscoutEventSchema instead""",
-        DeprecationWarning,
-    )
-    return WyscoutEventSchema(*args, **kwargs)

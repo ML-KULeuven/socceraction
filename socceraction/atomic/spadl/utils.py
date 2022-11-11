@@ -1,4 +1,6 @@
 """Utility functions for working with Atomic-SPADL dataframes."""
+from typing import cast
+
 from pandera.typing import DataFrame
 
 from . import config as spadlconfig
@@ -19,11 +21,12 @@ def add_names(actions: DataFrame[AtomicSPADLSchema]) -> DataFrame[AtomicSPADLSch
         The original dataframe with a 'type_name', 'result_name' and
         'bodypart_name' appended.
     """
-    return (
+    return cast(
+        DataFrame[AtomicSPADLSchema],
         actions.drop(columns=['type_name', 'bodypart_name'], errors='ignore')
         .merge(spadlconfig.actiontypes_df(), how='left')
         .merge(spadlconfig.bodyparts_df(), how='left')
-        .pipe(DataFrame[AtomicSPADLSchema])
+        .set_index(actions.index),
     )
 
 

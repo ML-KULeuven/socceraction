@@ -1,7 +1,6 @@
 """Implements the xT framework."""
 import json
 import os
-import warnings
 from typing import Callable, List, Optional, Tuple
 
 import numpy as np
@@ -376,34 +375,6 @@ class ExpectedThreat:
         y = np.arange(0.0, spadlconfig.field_width, cell_width) + 0.5 * cell_width
 
         return interp2d(x=x, y=y, z=self.xT, kind=kind, bounds_error=False)
-
-    def predict(
-        self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False
-    ) -> npt.NDArray[np.float64]:  # pragma: no cover
-        """Compute the xT values for the given actions.
-
-        xT should only be used to value actions that move the ball and also
-        keep the current team in possession of the ball.
-
-        Parameters
-        ----------
-        actions : pd.DataFrame
-            Actions, in SPADL format.
-        use_interpolation : bool
-            Indicates whether to use bilinear interpolation when inferring xT
-            values. Note that this requires Scipy to be installed (pip install
-            scipy).
-
-        Returns
-        -------
-        np.ndarray
-            The xT value for each action.
-
-        .. deprecated:: 1.0.3
-               Use :func:`socceraction.xthreat.ExpectedThreat.rate` instead.
-        """
-        warnings.warn('predict is deprecated, use rate instead', DeprecationWarning)
-        return self.rate(actions, use_interpolation)
 
     def rate(
         self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False

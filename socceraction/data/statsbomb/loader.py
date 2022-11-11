@@ -1,22 +1,12 @@
 """Implements serializers for StatsBomb data."""
 import os
-import warnings
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
 try:
-    from statsbombpy import api_client, sb
-
-    def my_has_auth(creds: Dict[str, str]) -> bool:
-        """Monkeypatch to hide the repeated print messages."""
-        if creds.get("user") in [None, ""] or creds.get("passwd") in [None, ""]:
-            warnings.warn("credentials were not supplied. open data access only")
-            return False
-        return True
-
-    api_client.has_auth = my_has_auth
+    from statsbombpy import sb
 except ImportError:
     sb = None
 
@@ -115,8 +105,8 @@ class StatsBombLoader(EventDataLoader):
         if not isinstance(obj, list):
             raise ParseError("The retrieved data should contain a list of competitions")
         if len(obj) == 0:
-            return pd.DataFrame(columns=cols).pipe(DataFrame[StatsBombCompetitionSchema])
-        return pd.DataFrame(obj)[cols].pipe(DataFrame[StatsBombCompetitionSchema])
+            return cast(DataFrame[StatsBombCompetitionSchema], pd.DataFrame(columns=cols))
+        return cast(DataFrame[StatsBombCompetitionSchema], pd.DataFrame(obj)[cols])
 
     def games(self, competition_id: int, season_id: int) -> DataFrame[StatsBombGameSchema]:
         """Return a dataframe with all available games in a season.
@@ -164,7 +154,7 @@ class StatsBombLoader(EventDataLoader):
         if not isinstance(obj, list):
             raise ParseError("The retrieved data should contain a list of games")
         if len(obj) == 0:
-            return pd.DataFrame(columns=cols).pipe(DataFrame[StatsBombGameSchema])
+            return cast(DataFrame[StatsBombGameSchema], pd.DataFrame(columns=cols))
         gamesdf = pd.DataFrame(_flatten(m) for m in obj)
         gamesdf["kick_off"] = gamesdf["kick_off"].fillna("12:00:00.000")
         gamesdf["match_date"] = pd.to_datetime(
@@ -185,7 +175,7 @@ class StatsBombLoader(EventDataLoader):
             gamesdf["venue"] = None
         if "referee" not in gamesdf:
             gamesdf["referee"] = None
-        return gamesdf[cols].pipe(DataFrame[StatsBombGameSchema])
+        return cast(DataFrame[StatsBombGameSchema], gamesdf[cols])
 
     def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
         if self._local:
@@ -219,7 +209,7 @@ class StatsBombLoader(EventDataLoader):
         """
         cols = ["team_id", "team_name"]
         obj = self._lineups(game_id)
-        return pd.DataFrame(obj)[cols].pipe(DataFrame[StatsBombTeamSchema])
+        return cast(DataFrame[StatsBombTeamSchema], pd.DataFrame(obj)[cols])
 
     def players(self, game_id: int) -> DataFrame[StatsBombPlayerSchema]:
         """Return a dataframe with all players that participated in a game.
@@ -276,7 +266,7 @@ class StatsBombLoader(EventDataLoader):
             },
             inplace=True,
         )
-        return playersdf[cols].pipe(DataFrame[StatsBombPlayerSchema])
+        return cast(DataFrame[StatsBombPlayerSchema], playersdf[cols])
 
     def events(self, game_id: int, load_360: bool = False) -> DataFrame[StatsBombEventSchema]:
         """Return a dataframe with the event stream of a game.
@@ -335,7 +325,7 @@ class StatsBombLoader(EventDataLoader):
         if not isinstance(obj, list):
             raise ParseError("The retrieved data should contain a list of events")
         if len(obj) == 0:
-            return pd.DataFrame(columns=cols).pipe(DataFrame[StatsBombEventSchema])
+            return cast(DataFrame[StatsBombEventSchema], pd.DataFrame(columns=cols))
 
         eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
         eventsdf["match_id"] = game_id
@@ -350,7 +340,7 @@ class StatsBombLoader(EventDataLoader):
             inplace=True,
         )
         if not load_360:
-            return eventsdf[cols].pipe(DataFrame[StatsBombEventSchema])
+            return cast(DataFrame[StatsBombEventSchema], eventsdf[cols])
 
         # Load the 360 data
         cols_360 = ["visible_area_360", "freeze_frame_360"]
@@ -363,7 +353,7 @@ class StatsBombLoader(EventDataLoader):
         if len(obj) == 0:
             eventsdf["visible_area_360"] = None
             eventsdf["freeze_frame_360"] = None
-            return eventsdf[cols + cols_360].pipe(DataFrame[StatsBombEventSchema])
+            return cast(DataFrame[StatsBombEventSchema], eventsdf[cols + cols_360])
         framesdf = pd.DataFrame(obj).rename(
             columns={
                 "event_uuid": "event_id",
@@ -371,8 +361,9 @@ class StatsBombLoader(EventDataLoader):
                 "freeze_frame": "freeze_frame_360",
             },
         )[["event_id", "visible_area_360", "freeze_frame_360"]]
-        return pd.merge(eventsdf, framesdf, on="event_id", how="left")[cols + cols_360].pipe(
-            DataFrame[StatsBombEventSchema]
+        return cast(
+            DataFrame[StatsBombEventSchema],
+            pd.merge(eventsdf, framesdf, on="event_id", how="left")[cols + cols_360],
         )
 
 

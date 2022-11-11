@@ -1,5 +1,5 @@
 """StatsBomb event stream data to SPADL converter."""
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -73,7 +73,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
-    return actions.pipe(DataFrame[SPADLSchema])
+    return cast(DataFrame[SPADLSchema], actions)
 
 
 Location = Tuple[float, float]
@@ -156,6 +156,10 @@ def _parse_pass_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C
         b = 'foot'
     elif 'Head' in bp:
         b = 'head'
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
     elif 'Foot' in bp or bp == 'Drop Kick':
         b = 'foot'
     else:
@@ -254,7 +258,11 @@ def _parse_shot_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
         b = 'foot'
     elif 'Head' in bp:
         b = 'head'
-    elif 'Foot' in bp or bp == 'Drop Kick':
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
+    elif 'Foot' in bp:
         b = 'foot'
     else:
         b = 'other'
@@ -300,6 +308,10 @@ def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # n
         b = 'foot'
     elif 'Head' in bp:
         b = 'head'
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
     elif 'Foot' in bp or bp == 'Drop Kick':
         b = 'foot'
     else:
@@ -308,10 +320,22 @@ def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # n
     return a, r, b
 
 
-def _parse_clearance_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_clearance_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     a = 'clearance'
     r = 'success'
-    b = 'foot'
+    bp = extra.get('clearance', {}).get('body_part', {}).get('name')
+    if bp is None:
+        b = 'foot'
+    elif 'Head' in bp:
+        b = 'head'
+    elif bp == 'Left Foot':
+        b = 'foot_left'
+    elif bp == 'Right Foot':
+        b = 'foot_right'
+    elif 'Foot' in bp:
+        b = 'foot'
+    else:
+        b = 'other'
     return a, r, b
 
 
@@ -320,94 +344,3 @@ def _parse_miscontrol_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
     r = 'fail'
     b = 'foot'
     return a, r, b
-
-
-def StatsBombLoader(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import StatsBombLoader  # type: ignore
-
-    warn(
-        """socceraction.spadl.statsbomb.StatsBombLoader is depecated,
-        use socceraction.data.statsbomb.StatsBombLoader instead""",
-        DeprecationWarning,
-    )
-    return StatsBombLoader(*args, **kwargs)
-
-
-def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:  # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import extract_player_games
-
-    warn(
-        """socceraction.spadl.statsbomb.extract_player_games is depecated,
-        use socceraction.data.statsbomb.extract_player_games instead""",
-        DeprecationWarning,
-    )
-    return extract_player_games(events)
-
-
-def StatsBombCompetitionSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import StatsBombCompetitionSchema
-
-    warn(
-        """socceraction.spadl.statsbomb.StatsBombCompetitionSchema is depecated,
-        use socceraction.data.statsbomb.StatsBombCompetitionSchema instead""",
-        DeprecationWarning,
-    )
-    return StatsBombCompetitionSchema(*args, **kwargs)
-
-
-def StatsBombGameSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import StatsBombGameSchema
-
-    warn(
-        """socceraction.spadl.statsbomb.StatsBombGameSchema is depecated,
-        use socceraction.data.statsbomb.StatsBombGameSchema instead""",
-        DeprecationWarning,
-    )
-    return StatsBombGameSchema(*args, **kwargs)
-
-
-def StatsBombPlayerSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import StatsBombPlayerSchema
-
-    warn(
-        """socceraction.spadl.statsbomb.StatsBombPlayerSchema is depecated,
-        use socceraction.data.statsbomb.StatsBombPlayerSchema instead""",
-        DeprecationWarning,
-    )
-    return StatsBombPlayerSchema(*args, **kwargs)
-
-
-def StatsBombTeamSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import StatsBombTeamSchema
-
-    warn(
-        """socceraction.spadl.statsbomb.StatsBombTeamSchema is depecated,
-        use socceraction.data.statsbomb.StatsBombTeamSchema instead""",
-        DeprecationWarning,
-    )
-    return StatsBombTeamSchema(*args, **kwargs)
-
-
-def StatsBombEventSchema(*args, **kwargs):  # type: ignore # noqa
-    from warnings import warn
-
-    from socceraction.data.statsbomb import StatsBombEventSchema
-
-    warn(
-        """socceraction.spadl.statsbomb.StatsBombEventSchema is depecated,
-        use socceraction.data.statsbomb.StatsBombEventSchema instead""",
-        DeprecationWarning,
-    )
-    return StatsBombEventSchema(*args, **kwargs)
