@@ -12,7 +12,16 @@ from lxml import objectify
 
 
 class OptaParser:
-    """Extract data from an Opta data stream."""
+    """Extract data from an Opta data stream.
+
+    Parameters
+    ----------
+    path : str
+        Path of the data file.
+    """
+
+    def __init__(self, path: str, **kwargs: Any) -> None:
+        raise NotImplementedError
 
     def extract_competitions(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
