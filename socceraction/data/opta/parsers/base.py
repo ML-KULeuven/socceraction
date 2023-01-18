@@ -6,23 +6,13 @@ encoded in the file.
 
 """
 import json  # type: ignore
-from abc import ABC
 from typing import Any, Dict, Optional, Tuple
 
 from lxml import objectify
 
 
-class OptaParser(ABC):
-    """Extract data from an Opta data stream.
-
-    Parameters
-    ----------
-    path : str
-        Path of the data file.
-    """
-
-    def __init__(self, path: str, **kwargs: Any) -> None:
-        raise NotImplementedError
+class OptaParser:
+    """Extract data from an Opta data stream."""
 
     def extract_competitions(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
         """Return a dictionary with all available competitions.
