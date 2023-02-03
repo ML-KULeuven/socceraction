@@ -237,8 +237,8 @@ class WhoScoredParser(OptaParser):
                 if "relatedPlayerId" in attr
                 else None,
                 touch=bool(attr.get("isTouch", False)),
-                shot=bool(attr.get("isGoal", False)),
-                goal=bool(attr.get("isShot", False)),
+                goal=bool(attr.get("isGoal", False)),
+                shot=bool(attr.get("isShot", False)),
                 # assist=bool(attr.get('assist')) if "assist" in attr else None,
                 # keypass=bool(attr.get('keypass')) if "keypass" in attr else None,
             )
