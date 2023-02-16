@@ -70,7 +70,7 @@ def get_tagsdf(events: pd.DataFrame) -> pd.DataFrame:
     """
     tags = events.tags.apply(_get_tag_set)
     tagsdf = pd.DataFrame()
-    for (tag_id, column) in wyscout_tags:
+    for tag_id, column in wyscout_tags:
         tagsdf[column] = tags.apply(lambda x, tag=tag_id: tag in x)
     return tagsdf
 

@@ -118,7 +118,6 @@ def _parse_event_as_non_action(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
 
 
 def _parse_pass_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C901
-
     a = 'pass'  # default
     p = extra.get('pass', {})
     ptype = p.get('type', {}).get('name')

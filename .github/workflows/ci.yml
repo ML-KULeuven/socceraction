@@ -56,6 +56,8 @@ jobs:
       - name: Install dependencies
         if: steps.cache-statsbomb.outputs.cache-hit != 'true' || steps.cache-public-wyscout.outputs.cache-hit != 'true'
         run: poetry install --no-dev
+        env:
+          PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
 
       - name: Download StatsBomb test data
         if: steps.cache-statsbomb.outputs.cache-hit != 'true'
@@ -73,15 +75,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { python-version: 3.9, os: ubuntu-latest, session: "pre-commit" }
-          - { python-version: 3.9, os: ubuntu-latest, session: "mypy" }
-          - { python-version: 3.8, os: ubuntu-latest, session: "mypy" }
-          - { python-version: 3.7, os: ubuntu-latest, session: "mypy" }
-          - { python-version: 3.9, os: ubuntu-latest, session: "tests" }
-          - { python-version: 3.8, os: ubuntu-latest, session: "tests" }
-          - { python-version: 3.7, os: ubuntu-latest, session: "tests" }
-          - { python-version: 3.9, os: windows-latest, session: "tests" }
-          - { python-version: 3.9, os: ubuntu-latest, session: "docs-build" }
+          - { python-version: "3.11", os: ubuntu-latest, session: "pre-commit" }
+          - { python-version: "3.11", os: ubuntu-latest, session: "mypy" }
+          - { python-version: "3.11", os: ubuntu-latest, session: "tests" }
+          - { python-version: "3.10", os: ubuntu-latest, session: "tests" }
+          - { python-version: "3.9", os: ubuntu-latest, session: "tests" }
+          - { python-version: "3.8", os: ubuntu-latest, session: "tests" }
+          - { python-version: "3.11", os: windows-latest, session: "tests" }
+          - { python-version: "3.11", os: ubuntu-latest, session: "docs-build" }
 
     env:
       NOXSESSION: ${{ matrix.session }}
@@ -175,10 +176,10 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.11
 
       - name: Upgrade pip
         run: |

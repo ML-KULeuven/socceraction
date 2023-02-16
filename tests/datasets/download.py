@@ -37,6 +37,7 @@ _data_dir = os.path.dirname(__file__)
 
 
 def download_statsbomb_data() -> None:
+    """Download and extract the StatsBomb open data repository."""
     logging.info("Downloading StatsBomb data")
     dataset_url = "https://github.com/statsbomb/open-data/archive/master.zip"
 
@@ -61,6 +62,7 @@ def download_statsbomb_data() -> None:
 
 
 def convert_statsbomb_data() -> None:
+    """Convert StatsBomb data to SPADL."""
     logging.info("Converting StatsBomb data")
     seasons = {
         3: "2018",
@@ -93,7 +95,6 @@ def convert_statsbomb_data() -> None:
         season_id = seasons[competition.season_id]
         spadl_h5 = os.path.join(spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5")
         with pd.HDFStore(spadl_h5) as spadlstore:
-
             spadlstore.put("actiontypes", spadl.actiontypes_df(), format="table")
             spadlstore.put("results", spadl.results_df(), format="table")
             spadlstore.put("bodyparts", spadl.bodyparts_df(), format="table")
@@ -126,6 +127,7 @@ def convert_statsbomb_data() -> None:
 
 
 def download_wyscout_data() -> None:
+    """Download and extract the Wyscout public dataset."""
     logging.info("Downloading Wyscout data")
     # https://figshare.com/collections/Soccer_match_event_dataset/4415000/5
     dataset_urls = dict(
@@ -153,6 +155,7 @@ def download_wyscout_data() -> None:
 
 
 def convert_wyscout_data() -> None:
+    """Convert Wyscout data to SPADL."""
     logging.info("Converting Wyscout data")
     seasons = {
         10078: "2018",
@@ -185,7 +188,6 @@ def convert_wyscout_data() -> None:
         season_id = seasons[competition.season_id]
         spadl_h5 = os.path.join(spadl_datafolder, f"spadl-{competition_id}-{season_id}.h5")
         with pd.HDFStore(spadl_h5) as spadlstore:
-
             spadlstore.put("actiontypes", spadl.actiontypes_df(), format="table")
             spadlstore.put("results", spadl.results_df(), format="table")
             spadlstore.put("bodyparts", spadl.bodyparts_df(), format="table")
@@ -218,6 +220,7 @@ def convert_wyscout_data() -> None:
 
 
 def create_spadl(game_id: int, home_team_id: int) -> None:
+    """Create SPADL actions from StatsBomb data for a given game."""
     logging.info("Creating SPADL data")
     spadl_datafolder = os.path.join(_data_dir, "spadl")
     if not os.path.exists(spadl_datafolder):
