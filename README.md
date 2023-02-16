@@ -10,7 +10,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
 
-[![Build Status](https://img.shields.io/github/workflow/status/ML-KULeuven/socceraction/CI?label=build&logo=github)](https://github.com/ML-KULeuven/socceraction/actions?workflow=CI)
+[![Build Status](https://github.com/ML-KULeuven/socceraction/workflows/CI/badge.svg)](https://github.com/ML-KULeuven/socceraction/actions?workflow=CI)
 [![Read the Docs](https://img.shields.io/readthedocs/socceraction/latest.svg?label=Read%20the%20Docs)](https://socceraction.readthedocs.io)
 [![Code coverage](https://codecov.io/gh/ML-KULeuven/socceraction/branch/master/graph/badge.svg)](https://codecov.io/gh/ML-KULeuven/socceraction)
 
