@@ -61,13 +61,13 @@ def _count(x: Series[float], y: Series[float], l: int = N, w: int = M) -> npt.ND
 
     flat_indexes = _get_flat_indexes(x, y, l, w)
     vc = flat_indexes.value_counts(sort=False)
-    vector = np.zeros(w * l)
+    vector = np.zeros(w * l, dtype=int)
     vector[vc.index] = vc
     return vector.reshape((w, l))
 
 
 def _safe_divide(a: npt.ArrayLike, b: npt.ArrayLike) -> npt.NDArray[np.float64]:
-    return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
+    return np.divide(a, b, out=np.zeros_like(a), where=b != 0, casting='unsafe')
 
 
 def scoring_prob(
@@ -295,12 +295,12 @@ class ExpectedThreat:
             When moving, the probability of moving to each of the other zones.
         """
         gs = p_scoring * p_shot
-        diff = 1
+        diff = np.ones((self.w, self.l), dtype=np.float64)
         it = 0
         self.heatmaps.append(self.xT.copy())
 
         while np.any(diff > self.eps):
-            total_payoff = np.zeros((self.w, self.l))
+            total_payoff = np.zeros((self.w, self.l), dtype=np.float64)
 
             for y in range(0, self.w):
                 for x in range(0, self.l):

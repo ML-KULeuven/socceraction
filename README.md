@@ -37,7 +37,7 @@ Socceraction contains the following components:
 
 ## Installation / Getting started
 
-The recommended way to install `socceraction` is to simply use pip. The latest version officially supports Python 3.7.1 - 3.9.
+The recommended way to install `socceraction` is to simply use pip. The latest version officially supports Python 3.8 - 3.11.
 
 ```sh
 $ pip install socceraction
