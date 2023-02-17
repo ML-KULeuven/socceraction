@@ -2508,18 +2508,18 @@ files = [
 
 [[package]]
 name = "xgboost"
-version = "1.7.3"
+version = "1.7.4"
 description = "XGBoost Python Package"
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "xgboost-1.7.3-py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:4a8985b2a874bd65b31869c325bb80051a2c28cedc16805928e2dcfb55fa25ce"},
-    {file = "xgboost-1.7.3-py3-none-macosx_12_0_arm64.whl", hash = "sha256:86dfc7d7da6fae751dc5c316e862f3395d9eddef5d10622a43d47deceb3257df"},
-    {file = "xgboost-1.7.3-py3-none-manylinux2014_aarch64.whl", hash = "sha256:457fa32b39b8bfa8a94eea6b932cb4d945c7a41fcd26e69a1f1dd843179eaccc"},
-    {file = "xgboost-1.7.3-py3-none-manylinux2014_x86_64.whl", hash = "sha256:fab7aeb508f0dbbd4dc7a4569a80ed07632bca3bd91b5490d043d4a33b138a39"},
-    {file = "xgboost-1.7.3-py3-none-win_amd64.whl", hash = "sha256:719e13ac9246b297fb93dd4ee772947f6ec693c46f1adb8cdeb3d3e98e5c08fb"},
-    {file = "xgboost-1.7.3.tar.gz", hash = "sha256:d1ee270b67e8fc5b90002e17493d1c910ae6abe856e6d0d86c619c0002e7c7d1"},
+    {file = "xgboost-1.7.4-py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:986fb1b4ef0c1cf69a8ce0f6997e3dbd4b9d360bd0cecec8a17b6cb95e6b67cf"},
+    {file = "xgboost-1.7.4-py3-none-macosx_12_0_arm64.whl", hash = "sha256:31aec5c4acb9e23bee9b9200444de1d808a1a44f48136ec6a4fbe8d57fc1b13b"},
+    {file = "xgboost-1.7.4-py3-none-manylinux2014_aarch64.whl", hash = "sha256:f8b32ff0cb3a0130e4f8f1ae69312b4839c877455f0ac9c03377fb159cf5aab7"},
+    {file = "xgboost-1.7.4-py3-none-manylinux2014_x86_64.whl", hash = "sha256:ef8033c2ab2c7694f3d8c498b72c24719e3505abfc3dc5b8d67dc42be0cdb7ff"},
+    {file = "xgboost-1.7.4-py3-none-win_amd64.whl", hash = "sha256:a4d8548b3b2c864477d1039fc82c3fa88508fa51445cb3e7b7cdb6086b7e4b47"},
+    {file = "xgboost-1.7.4.tar.gz", hash = "sha256:7a2406562277d0f7f6ed08f1cda8fef0ed64956bc13a1ff1da1b4201b431e721"},
 ]
 
 [package.dependencies]
