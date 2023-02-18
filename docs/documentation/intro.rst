@@ -1,7 +1,8 @@
 Quickstart
 ===========
 
-Eager to get started valuing some soccer actions? This page gives a quick introduction in how to get started.
+Eager to get started valuing some soccer actions? This page gives a quick
+introduction on how to get started.
 
 Installation
 ------------
@@ -15,13 +16,13 @@ First, make sure that socceraction is installed:
 For detailed instructions and other installation options, check out our
 detailed :doc:`installation instructions <install>`.
 
-Data
-----
+Loading event stream data
+-------------------------
 
 First of all, you will need some data. Luckily, both `StatsBomb <https://github.com/statsbomb/open-data>`_ and
 `Wyscout <https://www.nature.com/articles/s41597-019-0247-7>`_ provide a small freely available dataset.
 The :ref:`data module<api-data>` of socceraction makes it trivial to load these datasets as
-`Pandas dataframes <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`__.
+`Pandas DataFrames <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`__.
 In this short introduction, we will work with Statsbomb's dataset of the 2018 World Cup.
 
 .. code-block:: python
@@ -55,15 +56,15 @@ England and Belgium.
   df_events = SBL.events(game_id)
 
 
-SPADL
------
+Converting to SPADL actions
+---------------------------
 
 The event stream format is not well-suited for data analysis: some of the
 recorded information is irrelavant for valuing actions, each vendor uses their
 own custom format and definitions, and the events are stored as unstructured
-JSON objects. Therefore, socceraction uses the :doc:`SPADL format <SPADL>` for describing
-actions on the pitch. With the code below, you can convert the events to
-SPADL actions.
+JSON objects. Therefore, socceraction uses the :doc:`SPADL format
+<spadl/index>` for describing actions on the pitch. With the code below, you
+can convert the events to SPADL actions.
 
 .. code-block:: python
 
@@ -105,24 +106,22 @@ Valuing actions
 
 We can now assign a numeric value to each of these individual actions that
 quantifies how much the action contributed towards winning the game.
-Socceraction implements two frameworks for doing this: xT and VAEP.
-
-Valuing actions with xT
-^^^^^^^^^^^^^^^^^^^^^^^^
+Socceraction implements three frameworks for doing this: xT, VAEP and
+Atomic-Vaep. In this quickstart guid, we will focus on the xT framework.
 
 The expected threat or xT model overlays a :math:`M \times N` grid on the
 pitch in order to divide it into zones. Each zone :math:`z` is
 then assigned a value :math:`xT(z)` that reflects how threatening teams are at
 that location, in terms of scoring. An example grid is visualized below.
 
-.. image:: default_xt_grid.png
+.. image:: valuing_actions/default_xt_grid.png
    :width: 600
    :align: center
 
 The code below allows you to load
 league-wide xT values from the 2017-18 Premier League season (the 12x8 grid
 shown above). Instructions on how to train your own model can be found in the
-:doc:`detailed documentation about xT <xT>`.
+:doc:`detailed documentation about xT <valuing_actions/xT>`.
 
 .. code-block:: python
 
@@ -148,74 +147,8 @@ assign a value to failed actions, shots and defensive actions such as tackles.
    :align: center
 
 
-
-Valuing actions with VAEP
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-VAEP goes beyond the possession-based approach of xT by trying to value
-a broader set of actions and by taking the action and game context into
-account. Therefore, VAEP frames the problem of quantifying a soccer player’s
-contributions within a game as a binary classification task and rates each
-action by estimating its effect on the short-term probabilities that a team
-will both score or concede. That is, VAEP quanitifies the effect of an action :math:`a_i`
-that moves the game from state :math:`S_{i−1} = \{a_{i-n}, \ldots, a_{i−1}\}` to state
-:math:`S_i = \{a_{i-n+1}, . . . , a_{i−1}, a_i\}`, where each game state is
-represented by the :math:`n` previous actions. Then each game state is
-represented using a set of features and assigned two labels. A first label
-that defines whether the team  in possession scored a goal in the next
-:math:`k` actions; a second label that defines whether the team  in possession
-conceded a goal in the next :math:`k` actions.
-
-This allows to train two
-classifiers: one that predicts the probability that a team will score in the
-next :math:`k` actions from the current game state (:math:`P_{scores}`) and
-one that predicts the probability that a team will concede in the
-next :math:`k` actions from the current game state (:math:`P_{concedes}`).
-
-.. code-block:: python
-
-  from socceraction.vaep import VAEP
-  from tqdm import tqdm
-
-  VAEP_model = VAEP(nb_prev_actions=1)
-
-  # compute features and labels for each game
-  all_features, all_labels = [], []
-  for game_id, game in tqdm(list(df_games.iterrows())):
-      # load the game's events
-      game_events = SBL.events(game_id)
-      # convert the events to actions
-      game_home_team_id = df_games.at[game_id, "home_team_id"]
-      game_actions = spadl.statsbomb.convert_to_actions(game_events, game_home_team_id)
-      # compute features and labels
-      all_features.append(VAEP_model.compute_features(game, game_actions))
-      all_labels.append(VAEP_model.compute_labels(game, game_actions))
-  # combine all features and labels in a single dataframe
-  all_features = pd.concat(all_features)
-  all_labels = pd.concat(all_labels)
-
-  # fit the model
-  VAEP_model.fit(all_features, all_labels)
-
-Given these probabilites, VAEP estimates the risk-reward trade-off of an
-action as the sum of the offensive value :math:`\Delta
-P_\textrm{score}(a_{i})` (i.e., how much did the action increase the probability of
-scoring) and defensive value :math:`- \Delta P_\textrm{concede}(a_{i})` (i.e., how
-much did the action decrease the probability of conceding) of the action:
-:math:`\textrm{VAEP}(a_i) = \Delta P_\textrm{score}(a_{i}) - \Delta P_\textrm{concede}(a_{i})`.
-
-
-.. code-block:: python
-
-    # rate a game
-    ratings = VAEP_model.rate(df_games.loc[game_id], actions)
-
-
-.. image:: eden_hazard_goal_vaep.png
-   :align: center
-
-
 -----------------------
 
 Ready for more? Check out the detailed documentation about the
-:doc:`data representation <SPADL>` and :doc:`action value frameworks <valuing_actions>`.
+:doc:`data representation <spadl/index>` and
+:doc:`action value frameworks <valuing_actions/index>`.

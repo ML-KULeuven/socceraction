@@ -42,3 +42,9 @@ article .align-center,
 article .align-default {
   text-align: left;
 }
+
+table.dataframe {
+  font-size: 80%;
+  margin-left: 0;
+  margin-right: 0;
+}
