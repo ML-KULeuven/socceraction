@@ -108,7 +108,10 @@ def _get_result_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:
 
 def _get_type_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:  # noqa: C901
     eventname, outcome, q = args
-    if eventname in ('pass', 'offside pass'):
+    fairplay = 238 in q
+    if fairplay:
+        a = 'non_action'
+    elif eventname in ('pass', 'offside pass'):
         cross = 2 in q
         freekick = 5 in q
         corner = 6 in q
