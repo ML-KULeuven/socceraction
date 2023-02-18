@@ -69,7 +69,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
 
 
 def _get_bodypart_id(qualifiers: Dict[int, Any]) -> int:
-    if 15 in qualifiers or 3 in qualifiers:
+    if 15 in qualifiers or 3 in qualifiers or 168 in qualifiers:
         b = 'head'
     elif 21 in qualifiers:
         b = 'other'
