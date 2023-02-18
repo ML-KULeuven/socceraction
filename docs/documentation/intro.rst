@@ -97,7 +97,7 @@ actions:
         zoom=False
     )
 
-.. figure:: ../eden_hazard_goal.png
+.. figure:: spadl/eden_hazard_goal_spadl.png
    :align: center
 
 
