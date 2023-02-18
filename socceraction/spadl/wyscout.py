@@ -616,7 +616,9 @@ def determine_type_id(event: pd.DataFrame) -> int:  # noqa: C901
     int
         id of the action type
     """
-    if event["own_goal"]:
+    if event["fairplay"]:
+        action_type = "non_action"
+    elif event["own_goal"]:
         action_type = "bad_touch"
     elif event["type_id"] == 8:
         if event["subtype_id"] == 80:
