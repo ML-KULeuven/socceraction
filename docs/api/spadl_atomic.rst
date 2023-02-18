@@ -1,7 +1,7 @@
 .. _api-spadl-atomic:
 
-Atomic-SPADL
-============
+socceraction.atomic.spadl
+=========================
 
 Converters
 ----------

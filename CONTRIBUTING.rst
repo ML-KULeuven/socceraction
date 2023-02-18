@@ -1,4 +1,4 @@
-Contributor Guide
+Contributor guide
 =================
 
 This document lays out guidelines and advice for contributing to this project.
@@ -16,7 +16,7 @@ thinking of making.
 
 .. _bug-reports:
 
-Bug Reports
+Bug reports
 -----------
 
 Bug reports are hugely important! Before you raise one, though, please check
@@ -37,7 +37,7 @@ and/or steps to reproduce the issue.
 .. _GitHub issues: https://github.com/ML-KULeuven/socceraction/issues
 
 
-Feature Requests
+Feature requests
 ----------------
 
 Socceraction is not actively developed. It's primary use is to enable
@@ -49,7 +49,7 @@ be accepted.
 .. _Issue tracker: https://github.com/ML-KULeuven/socceraction/issues
 
 
-Documentation Contributions
+Documentation contributions
 ---------------------------
 
 Documentation improvements are always welcome! The documentation files live in
@@ -72,7 +72,7 @@ When presenting Python code, use single-quoted strings (``'hello'`` instead of
 .. _edit files directly on GitHub: https://docs.github.com/en/repositories/working-with-files/managing-files/editing-files
 
 
-Code Contributions
+Code contributions
 ------------------
 
 If you intend to contribute code, do not feel the need to sit on your
@@ -107,7 +107,7 @@ You can now run an interactive Python session.
 .. _Nox: https://nox.thea.codes/
 .. _nox-poetry: https://nox-poetry.readthedocs.io/
 
-Steps for submitting Code
+Steps for submitting code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When contributing code, you'll want to follow this checklist:

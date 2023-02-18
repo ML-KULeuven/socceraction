@@ -1,7 +1,7 @@
 .. _api-atomic-vaep:
 
-Atomic-VAEP
-===========
+socceraction.atomic.vaep
+========================
 
 .. automodule:: socceraction.atomic.vaep
 

@@ -5,6 +5,13 @@ experiments/
 tests/datasets/*
 !tests/data/download.py
 
+# Docs
+docs/api/generated
+
+# Nox
+.nox
+.nox-*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,8 +1,8 @@
 VAEP
 -----
 
-VAEP is based on the insight that players tend to perform actions with two
-possible intentions:
+VAEP (Valuing Actions by Estimating Probabilities) is based on the insight
+that players tend to perform actions with two possible intentions:
 
 1. increase the chance of scoring a goal in the short-term future and/or,
 2. decrease the chance of conceding a goal in the short-term future.

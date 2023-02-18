@@ -1,23 +1,24 @@
 Valuing actions
 ================
 
-Once you've collected the data and converted it to the SPADL format, you can
+Once you've :doc:`collected the data </documentation/data/index>` and
+:doc:`converted it to the SPADL format </documentation/spadl/index>`, you can
 start valuing the contributions of soccer players. This document gives
-a general introduction to action valuing framweworks  and links to a detailled
+a general introduction to action valuing frameworks and links to a detailled
 discussion of the three implmented frameworks.
 
 General idea
 ------------
 
 When considering event stream data, a soccer match can be viewed as a sequence
-of :math:`n` consecutive on-the-ball actions :math:`\left[a_1, a_2, \ldots, a_n\right]` (e.g., [*pass*,
-*dribble*,..., *interception*]). Action-valuing frameworks aim to assign
-a numeric value to each of these individual actions that quantifies how much
-the action contributed towards winning the game. This value should reflect
-both the circumstances under which it was performed as well as its longer-term
-effects. This is illustrated in the figure below:
+of :math:`n` consecutive on-the-ball actions :math:`\left[a_1, a_2, \ldots, a_n\right]`
+(e.g., [*pass*, *dribble*,..., *interception*]). Action-valuing frameworks aim
+to assign a numeric value to each of these individual actions that quantifies
+how much the action contributed towards winning the game. This value should
+reflect both the circumstances under which it was performed as well as its
+longer-term effects. This is illustrated in the figure below:
 
-.. image:: ../actions_bra-bel.png
+.. image:: ../../actions_bra-bel.png
    :width: 600
    :alt: a sequence of actions with action values
    :align: center
@@ -62,14 +63,15 @@ the game at a specific point in time; and (2) assign a value :math:`V` to
 a specific game state.
 
 
-Implemented Frameworks
+Implemented frameworks
 ----------------------
 
 The socceraction package implements three frameworks to assess the impact of the
-individual actions performed by soccer players: xT, VAEP and Atomic-VAEP.
+individual actions performed by soccer players: Expected Threat (xT), VAEP and
+Atomic-VAEP.
 
 .. toctree::
 
   xT
-  VAEP
-  Atomic_VAEP
+  vaep
+  atomic_vaep

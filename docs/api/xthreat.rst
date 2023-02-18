@@ -1,7 +1,7 @@
 .. _api-xt:
 
-xT
-==
+socceraction.xthreat
+====================
 
 .. automodule:: socceraction.xthreat
 

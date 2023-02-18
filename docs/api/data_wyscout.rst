@@ -1,7 +1,7 @@
 .. _api-data-wyscout:
 
-Wyscout
-=========
+socceraction.data.wyscout
+=========================
 
 .. automodule:: socceraction.data.wyscout
 

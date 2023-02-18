@@ -1,7 +1,7 @@
 .. _api-vaep:
 
-VAEP
-====
+socceraction.vaep
+=================
 
 .. automodule:: socceraction.vaep
 

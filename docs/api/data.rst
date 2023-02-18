@@ -1,7 +1,7 @@
 .. _api-data:
 
-Data
-====
+socceraction.data
+=================
 
 .. list-table::
    :widths: 30 70
@@ -20,6 +20,7 @@ Data
   :hidden:
   :maxdepth: 1
 
+  data_base
   data_statsbomb
   data_opta
   data_wyscout

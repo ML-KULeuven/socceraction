@@ -1,7 +1,7 @@
 .. _api-data-opta:
 
-Opta
-=====
+socceraction.data.opta
+======================
 
 .. automodule:: socceraction.data.opta
 

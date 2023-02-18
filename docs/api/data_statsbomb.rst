@@ -1,7 +1,7 @@
 .. _api-data-statsbomb:
 
-StatsBomb
-=========
+socceraction.data.statsbomb
+===========================
 
 .. automodule:: socceraction.data.statsbomb
 

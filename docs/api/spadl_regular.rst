@@ -1,7 +1,7 @@
 .. _api-spadl-regular:
 
-Regular SPADL
-=============
+socceraction.spadl
+==================
 
 .. automodule:: socceraction.spadl
 
