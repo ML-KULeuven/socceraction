@@ -259,16 +259,16 @@ class OptaLoader(EventDataLoader):
         if parser == "json":
             if feeds is None:
                 feeds = {
-                    "f1": "f7-{competition_id}-{season_id}-{game_id}.json",
-                    "f9": "f7-{competition_id}-{season_id}-{game_id}.json",
+                    "f1": "f1-{competition_id}-{season_id}.json",
+                    "f9": "f9-{competition_id}-{season_id}-{game_id}.json",
                     "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
                 }
             self.parsers = self._get_parsers_for_feeds(_jsonparsers, feeds)
         elif parser == "xml":
             if feeds is None:
                 feeds = {
-                    "f7": "f7-{competition_id}-{season_id}-{game_id}.json",
-                    "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+                    "f7": "f7-{competition_id}-{season_id}-{game_id}.xml",
+                    "f24": "f24-{competition_id}-{season_id}-{game_id}.xml",
                 }
             self.parsers = self._get_parsers_for_feeds(_xmlparsers, feeds)
         elif parser == "statsperform":
