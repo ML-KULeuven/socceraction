@@ -143,7 +143,7 @@ assign a value to failed actions, shots and defensive actions such as tackles.
     df_actions["xT_value"] = xT_model.rate(df_actions_ltr)
 
 
-.. image:: eden_hazard_goal_xt.png
+.. image:: valuing_actions/eden_hazard_goal_xt.png
    :align: center
 
 
