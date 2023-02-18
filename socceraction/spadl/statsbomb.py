@@ -147,6 +147,10 @@ def _parse_pass_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C
         r = 'fail'
     elif pass_outcome == 'Pass Offside':
         r = 'offside'
+    elif pass_outcome in ['Injury Clearance', 'Unknown']:
+        # discard passes that are not part of the play
+        a = 'non_action'
+        r = 'success'
     else:
         r = 'success'
 
