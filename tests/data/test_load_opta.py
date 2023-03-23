@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 from py.path import local
@@ -98,6 +99,23 @@ def test_create_invalid_loader(tmpdir: local) -> None:
     }
     with pytest.raises(ValueError):
         opta.OptaLoader(root=str(tmpdir), parser="wrong", feeds=feeds)
+
+
+def test_universal_feeds(tmpdir: local) -> None:
+    """It should replace forward slashes in glob patterns on Windows."""
+    feeds = {
+        "myfeed": "{competition_id}/{season_id}/{game_id}.json",
+    }
+    parser = {
+        "myfeed": opta.parsers.base.OptaParser,
+    }
+    loader = opta.OptaLoader(root=str(tmpdir), parser=parser, feeds=feeds)
+
+    if 'win' in sys.platform:
+        assert loader.feeds["myfeed"] == "{competition_id}\\{season_id}\\{game_id}.json"
+
+    elif 'linux' in sys.platform:
+        assert loader.feeds["myfeed"] == "{competition_id}/{season_id}/{game_id}.json"
 
 
 def test_deepupdate() -> None:

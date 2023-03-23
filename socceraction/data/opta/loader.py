@@ -5,6 +5,7 @@ import glob
 import os
 import re
 import warnings
+from pathlib import Path
 from typing import Any, Dict, Mapping, Optional, Type, Union, cast
 
 import pandas as pd  # type: ignore
@@ -202,18 +203,18 @@ def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, Union[str, int]
 
 
 class OptaLoader(EventDataLoader):
-    """Load Opta data from a local folder.
+    """Load Opta data feeds from a local folder.
 
     Parameters
     ----------
     root : str
         Root-path of the data.
     parser : str or dict
-        Either 'xml', 'json', 'statsperform', 'whoscored' or your custom
-        parser for each feed. The default xml parser supports F7 and F24
-        feeds; the default json parser supports F1, F9 and F24 feeds, the StatsPerform
-        parser supports MA1 and MA3 feeds. Custom parsers can be specified
-        as::
+        Either 'xml', 'json', 'statsperform', 'whoscored' or a dict with
+        a custom parser for each feed. The default xml parser supports F7 and
+        F24 feeds; the default json parser supports F1, F9 and F24 feeds, the
+        StatsPerform parser supports MA1 and MA3 feeds. Custom parsers can be
+        specified as::
 
             {
                 'feed1_name': Feed1Parser
@@ -222,10 +223,11 @@ class OptaLoader(EventDataLoader):
 
         where Feed1Parser and Feed2Parser are classes implementing
         :class:`~socceraction.spadl.opta.OptaParser` and 'feed1_name' and
-        'feed2_name' correspond to the keys in 'feeds'.
+        'feed2_name' are a unique ID for each feed that matches to the keys in
+        `feeds`.
     feeds : dict
-        Glob pattern for each feed that should be parsed. For example, if
-        files are named::
+        Glob pattern describing from which files the data from a specific game
+        can be retrieved. For example, if files are named::
 
             f7-1-2021-17362.xml
             f24-1-2021-17362.xml
@@ -235,12 +237,6 @@ class OptaLoader(EventDataLoader):
             feeds = {
                 'f7': "f7-{competition_id}-{season_id}-{game_id}.xml",
                 'f24': "f24-{competition_id}-{season_id}-{game_id}.xml"
-            }
-
-        If you use JSON files obtained from `WhoScored <whoscored.com>`__ use::
-
-            feeds = {
-                'whoscored': "{competition_id}-{season_id}/{game_id}.json",
             }
 
     Raises
@@ -290,7 +286,7 @@ class OptaLoader(EventDataLoader):
             self.parsers = self._get_parsers_for_feeds(parser, feeds)
         else:
             raise ValueError("Invalid parser provided.")
-        self.feeds = feeds
+        self.feeds = {k: str(Path(v)) for k, v in feeds.items()}
 
     def _get_parsers_for_feeds(
         self, available_parsers: Mapping[str, Type[OptaParser]], feeds: Dict[str, str]
