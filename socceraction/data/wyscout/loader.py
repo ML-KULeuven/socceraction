@@ -302,11 +302,15 @@ class PublicWyscoutLoader(EventDataLoader):
 
         # get minutes played
         competition_id, season_id = self._match_index.loc[game_id, ["competition_id", "season_id"]]
-        path_events = os.path.join(
-            self.root, self._index.at[(competition_id, season_id), "db_events"]
-        )
-        events = cast(List[Dict[str, Any]], self.get(path_events))
-        match_events = [e for e in events if e["matchId"] == game_id]
+        path = os.path.join(self.root, self._index.at[(competition_id, season_id), "db_events"])
+        if self._cache is not None and self._cache["path"] == path:
+            df_events = self._cache["events"]
+        else:
+            df_events = pd.DataFrame(self.get(path)).set_index("matchId")
+            # avoid that this large json file has to be parsed again for
+            # each game when loading a batch of games from the same season
+            self._cache = {"path": path, "events": df_events}
+        match_events = df_events.loc[game_id].reset_index().to_dict("records")
         mp = _get_minutes_played(lineups, match_events)
         df_players_match = pd.merge(df_players_match, mp, on="player_id", how="right")
         df_players_match["minutes_played"] = df_players_match.minutes_played.fillna(0)
