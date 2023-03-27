@@ -4,8 +4,8 @@ Valuing actions
 Once you've :doc:`collected the data </documentation/data/index>` and
 :doc:`converted it to the SPADL format </documentation/spadl/index>`, you can
 start valuing the contributions of soccer players. This document gives
-a general introduction to action valuing frameworks and links to a detailled
-discussion of the three implmented frameworks.
+a general introduction to action-valuing frameworks and links to a detailed
+discussion of the three implemented frameworks.
 
 General idea
 ------------
