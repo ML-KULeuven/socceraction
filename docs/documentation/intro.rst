@@ -11,7 +11,7 @@ First, make sure that socceraction is installed:
 
 .. code-block:: console
 
-   $ pip install socceraction
+   $ pip install socceraction[statsbomb]
 
 For detailed instructions and other installation options, check out our
 detailed :doc:`installation instructions <install>`.
@@ -60,7 +60,7 @@ Converting to SPADL actions
 ---------------------------
 
 The event stream format is not well-suited for data analysis: some of the
-recorded information is irrelavant for valuing actions, each vendor uses their
+recorded information is irrelevant for valuing actions, each vendor uses their
 own custom format and definitions, and the events are stored as unstructured
 JSON objects. Therefore, socceraction uses the :doc:`SPADL format
 <spadl/index>` for describing actions on the pitch. With the code below, you
@@ -81,7 +81,7 @@ actions:
     import matplotsoccer as mps
 
     # Select relevant actions
-    df_actions_goal = df_actions.loc[2197:2201]
+    df_actions_goal = df_actions.loc[2196:2200]
     # Replace result, actiontype and bodypart IDs by their corresponding name
     df_actions_goal = spadl.add_names(df_actions_goal)
     # Add team and player names
@@ -107,7 +107,7 @@ Valuing actions
 We can now assign a numeric value to each of these individual actions that
 quantifies how much the action contributed towards winning the game.
 Socceraction implements three frameworks for doing this: xT, VAEP and
-Atomic-Vaep. In this quickstart guid, we will focus on the xT framework.
+Atomic-Vaep. In this quickstart guide, we will focus on the xT framework.
 
 The expected threat or xT model overlays a :math:`M \times N` grid on the
 pitch in order to divide it into zones. Each zone :math:`z` is
