@@ -24,7 +24,7 @@ under the `MIT license <https://github.com/ML-KULeuven/socceraction/blob/master/
 You are free to use, modify and redistribute socceraction in any way you see
 fit. However, if you do use socceraction in your research, please cite our
 `research papers <Research>`_. When you use socceraction in public work
-or whn building a product or service using socceraction, we kindly request
+or when building a product or service using socceraction, we kindly request
 that you include the following attribution text in all advertising and documentation::
 
   This product includes socceraction created by the <a href="https://dtai.cs.kuleuven.be/sports/">DTAI Sports Analytics lab</a>,
