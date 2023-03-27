@@ -34,12 +34,12 @@ works, we refer to `Karun's blog post <https://karun.in/blog/expected-threat.htm
     df_games = SBL.games(competition_id=43, season_id=3)
     dataset = [
         {
-            **game, 
+            **game,
             'actions': spadl.statsbomb.convert_to_actions(
-                events=SBL.events(game['game_id']), 
+                events=SBL.events(game['game_id']),
                 home_team_id=game['home_team_id']
             )
-        } 
+        }
         for game in df_games.to_dict(orient='records')
     ]
 
