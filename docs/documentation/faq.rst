@@ -3,7 +3,7 @@ FAQ
 ===
 
 **Q: What is socceraction?**
-Socceraction is an an open-source Python package that primarily provides an
+Socceraction is an open source Python package that primarily provides an
 implementation of the VAEP possession value framework. However, the package also
 provides a number of other features, such as API clients for loading data from
 the most popular data providers and converters for each of these data
@@ -13,10 +13,10 @@ can take away some of the heavy data preprocessing burden from researchers and
 data scientists who are interested in working with soccer event stream data.
 
 **Q: Where can I get event stream data?**
-Both StatsBomb and Wyscout provide a free sample of their data. Alternatively
+Both StatsBomb and Wyscout provide a free sample of their data. Alternatively,
 you can buy a subscription to the event data feed from StatsBomb, Wyscout or
 Opta (Stats Perform). Instructions on how to load the data from each of these
-sources with socceraction are avaliable in the :doc:`documentation
+sources with socceraction are available in the :doc:`documentation
 <data/index>`.
 
 **Q: What license is socceraction released under?** Socceraction is released
