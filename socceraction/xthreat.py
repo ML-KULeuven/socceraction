@@ -26,8 +26,8 @@ def _get_cell_indexes(
 ) -> Tuple[Series[int], Series[int]]:
     xi = x.divide(spadlconfig.field_length).multiply(l)
     yj = y.divide(spadlconfig.field_width).multiply(w)
-    xi = xi.astype('int64').clip(0, l - 1)
-    yj = yj.astype('int64').clip(0, w - 1)
+    xi = xi.astype("int64").clip(0, l - 1)
+    yj = yj.astype("int64").clip(0, w - 1)
     return xi, yj
 
 
@@ -67,7 +67,7 @@ def _count(x: Series[float], y: Series[float], l: int = N, w: int = M) -> npt.ND
 
 
 def _safe_divide(a: npt.ArrayLike, b: npt.ArrayLike) -> npt.NDArray[np.float64]:
-    return np.divide(a, b, out=np.zeros_like(a), where=b != 0, casting='unsafe')
+    return np.divide(a, b, out=np.zeros_like(a, dtype="float64"), where=b != 0, casting="unsafe")
 
 
 def scoring_prob(
@@ -89,8 +89,8 @@ def scoring_prob(
     np.ndarray
         A matrix, denoting the probability of scoring for each cell.
     """
-    shot_actions = actions[(actions.type_id == spadlconfig.actiontypes.index('shot'))]
-    goals = shot_actions[(shot_actions.result_id == spadlconfig.results.index('success'))]
+    shot_actions = actions[(actions.type_id == spadlconfig.actiontypes.index("shot"))]
+    goals = shot_actions[(shot_actions.result_id == spadlconfig.results.index("success"))]
 
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
     goalmatrix = _count(goals.start_x, goals.start_y, l, w)
@@ -115,9 +115,9 @@ def get_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SPADLSchema]:
         All ball-progressing actions in the input dataframe.
     """
     return actions[
-        (actions.type_id == spadlconfig.actiontypes.index('pass'))
-        | (actions.type_id == spadlconfig.actiontypes.index('dribble'))
-        | (actions.type_id == spadlconfig.actiontypes.index('cross'))
+        (actions.type_id == spadlconfig.actiontypes.index("pass"))
+        | (actions.type_id == spadlconfig.actiontypes.index("dribble"))
+        | (actions.type_id == spadlconfig.actiontypes.index("cross"))
     ]
 
 
@@ -137,7 +137,7 @@ def get_successful_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SP
         All ball-progressing actions in the input dataframe.
     """
     move_actions = get_move_actions(actions)
-    return move_actions[(move_actions.result_id == spadlconfig.results.index('success'))]
+    return move_actions[(move_actions.result_id == spadlconfig.results.index("success"))]
 
 
 def action_prob(
@@ -164,7 +164,7 @@ def action_prob(
         For each cell the probability of choosing to move.
     """
     move_actions = get_move_actions(actions)
-    shot_actions = actions[(actions.type_id == spadlconfig.actiontypes.index('shot'))]
+    shot_actions = actions[(actions.type_id == spadlconfig.actiontypes.index("shot"))]
 
     movematrix = _count(move_actions.start_x, move_actions.start_y, l, w)
     shotmatrix = _count(shot_actions.start_x, shot_actions.start_y, l, w)
@@ -198,9 +198,9 @@ def move_transition_matrix(
     move_actions = get_move_actions(actions)
 
     X = pd.DataFrame()
-    X['start_cell'] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
-    X['end_cell'] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
-    X['result_id'] = move_actions.result_id
+    X["start_cell"] = _get_flat_indexes(move_actions.start_x, move_actions.start_y, l, w)
+    X["end_cell"] = _get_flat_indexes(move_actions.end_x, move_actions.end_y, l, w)
+    X["result_id"] = move_actions.result_id
 
     vc = X.start_cell.value_counts(sort=False)
     start_counts = np.zeros(w * l)
@@ -210,7 +210,7 @@ def move_transition_matrix(
 
     for i in range(0, w * l):
         vc2 = X[
-            ((X.start_cell == i) & (X.result_id == spadlconfig.results.index('success')))
+            ((X.start_cell == i) & (X.result_id == spadlconfig.results.index("success")))
         ].end_cell.value_counts(sort=False)
         transition_matrix[i, vc2.index] = vc2 / start_counts[i]
 
@@ -316,9 +316,9 @@ class ExpectedThreat:
             self.heatmaps.append(self.xT.copy())
             it += 1
 
-        print('# iterations: ', it)
+        print("# iterations: ", it)
 
-    def fit(self, actions: DataFrame[SPADLSchema]) -> 'ExpectedThreat':
+    def fit(self, actions: DataFrame[SPADLSchema]) -> "ExpectedThreat":
         """Fits the xT model with the given actions.
 
         Parameters
@@ -344,7 +344,7 @@ class ExpectedThreat:
         return self
 
     def interpolator(
-        self, kind: str = 'linear'
+        self, kind: str = "linear"
     ) -> Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], npt.NDArray[np.float64]]:
         """Interpolate over the pitch.
 
@@ -366,7 +366,7 @@ class ExpectedThreat:
             A function that interpolates xT values over the pitch.
         """
         if interp2d is None:
-            raise ImportError('Interpolation requires scipy to be installed.')
+            raise ImportError("Interpolation requires scipy to be installed.")
 
         cell_length = spadlconfig.field_length / self.l
         cell_width = spadlconfig.field_width / self.w
@@ -469,9 +469,9 @@ class ExpectedThreat:
         if not overwrite and os.path.isfile(filepath):
             raise ValueError(
                 'save_xt got overwrite="False", but a file '
-                f'({filepath}) exists already. No data was saved.'
+                f"({filepath}) exists already. No data was saved."
             )
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(self.xT.tolist(), f)
 
 
