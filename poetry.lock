@@ -1214,22 +1214,6 @@ files = [
 setuptools = "*"
 
 [[package]]
-name = "nose2"
-version = "0.12.0"
-description = "unittest2 with plugins, the successor to nose"
-category = "main"
-optional = true
-python-versions = "*"
-files = [
-    {file = "nose2-0.12.0-py2.py3-none-any.whl", hash = "sha256:da7eb5e3cbe2abb693a053e17b4fbefca98ea9ea79fc729b0b0f41e8b4196304"},
-    {file = "nose2-0.12.0.tar.gz", hash = "sha256:956e79b9bd558ee08b6200c05ad2c76465b7e3860c0c0537686089285c320113"},
-]
-
-[package.extras]
-coverage-plugin = ["coverage"]
-dev = ["Sphinx", "mock", "sphinx-issues", "sphinx-rtd-theme"]
-
-[[package]]
 name = "numexpr"
 version = "2.8.4"
 description = "Fast numerical expression evaluator for NumPy"
@@ -2180,23 +2164,25 @@ test = ["pytest"]
 
 [[package]]
 name = "statsbombpy"
-version = "1.7.0"
-description = "easily stream StatsBomb data into Python"
+version = "1.8.1"
+description = "Easily stream StatsBomb data into Python"
 category = "main"
 optional = true
 python-versions = "*"
 files = [
-    {file = "statsbombpy-1.7.0-py3-none-any.whl", hash = "sha256:4827127a03e1f0450b883f531b87ad4289d932c2e854a66138d1d25ef2c9a1c4"},
-    {file = "statsbombpy-1.7.0.tar.gz", hash = "sha256:67bed25913953ff572c39c1439f8e10ab1d5bcd3af8ce417b5d69f76c1f2f6c6"},
+    {file = "statsbombpy-1.8.1-py3-none-any.whl", hash = "sha256:02d6461c2a153cbfdbc2ae9e0d5b8d5b222da10085dab38a039c6a033fd5aa04"},
+    {file = "statsbombpy-1.8.1.tar.gz", hash = "sha256:5ec769211edf134a86c03375774b36759ccd8a3aa34d8fdb27d8957f483fca9b"},
 ]
 
 [package.dependencies]
 inflect = "*"
 joblib = "*"
-nose2 = "*"
 pandas = "*"
 requests = "*"
 requests-cache = "*"
+
+[package.extras]
+dev = ["nose2"]
 
 [[package]]
 name = "tables"
