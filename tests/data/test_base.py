@@ -1,6 +1,11 @@
 import os
 
-from socceraction.data.base import _localloadjson, _remoteloadjson
+from socceraction.data.base import (
+    _auth_remoteloadjson,
+    _has_auth,
+    _localloadjson,
+    _remoteloadjson,
+)
 
 
 def test_load_json_from_url() -> None:
@@ -8,6 +13,27 @@ def test_load_json_from_url() -> None:
     result = _remoteloadjson(url)
     assert isinstance(result, list)
     assert isinstance(result[0], dict)
+
+
+def test_has_auth() -> None:
+    assert not _has_auth({})
+    assert not _has_auth({"user": "", "passwd": "test_passwd"})
+    assert not _has_auth({"user": "test_user"})
+    assert not _has_auth({"passwd": "test_passwd"})
+    assert _has_auth({"user": "test_user", "passwd": "test_passwd"})
+
+
+def test_load_json_from_url_with_auth() -> None:
+    # use httpbin.org to test authentication
+    user = "test_user"
+    passwd = "test_passwd"
+    url = f"http://httpbin.org/basic-auth/{user}/{passwd}"
+    # add authentication header
+    _auth_remoteloadjson(user, passwd)
+    # the remote_load_json header should now use the authentication header
+    result = _remoteloadjson(url)
+    assert isinstance(result, dict)
+    assert result.get("authenticated") is True
 
 
 def test_load_json_from_file() -> None:
