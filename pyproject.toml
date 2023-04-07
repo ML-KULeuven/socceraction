@@ -58,6 +58,8 @@ sphinx-autobuild = "^2021.3.14"
 pep8-naming = "^0.13.0"
 Pygments = "^2.12.0"
 pyupgrade = "^2.34.0"
+pytest-lazy-fixture = "^0.6.3"
+sqlalchemy = "<2.0"
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore::DeprecationWarning:tables.*:"
