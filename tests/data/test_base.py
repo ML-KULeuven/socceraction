@@ -1,4 +1,7 @@
 import os
+from urllib.error import HTTPError
+
+import pytest
 
 from socceraction.data.base import (
     _auth_remoteloadjson,
@@ -31,9 +34,13 @@ def test_load_json_from_url_with_auth() -> None:
     # add authentication header
     _auth_remoteloadjson(user, passwd)
     # the remote_load_json header should now use the authentication header
-    result = _remoteloadjson(url)
-    assert isinstance(result, dict)
-    assert result.get("authenticated") is True
+    try:
+        result = _remoteloadjson(url)
+        assert isinstance(result, dict)
+        assert result.get("authenticated") is True
+    except HTTPError as e:
+        if e.code == 504:
+            pytest.skip("httpbin.org is down or too slow")
 
 
 def test_load_json_from_file() -> None:
