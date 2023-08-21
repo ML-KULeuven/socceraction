@@ -8,10 +8,10 @@ init:
 	poetry install
 
 tests/datasets/statsbomb/:
-	$(BIN)python tests/datasets/download.py statsbomb
+	$(BIN)python tests/datasets/download.py --download-statsbomb --convert-statsbomb
 
 tests/datasets/wyscout_public/:
-	$(BIN)python tests/datasets/download.py wyscout
+	$(BIN)python tests/datasets/download.py --download-wyscout --convert-wyscout
 
 test: tests/datasets/statsbomb/  tests/datasets/wyscout_public/
 	nox -rs tests -- $(args)

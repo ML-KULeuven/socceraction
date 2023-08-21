@@ -79,7 +79,8 @@ def convert_statsbomb_data() -> None:
     # View all available competitions
     df_competitions = SBL.competitions()
     selected_competitions = df_competitions.competition_name.isin(leagues.keys())
-    df_selected_competitions = df_competitions.loc[selected_competitions]
+    selected_seasons = df_competitions.season_id.isin(seasons.keys())
+    df_selected_competitions = df_competitions.loc[selected_competitions & selected_seasons]
 
     for competition in df_selected_competitions.itertuples():
         # Get games from all selected competition
