@@ -21,6 +21,8 @@ from .parsers import (
     F24XMLParser,
     MA1JSONParser,
     MA3JSONParser,
+    MA5JSONParser,
+    MA12JSONParser,
     OptaParser,
     WhoScoredParser,
 )
@@ -38,6 +40,8 @@ _jsonparsers = {
     "f24": F24JSONParser,
     "ma1": MA1JSONParser,
     "ma3": MA3JSONParser,
+    "ma5": MA5JSONParser,
+    "ma12": MA12JSONParser,
 }
 
 _xmlparsers = {
@@ -318,6 +322,26 @@ class OptaLoader(EventDataLoader):
             else:
                 warnings.warn(f"No parser available for {feed} feeds. This feed is ignored.")
         return parsers
+
+    def file_names(self, competition_id: int, season_id: int):
+        """Return a list of all the file names in the data folder of a given season.
+
+        Parameters
+        ----------
+        competition_id : int
+            The ID of the competition.
+        season_id : int
+            The ID of the season.
+        """
+        # feed = 'ma1'
+        feed_pattern = '{competition_id}\\{season_id}\\MA1\\{game_id}.json'
+        glob_pattern = feed_pattern.format(
+            competition_id=competition_id, season_id=season_id, game_id="*"
+        )
+        feed_files = glob.glob(os.path.join(self.root, glob_pattern))
+        for i in range(len(feed_files)):
+            feed_files[i] = feed_files[i][25:][:-5]
+        return feed_files
 
     def competitions(self) -> DataFrame[OptaCompetitionSchema]:
         """Return a dataframe with all available competitions and seasons.

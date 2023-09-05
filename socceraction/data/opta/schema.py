@@ -37,6 +37,10 @@ class OptaGameSchema(GameSchema):
     """The name of the manager of the home team."""
     away_manager: Optional[Series[str]] = pa.Field(nullable=True)
     """The name of the manager of the away team."""
+    home_possession: Optional[Series[int]]
+    """The possession percentage of the home team in the game."""
+    away_possession: Optional[Series[int]]
+    """The possession percentage of the away team in the game."""
 
 
 class OptaPlayerSchema(PlayerSchema):
@@ -44,6 +48,15 @@ class OptaPlayerSchema(PlayerSchema):
 
     starting_position: Series[str]
     """The starting position of the player."""
+
+    position_side: Optional[Series[str]]
+    """The side of the pitch where the player started the game"""
+
+    xG_non_penalty: Optional[Series[int]]
+    """The xG of the player without taking penalties into account"""
+
+    # minutes_played: Optional[Series[int]]
+    # """The amount of minutes played by the player"""
 
 
 class OptaTeamSchema(TeamSchema):

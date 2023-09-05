@@ -9,6 +9,8 @@ __all__ = [
     'F24XMLParser',
     'MA1JSONParser',
     'MA3JSONParser',
+    'MA5JSONParser',
+    'MA12JSONParser',
     'WhoScoredParser',
 ]
 
@@ -20,4 +22,6 @@ from .f24_json import F24JSONParser
 from .f24_xml import F24XMLParser
 from .ma1_json import MA1JSONParser
 from .ma3_json import MA3JSONParser
+from .ma5_json import MA5JSONParser
+from .ma12_json import MA12JSONParser
 from .whoscored import WhoScoredParser

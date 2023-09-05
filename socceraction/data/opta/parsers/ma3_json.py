@@ -86,20 +86,24 @@ class MA3JSONParser(OptaJSONParser):
         game_date = assertget(match_info, "date")[0:10]
         game_time = assertget(match_info, "time")[0:8]
         game_datetime = f"{game_date}T{game_time}"
+        # game_duration = assertget(match_details, "matchLengthMin"),
+        game_duration = match_details.get("matchLengthMin")
+        if game_duration is None:
+            game_duration = 93
         return {
             game_id: dict(
                 # Fields required by the base schema
                 game_id=game_id,
                 season_id=assertget(season, "id"),
                 competition_id=assertget(competition, "id"),
-                game_day=int(assertget(match_info, "week")),
+                game_day=int(match_info["week"]) if "week" in match_info else None,
                 game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
                 home_team_id=self._extract_team_id(contestant, "home"),
                 away_team_id=self._extract_team_id(contestant, "away"),
                 # Optional fields
                 home_score=home_score,
                 away_score=away_score,
-                duration=assertget(match_details, "matchLengthMin"),
+                duration=game_duration,
                 # referee=?
                 venue=assertget(venue, "shortName"),
                 # attendance=?
