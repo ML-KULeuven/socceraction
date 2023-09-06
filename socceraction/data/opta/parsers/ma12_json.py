@@ -158,7 +158,7 @@ class MA12JSONParser(OptaJSONParser):
                 "player_id": player.player_id,
                 "player_name": player.player_name,
                 "is_starter": is_starter,
-                "minutes_played": player.minutes_played,
+                "minutes_played": int(player.minutes_played),
                 "jersey_number": player.jersey_number,
                 # Fields required by the opta schema
                 "starting_position": player.starting_position,

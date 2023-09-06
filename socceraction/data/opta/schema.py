@@ -48,11 +48,9 @@ class OptaPlayerSchema(PlayerSchema):
 
     starting_position: Series[str]
     """The starting position of the player."""
-
     position_side: Optional[Series[str]]
     """The side of the pitch where the player started the game"""
-
-    xG_non_penalty: Optional[Series[int]]
+    xG_non_penalty: Optional[Series[float]]
     """The xG of the player without taking penalties into account"""
 
     # minutes_played: Optional[Series[int]]

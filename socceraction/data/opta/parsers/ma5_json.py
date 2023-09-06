@@ -32,16 +32,6 @@ class MA5JSONParser(OptaJSONParser):
             return self.root["liveData"]
         raise MissingDataError
 
-    """
-    game_id: Series[Object] = pa.Field()
-    season_id: Series[Object] = pa.Field()
-    competition_id: Series[Object] = pa.Field()
-    game_day: Series[pd.Int64Dtype] = pa.Field(nullable=True)
-    game_date: Series[DateTime] = pa.Field()
-    home_team_id: Series[Object] = pa.Field()
-    away_team_id: Series[Object] = pa.Field()
-    """
-
     def extract_games(self) -> Dict[str, Dict[str, Any]]:
         """Return a dictionary with all available games.
 
@@ -81,7 +71,7 @@ class MA5JSONParser(OptaJSONParser):
                 game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
                 home_team_id=home_team_id,
                 away_team_id=away_team_id,
-                home_possession=home_possession,
-                away_possession=away_possession,
+                home_possession=float(home_possession),
+                away_possession=float(away_possession),
             )
         }
