@@ -92,7 +92,7 @@ class MA3JSONParser(OptaJSONParser):
                 game_id=game_id,
                 season_id=assertget(season, "id"),
                 competition_id=assertget(competition, "id"),
-                game_day=int(assertget(match_info, "week")),
+                game_day=int(match_info["week"]) if "week" in match_info else None,
                 game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
                 home_team_id=self._extract_team_id(contestant, "home"),
                 away_team_id=self._extract_team_id(contestant, "away"),
