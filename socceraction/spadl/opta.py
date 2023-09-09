@@ -5,7 +5,12 @@ import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
 from . import config as spadlconfig
-from .base import _add_dribbles, _fix_clearances, _fix_direction_of_play
+from .base import (
+    _add_dribbles,
+    _fix_clearances,
+    _fix_direction_of_play,
+    min_dribble_length,
+)
 from .schema import SPADLSchema
 
 
@@ -54,6 +59,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     )
     actions['bodypart_id'] = events.qualifiers.apply(_get_bodypart_id)
 
+    actions = _fix_recoveries(actions, events.type_name)
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
         .sort_values(['game_id', 'period_id', 'time_seconds'])
@@ -177,3 +183,45 @@ def _fix_owngoals(actions: pd.DataFrame) -> pd.DataFrame:
     )
     actions.loc[owngoals_idx, 'type_id'] = spadlconfig.actiontypes.index('bad_touch')
     return actions
+
+
+def _fix_recoveries(df_actions: pd.DataFrame, opta_types) -> pd.DataFrame:
+    """Convert ball recovery events to dribbles.
+
+    This function converts the Opta 'ball recovery' event (type_id 49) into
+    a dribble.
+
+    Parameters
+    ----------
+    df_actions : pd.DataFrame
+        Opta actions dataframe
+    opta_types : pd.Series
+        Original Opta event types
+
+    Returns
+    -------
+    pd.DataFrame
+        Opta event dataframe without any ball recovery events
+    """
+    df_actions_next = df_actions.shift(-1)
+    df_actions_next = df_actions_next.mask(
+        df_actions_next.type_id == spadlconfig.actiontypes.index('non_action')
+    ).bfill()
+
+    selector_recovery = opta_types == 'ball recovery'
+
+    same_x = abs(df_actions["end_x"] - df_actions_next["start_x"]) < min_dribble_length
+    same_y = abs(df_actions["end_y"] - df_actions_next["start_y"]) < min_dribble_length
+    same_loc = same_x & same_y
+
+    df_actions.loc[selector_recovery & ~same_loc, "type_id"] = spadlconfig.actiontypes.index(
+        "dribble"
+    )
+    df_actions.loc[selector_recovery & same_loc, "type_id"] = spadlconfig.actiontypes.index(
+        "non_action"
+    )
+    df_actions.loc[selector_recovery, ['end_x', 'end_y']] = df_actions_next.loc[
+        selector_recovery, ['start_x', 'start_y']
+    ].values
+
+    return df_actions
