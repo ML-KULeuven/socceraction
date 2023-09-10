@@ -21,11 +21,11 @@ class OptaCompetitionSchema(CompetitionSchema):
 class OptaGameSchema(GameSchema):
     """Definition of a dataframe containing a list of games."""
 
-    home_score: Optional[Series[int]]
+    home_score: Optional[Series[int]] = pa.Field(nullable=True)
     """The final score of the home team."""
-    away_score: Optional[Series[int]]
+    away_score: Optional[Series[int]] = pa.Field(nullable=True)
     """The final score of the away team."""
-    duration: Optional[Series[int]]
+    duration: Optional[Series[int]] = pa.Field(nullable=True)
     """The total duration of the game in minutes."""
     referee: Optional[Series[str]] = pa.Field(nullable=True)
     """The name of the referee."""
