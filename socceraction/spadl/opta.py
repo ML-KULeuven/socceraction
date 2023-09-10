@@ -5,7 +5,12 @@ import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
 from . import config as spadlconfig
-from .base import _add_dribbles, _fix_clearances, _fix_direction_of_play
+from .base import (
+    _add_dribbles,
+    _fix_clearances,
+    _fix_direction_of_play,
+    min_dribble_length,
+)
 from .schema import SPADLSchema
 
 
@@ -54,6 +59,8 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     )
     actions['bodypart_id'] = events.qualifiers.apply(_get_bodypart_id)
 
+    actions = _fix_recoveries(actions, events.type_name)
+    actions = _fix_unintentional_ball_touches(actions, events.type_name, events.outcome)
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
         .sort_values(['game_id', 'period_id', 'time_seconds'])
@@ -177,3 +184,80 @@ def _fix_owngoals(actions: pd.DataFrame) -> pd.DataFrame:
     )
     actions.loc[owngoals_idx, 'type_id'] = spadlconfig.actiontypes.index('bad_touch')
     return actions
+
+
+def _fix_recoveries(df_actions: pd.DataFrame, opta_types: pd.Series) -> pd.DataFrame:
+    """Convert ball recovery events to dribbles.
+
+    This function converts the Opta 'ball recovery' event (type_id 49) into
+    a dribble.
+
+    Parameters
+    ----------
+    df_actions : pd.DataFrame
+        Opta actions dataframe
+    opta_types : pd.Series
+        Original Opta event types
+
+    Returns
+    -------
+    pd.DataFrame
+        Opta event dataframe without any ball recovery events
+    """
+    df_actions_next = df_actions.shift(-1)
+    df_actions_next = df_actions_next.mask(
+        df_actions_next.type_id == spadlconfig.actiontypes.index('non_action')
+    ).bfill()
+
+    selector_recovery = opta_types == 'ball recovery'
+
+    same_x = abs(df_actions["end_x"] - df_actions_next["start_x"]) < min_dribble_length
+    same_y = abs(df_actions["end_y"] - df_actions_next["start_y"]) < min_dribble_length
+    same_loc = same_x & same_y
+
+    df_actions.loc[selector_recovery & ~same_loc, "type_id"] = spadlconfig.actiontypes.index(
+        "dribble"
+    )
+    df_actions.loc[selector_recovery & same_loc, "type_id"] = spadlconfig.actiontypes.index(
+        "non_action"
+    )
+    df_actions.loc[selector_recovery, ['end_x', 'end_y']] = df_actions_next.loc[
+        selector_recovery, ['start_x', 'start_y']
+    ].values
+
+    return df_actions
+
+
+def _fix_unintentional_ball_touches(
+    df_actions: pd.DataFrame, opta_type: pd.Series, opta_outcome: pd.Series
+) -> pd.DataFrame:
+    """Discard unintentional ball touches.
+
+    Passes that are deflected but still reach their target are registered as
+    successful passes. The (unintentional) deflection is not recored as an
+    action, because players should not be credited for it.
+
+    Parameters
+    ----------
+    df_actions : pd.DataFrame
+        Opta actions dataframe
+    opta_type : pd.Series
+        Original Opta event types
+    opta_outcome : pd.Series
+        Original Opta event outcomes
+
+    Returns
+    -------
+    pd.DataFrame
+        Opta event dataframe without any unintentional ball touches.
+    """
+    df_actions_next = df_actions.shift(-2)
+    selector_deflected = (opta_type.shift(-1) == 'ball touch') & (opta_outcome.shift(-1) is True)
+    selector_same_team = df_actions["team_id"] == df_actions_next["team_id"]
+    df_actions.loc[selector_deflected, ['end_x', 'end_y']] = df_actions_next.loc[
+        selector_deflected, ['start_x', 'start_y']
+    ].values
+    df_actions.loc[
+        selector_deflected & selector_same_team, "result_id"
+    ] = spadlconfig.results.index("success")
+    return df_actions
