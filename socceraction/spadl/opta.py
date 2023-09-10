@@ -252,7 +252,7 @@ def _fix_unintentional_ball_touches(
         Opta event dataframe without any unintentional ball touches.
     """
     df_actions_next = df_actions.shift(-2)
-    selector_deflected = (opta_type.shift(-1) == 'ball touch') & (opta_outcome.shift(-1) is True)
+    selector_deflected = (opta_type.shift(-1) == 'ball touch') & (opta_outcome.shift(-1) == True)
     selector_same_team = df_actions["team_id"] == df_actions_next["team_id"]
     df_actions.loc[selector_deflected, ['end_x', 'end_y']] = df_actions_next.loc[
         selector_deflected, ['start_x', 'start_y']
