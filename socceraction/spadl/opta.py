@@ -186,7 +186,7 @@ def _fix_owngoals(actions: pd.DataFrame) -> pd.DataFrame:
     return actions
 
 
-def _fix_recoveries(df_actions: pd.DataFrame, opta_types) -> pd.DataFrame:
+def _fix_recoveries(df_actions: pd.DataFrame, opta_types: pd.Series) -> pd.DataFrame:
     """Convert ball recovery events to dribbles.
 
     This function converts the Opta 'ball recovery' event (type_id 49) into
@@ -229,7 +229,7 @@ def _fix_recoveries(df_actions: pd.DataFrame, opta_types) -> pd.DataFrame:
 
 
 def _fix_unintentional_ball_touches(
-    df_actions: pd.DataFrame, opta_type, opta_outcome
+    df_actions: pd.DataFrame, opta_type: pd.Series, opta_outcome: pd.Series
 ) -> pd.DataFrame:
     """Discard unintentional ball touches.
 
