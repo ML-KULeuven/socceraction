@@ -68,45 +68,35 @@ class MA3JSONParser(OptaJSONParser):
             each game in the data stream.
         """
         match_info = self._get_match_info()
-        live_data = self._get_live_data()
+        game_id = assertget(match_info, "id")
         season = assertget(match_info, "tournamentCalendar")
         competition = assertget(match_info, "competition")
         contestant = assertget(match_info, "contestant")
-        venue = assertget(match_info, "venue")
-        game_id = assertget(match_info, "id")
-        match_details = assertget(live_data, "matchDetails")
-        scores = assertget(match_details, "scores")
-        score_total = assertget(scores, "total")
-        home_score = None
-        away_score = None
-        if isinstance(score_total, dict):
-            home_score = assertget(score_total, "home")
-            away_score = assertget(score_total, "away")
-
         game_date = assertget(match_info, "date")[0:10]
         game_time = assertget(match_info, "time")[0:8]
         game_datetime = f"{game_date}T{game_time}"
-        return {
-            game_id: dict(
-                # Fields required by the base schema
-                game_id=game_id,
-                season_id=assertget(season, "id"),
-                competition_id=assertget(competition, "id"),
-                game_day=int(match_info["week"]) if "week" in match_info else None,
-                game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
-                home_team_id=self._extract_team_id(contestant, "home"),
-                away_team_id=self._extract_team_id(contestant, "away"),
-                # Optional fields
-                home_score=home_score,
-                away_score=away_score,
-                duration=assertget(match_details, "matchLengthMin"),
-                # referee=?
-                venue=assertget(venue, "shortName"),
-                # attendance=?
-                # home_manager=?
-                # away_manager=?
-            )
-        }
+        venue = assertget(match_info, "venue")
+        game_obj = dict(
+            game_id=game_id,
+            competition_id=assertget(competition, "id"),
+            season_id=assertget(season, "id"),
+            game_day=int(match_info["week"]) if "week" in match_info else None,
+            game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
+            home_team_id=self._extract_team_id(contestant, "home"),
+            away_team_id=self._extract_team_id(contestant, "away"),
+            venue=assertget(venue, "shortName"),
+        )
+        live_data = self._get_live_data()
+        if "matchDetails" in live_data:
+            match_details = assertget(live_data, "matchDetails")
+            if "matchLengthMin" in match_details:
+                game_obj["duration"] = assertget(match_details, "matchLengthMin")
+            if "scores" in match_details:
+                scores = assertget(match_details, "scores")
+                game_obj["home_score"] = assertget(scores, "total")["home"]
+                game_obj["away_score"] = assertget(scores, "total")["away"]
+
+        return {game_id: game_obj}
 
     def extract_teams(self) -> Dict[str, Dict[str, Any]]:
         """Return a dictionary with all available teams.
