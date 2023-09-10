@@ -60,6 +60,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['bodypart_id'] = events.qualifiers.apply(_get_bodypart_id)
 
     actions = _fix_recoveries(actions, events.type_name)
+    actions = _fix_unintentional_ball_touches(actions, events.type_name, events.outcome)
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
         .sort_values(['game_id', 'period_id', 'time_seconds'])
@@ -224,4 +225,39 @@ def _fix_recoveries(df_actions: pd.DataFrame, opta_types) -> pd.DataFrame:
         selector_recovery, ['start_x', 'start_y']
     ].values
 
+    return df_actions
+
+
+def _fix_unintentional_ball_touches(
+    df_actions: pd.DataFrame, opta_type, opta_outcome
+) -> pd.DataFrame:
+    """Discard unintentional ball touches.
+
+    Passes that are deflected but still reach their target are registered as
+    successful passes. The (unintentional) deflection is not recored as an
+    action, because players should not be credited for it.
+
+    Parameters
+    ----------
+    df_actions : pd.DataFrame
+        Opta actions dataframe
+    opta_type : pd.Series
+        Original Opta event types
+    opta_outcome : pd.Series
+        Original Opta event outcomes
+
+    Returns
+    -------
+    pd.DataFrame
+        Opta event dataframe without any unintentional ball touches.
+    """
+    df_actions_next = df_actions.shift(-2)
+    selector_deflected = (opta_type.shift(-1) == 'ball touch') & (opta_outcome.shift(-1) is True)
+    selector_same_team = df_actions["team_id"] == df_actions_next["team_id"]
+    df_actions.loc[selector_deflected, ['end_x', 'end_y']] = df_actions_next.loc[
+        selector_deflected, ['start_x', 'start_y']
+    ].values
+    df_actions.loc[
+        selector_deflected & selector_same_team, "result_id"
+    ] = spadlconfig.results.index("success")
     return df_actions
