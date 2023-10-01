@@ -19,6 +19,16 @@ def _fix_clearances(actions: pd.DataFrame) -> pd.DataFrame:
     return actions
 
 
+def _fix_actions_to_foul(actions: pd.DataFrame) -> pd.DataFrame:
+    next_actions = actions.shift(-1)
+    next_actions[-1:] = actions[-1:]
+    action_indices = {action: actions.type_id == spadlconfig.actiontypes.index(action) for action in
+                      ['pass', 'cross', 'corner_crossed', 'corner_short', 'freekick_crossed', 'freekick_short']}
+    combined_idx = pd.concat(action_indices.values(), axis=1).any(axis=1)
+    flagged_idx = (combined_idx & (next_actions.type_id == spadlconfig.actiontypes.index('foul'))).astype(bool)
+    return ~flagged_idx
+
+
 def _fix_direction_of_play(actions: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
     away_idx = (actions.team_id != home_team_id).values
     for col in ['start_x', 'end_x']:
@@ -49,7 +59,9 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     same_phase = dt < max_dribble_duration
     same_period = actions.period_id == next_actions.period_id
 
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
+    foul_dribbles = _fix_actions_to_foul(actions)
+
+    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period & foul_dribbles
 
     dribbles = pd.DataFrame()
     prev = actions[dribble_idx]
