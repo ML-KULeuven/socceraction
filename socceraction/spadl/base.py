@@ -22,10 +22,21 @@ def _fix_clearances(actions: pd.DataFrame) -> pd.DataFrame:
 def _fix_actions_to_foul(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
     next_actions[-1:] = actions[-1:]
-    action_indices = {action: actions.type_id == spadlconfig.actiontypes.index(action) for action in
-                      ['pass', 'cross', 'corner_crossed', 'corner_short', 'freekick_crossed', 'freekick_short']}
+    action_list = [
+        'pass',
+        'cross',
+        'corner_crossed',
+        'corner_short',
+        'freekick_crossed',
+        'freekick_short',
+    ]
+    action_indices = {
+        action: actions.type_id == spadlconfig.actiontypes.index(action) for action in action_list
+    }
     combined_idx = pd.concat(action_indices.values(), axis=1).any(axis=1)
-    flagged_idx = (combined_idx & (next_actions.type_id == spadlconfig.actiontypes.index('foul'))).astype(bool)
+    flagged_idx = (
+        combined_idx & (next_actions.type_id == spadlconfig.actiontypes.index('foul'))
+    ).astype(bool)
     return ~flagged_idx
 
 
