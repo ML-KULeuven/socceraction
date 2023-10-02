@@ -33,9 +33,12 @@ def _fix_actions_to_foul(actions: pd.DataFrame) -> pd.DataFrame:
     action_indices = {
         action: actions.type_id == spadlconfig.actiontypes.index(action) for action in action_list
     }
+    unsuccessful_idx = actions.result_id == 0
     combined_idx = pd.concat(action_indices.values(), axis=1).any(axis=1)
     flagged_idx = (
-        combined_idx & (next_actions.type_id == spadlconfig.actiontypes.index('foul'))
+        combined_idx
+        & (next_actions.type_id == spadlconfig.actiontypes.index('foul'))
+        & unsuccessful_idx
     ).astype(bool)
     return ~flagged_idx
 
