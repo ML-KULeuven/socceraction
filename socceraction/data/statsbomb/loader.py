@@ -145,7 +145,7 @@ class StatsBombLoader(EventDataLoader):
         ]
         if self._local:
             obj = _localloadjson(
-                str(os.path.join(self._root, f"matches/{competition_id}/{season_id}.json"))
+                str(os.path.join(self._root, "matches", f"{competition_id}", f"{season_id}.json"))
             )
         else:
             obj = list(
@@ -179,7 +179,7 @@ class StatsBombLoader(EventDataLoader):
 
     def _lineups(self, game_id: int) -> list[dict[str, Any]]:
         if self._local:
-            obj = _localloadjson(str(os.path.join(self._root, f"lineups/{game_id}.json")))
+            obj = _localloadjson(str(os.path.join(self._root, "lineups", f"{game_id}.json")))
         else:
             obj = list(sb.lineups(game_id, fmt="dict", creds=self._creds).values())
         if not isinstance(obj, list):
@@ -319,7 +319,7 @@ class StatsBombLoader(EventDataLoader):
         ]
         # Load the events
         if self._local:
-            obj = _localloadjson(str(os.path.join(self._root, f"events/{game_id}.json")))
+            obj = _localloadjson(str(os.path.join(self._root, "events", f"{game_id}.json")))
         else:
             obj = list(sb.events(game_id, fmt="dict", creds=self._creds).values())
         if not isinstance(obj, list):
@@ -345,7 +345,7 @@ class StatsBombLoader(EventDataLoader):
         # Load the 360 data
         cols_360 = ["visible_area_360", "freeze_frame_360"]
         if self._local:
-            obj = _localloadjson(str(os.path.join(self._root, f"three-sixty/{game_id}.json")))
+            obj = _localloadjson(str(os.path.join(self._root, "three-sixty", f"{game_id}.json")))
         else:
             obj = sb.frames(game_id, fmt="dict", creds=self._creds)
         if not isinstance(obj, list):
