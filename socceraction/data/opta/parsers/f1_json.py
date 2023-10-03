@@ -1,6 +1,6 @@
 """JSON parser for Opta F1 feeds."""
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from ...base import MissingDataError
 from .base import OptaJSONParser, assertget
@@ -15,20 +15,20 @@ class F1JSONParser(OptaJSONParser):
         Path of the data file.
     """
 
-    def _get_feed(self) -> Dict[str, Any]:
+    def _get_feed(self) -> dict[str, Any]:
         for node in self.root:
             if 'OptaFeed' in node['data'].keys():
                 return node
         raise MissingDataError
 
-    def _get_doc(self) -> Dict[str, Any]:
+    def _get_doc(self) -> dict[str, Any]:
         f1 = self._get_feed()
         data = assertget(f1, 'data')
         optafeed = assertget(data, 'OptaFeed')
         optadocument = assertget(optafeed, 'OptaDocument')
         return optadocument
 
-    def extract_competitions(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_competitions(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
@@ -50,7 +50,7 @@ class F1JSONParser(OptaJSONParser):
         )
         return {(competition_id, season_id): competition}
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns

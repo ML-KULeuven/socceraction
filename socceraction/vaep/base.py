@@ -7,7 +7,7 @@ xfns_default : list(callable)
 
 """
 import math
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -86,10 +86,10 @@ class VAEP:
 
     def __init__(
         self,
-        xfns: Optional[List[fs.FeatureTransfomer]] = None,
+        xfns: Optional[list[fs.FeatureTransfomer]] = None,
         nb_prev_actions: int = 3,
     ) -> None:
-        self.__models: Dict[str, Any] = {}
+        self.__models: dict[str, Any] = {}
         self.xfns = xfns_default if xfns is None else xfns
         self.yfns = [self._lab.scores, self._lab.concedes]
         self.nb_prev_actions = nb_prev_actions
@@ -142,8 +142,8 @@ class VAEP:
         y: pd.DataFrame,
         learner: str = 'xgboost',
         val_size: float = 0.25,
-        tree_params: Optional[Dict[str, Any]] = None,
-        fit_params: Optional[Dict[str, Any]] = None,
+        tree_params: Optional[dict[str, Any]] = None,
+        fit_params: Optional[dict[str, Any]] = None,
     ) -> 'VAEP':
         """
         Fit the model according to the given training data.
@@ -216,9 +216,9 @@ class VAEP:
         self,
         X: pd.DataFrame,
         y: pd.Series,
-        eval_set: Optional[List[Tuple[pd.DataFrame, pd.Series]]] = None,
-        tree_params: Optional[Dict[str, Any]] = None,
-        fit_params: Optional[Dict[str, Any]] = None,
+        eval_set: Optional[list[tuple[pd.DataFrame, pd.Series]]] = None,
+        tree_params: Optional[dict[str, Any]] = None,
+        fit_params: Optional[dict[str, Any]] = None,
     ) -> 'xgboost.XGBClassifier':
         if xgboost is None:
             raise ImportError('xgboost is not installed.')
@@ -238,9 +238,9 @@ class VAEP:
         self,
         X: pd.DataFrame,
         y: pd.Series,
-        eval_set: Optional[List[Tuple[pd.DataFrame, pd.Series]]] = None,
-        tree_params: Optional[Dict[str, Any]] = None,
-        fit_params: Optional[Dict[str, Any]] = None,
+        eval_set: Optional[list[tuple[pd.DataFrame, pd.Series]]] = None,
+        tree_params: Optional[dict[str, Any]] = None,
+        fit_params: Optional[dict[str, Any]] = None,
     ) -> 'catboost.CatBoostClassifier':
         if catboost is None:
             raise ImportError('catboost is not installed.')
@@ -264,9 +264,9 @@ class VAEP:
         self,
         X: pd.DataFrame,
         y: pd.Series,
-        eval_set: Optional[List[Tuple[pd.DataFrame, pd.Series]]] = None,
-        tree_params: Optional[Dict[str, Any]] = None,
-        fit_params: Optional[Dict[str, Any]] = None,
+        eval_set: Optional[list[tuple[pd.DataFrame, pd.Series]]] = None,
+        tree_params: Optional[dict[str, Any]] = None,
+        fit_params: Optional[dict[str, Any]] = None,
     ) -> 'lightgbm.LGBMClassifier':
         if lightgbm is None:
             raise ImportError('lightgbm is not installed.')
@@ -332,7 +332,7 @@ class VAEP:
         vaep_values = self._vaep.value(game_actions_with_names, p_scores, p_concedes)
         return vaep_values
 
-    def score(self, X: pd.DataFrame, y: pd.DataFrame) -> Dict[str, Dict[str, float]]:
+    def score(self, X: pd.DataFrame, y: pd.DataFrame) -> dict[str, dict[str, float]]:
         """Evaluate the fit of the model on the given test data and labels.
 
         Parameters
@@ -357,7 +357,7 @@ class VAEP:
 
         y_hat = self._estimate_probabilities(X)
 
-        scores: Dict[str, Dict[str, float]] = {}
+        scores: dict[str, dict[str, float]] = {}
         for col in self.__models:
             scores[col] = {}
             scores[col]['brier'] = brier_score_loss(y[col], y_hat[col])

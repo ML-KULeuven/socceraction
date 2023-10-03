@@ -1,5 +1,5 @@
 """StatsBomb event stream data to SPADL converter."""
-from typing import Any, Dict, Tuple, cast
+from typing import Any, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -76,10 +76,10 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     return cast(DataFrame[SPADLSchema], actions)
 
 
-Location = Tuple[float, float]
+Location = tuple[float, float]
 
 
-def _get_end_location(q: Tuple[Location, Dict[str, Any]]) -> Location:
+def _get_end_location(q: tuple[Location, dict[str, Any]]) -> Location:
     start_location, extra = q
     for event in ['pass', 'shot', 'carry']:
         if event in extra and 'end_location' in extra[event]:
@@ -87,7 +87,7 @@ def _get_end_location(q: Tuple[Location, Dict[str, Any]]) -> Location:
     return start_location
 
 
-def _parse_event(q: Tuple[str, Dict[str, Any]]) -> Tuple[int, int, int]:
+def _parse_event(q: tuple[str, dict[str, Any]]) -> tuple[int, int, int]:
     t, x = q
     events = {
         'Pass': _parse_pass_event,
@@ -110,14 +110,14 @@ def _parse_event(q: Tuple[str, Dict[str, Any]]) -> Tuple[int, int, int]:
     return actiontype, result, bodypart
 
 
-def _parse_event_as_non_action(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_event_as_non_action(_extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'non_action'
     r = 'success'
     b = 'foot'
     return a, r, b
 
 
-def _parse_pass_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C901
+def _parse_pass_event(extra: dict[str, Any]) -> tuple[str, str, str]:  # noqa: C901
     a = 'pass'  # default
     p = extra.get('pass', {})
     ptype = p.get('type', {}).get('name')
@@ -171,7 +171,7 @@ def _parse_pass_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C
     return a, r, b
 
 
-def _parse_dribble_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_dribble_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'take_on'
 
     dribble_outcome = extra.get('dribble', {}).get('outcome', {}).get('name')
@@ -187,14 +187,14 @@ def _parse_dribble_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_carry_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_carry_event(_extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'dribble'
     r = 'success'
     b = 'foot'
     return a, r, b
 
 
-def _parse_foul_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_foul_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'foul'
 
     foul_card = extra.get('foul_committed', {}).get('card', {}).get('name', '')
@@ -210,7 +210,7 @@ def _parse_foul_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_duel_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_duel_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     if extra.get('duel', {}).get('type', {}).get('name') == 'Tackle':
         a = 'tackle'
         duel_outcome = extra.get('duel', {}).get('outcome', {}).get('name')
@@ -226,7 +226,7 @@ def _parse_duel_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return _parse_event_as_non_action(extra)
 
 
-def _parse_interception_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_interception_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'interception'
     interception_outcome = extra.get('interception', {}).get('outcome', {}).get('name')
     if interception_outcome in ['Lost In Play', 'Lost Out']:
@@ -239,7 +239,7 @@ def _parse_interception_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_shot_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_shot_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     extra_type = extra.get('shot', {}).get('type', {}).get('name')
     if extra_type == 'Free Kick':
         a = 'shot_freekick'
@@ -273,14 +273,14 @@ def _parse_shot_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_own_goal_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_own_goal_event(_extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'bad_touch'
     r = 'owngoal'
     b = 'foot'
     return a, r, b
 
 
-def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # noqa: C901
+def _parse_goalkeeper_event(extra: dict[str, Any]) -> tuple[str, str, str]:  # noqa: C901
     extra_type = extra.get('goalkeeper', {}).get('type', {}).get('name')
     if extra_type == 'Shot Saved':
         a = 'keeper_save'
@@ -323,7 +323,7 @@ def _parse_goalkeeper_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:  # n
     return a, r, b
 
 
-def _parse_clearance_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_clearance_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'clearance'
     r = 'success'
     bp = extra.get('clearance', {}).get('body_part', {}).get('name')
@@ -342,7 +342,7 @@ def _parse_clearance_event(extra: Dict[str, Any]) -> Tuple[str, str, str]:
     return a, r, b
 
 
-def _parse_miscontrol_event(_extra: Dict[str, Any]) -> Tuple[str, str, str]:
+def _parse_miscontrol_event(_extra: dict[str, Any]) -> tuple[str, str, str]:
     a = 'bad_touch'
     r = 'fail'
     b = 'foot'

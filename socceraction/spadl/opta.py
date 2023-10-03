@@ -1,5 +1,5 @@
 """Opta event stream data to SPADL converter."""
-from typing import Any, Dict, Tuple, cast
+from typing import Any, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -75,7 +75,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     return cast(DataFrame[SPADLSchema], actions)
 
 
-def _get_bodypart_id(qualifiers: Dict[int, Any]) -> int:
+def _get_bodypart_id(qualifiers: dict[int, Any]) -> int:
     if 15 in qualifiers or 3 in qualifiers or 168 in qualifiers:
         b = 'head'
     elif 21 in qualifiers:
@@ -91,7 +91,7 @@ def _get_bodypart_id(qualifiers: Dict[int, Any]) -> int:
     return spadlconfig.bodyparts.index(b)
 
 
-def _get_result_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:
+def _get_result_id(args: tuple[str, bool, dict[int, Any]]) -> int:
     e, outcome, q = args
     if e == 'offside pass':
         r = 'offside'  # offside
@@ -113,7 +113,7 @@ def _get_result_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:
     return spadlconfig.results.index(r)
 
 
-def _get_type_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:  # noqa: C901
+def _get_type_id(args: tuple[str, bool, dict[int, Any]]) -> int:  # noqa: C901
     eventname, outcome, q = args
     fairplay = 238 in q
     if fairplay:

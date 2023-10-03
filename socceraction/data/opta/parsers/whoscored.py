@@ -2,7 +2,7 @@
 import json  # type: ignore
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from ...base import MissingDataError
 from .base import OptaParser, _get_end_x, _get_end_y, assertget
@@ -74,12 +74,12 @@ class WhoScoredParser(OptaParser):
                 ) from e
         self.game_id = game_id
 
-    def _get_period_id(self, event: Dict[str, Any]) -> int:
+    def _get_period_id(self, event: dict[str, Any]) -> int:
         period = assertget(event, "period")
         period_id = int(assertget(period, "value"))
         return period_id
 
-    def _get_period_milliseconds(self, event: Dict[str, Any]) -> int:
+    def _get_period_milliseconds(self, event: dict[str, Any]) -> int:
         period_minute_limits = assertget(self.root, "periodMinuteLimits")
         period_id = self._get_period_id(event)
         if period_id == 16:  # Pre-match
@@ -93,7 +93,7 @@ class WhoScoredParser(OptaParser):
         period_second = period_minute * 60 + int(event.get("second", 0))
         return period_second * 1000
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -129,7 +129,7 @@ class WhoScoredParser(OptaParser):
         )
         return {self.game_id: game_dict}
 
-    def extract_teams(self) -> Dict[int, Dict[str, Any]]:
+    def extract_teams(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -148,7 +148,7 @@ class WhoScoredParser(OptaParser):
             )
         return teams
 
-    def extract_players(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_players(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available players.
 
         Returns
@@ -185,7 +185,7 @@ class WhoScoredParser(OptaParser):
                 )
         return players
 
-    def extract_events(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_events(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
@@ -245,7 +245,7 @@ class WhoScoredParser(OptaParser):
 
         return events
 
-    def extract_substitutions(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_substitutions(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all substitution events.
 
         Returns
@@ -269,7 +269,7 @@ class WhoScoredParser(OptaParser):
             subs[(self.game_id, sub_id)] = sub
         return subs
 
-    def extract_positions(self) -> Dict[Tuple[int, int, int], Dict[str, Any]]:  # noqa: C901
+    def extract_positions(self) -> dict[tuple[int, int, int], dict[str, Any]]:  # noqa: C901
         """Return a dictionary with each player's position during a game.
 
         Returns
@@ -318,7 +318,7 @@ class WhoScoredParser(OptaParser):
                     )
         return positions
 
-    def extract_teamgamestats(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_teamgamestats(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return some aggregated statistics of each team in a game.
 
         Returns
@@ -347,7 +347,7 @@ class WhoScoredParser(OptaParser):
 
         return teams_gamestats
 
-    def extract_playergamestats(self) -> Dict[Tuple[int, int], Dict[str, Any]]:  # noqa: C901
+    def extract_playergamestats(self) -> dict[tuple[int, int], dict[str, Any]]:  # noqa: C901
         """Return some aggregated statistics of each player in a game.
 
         Returns

@@ -4,7 +4,7 @@ import os
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import urlopen, urlretrieve
@@ -124,7 +124,7 @@ class PublicWyscoutLoader(EventDataLoader):
             ]
         ).set_index(["competition_id", "season_id"])
         self._match_index = self._create_match_index().set_index("match_id")
-        self._cache: Optional[Dict[str, Any]] = None
+        self._cache: Optional[dict[str, Any]] = None
 
     def _download_repo(self) -> None:
         dataset_urls = dict(
@@ -221,7 +221,7 @@ class PublicWyscoutLoader(EventDataLoader):
         df_matches = pd.DataFrame(self.get(path))
         return cast(DataFrame[WyscoutGameSchema], _convert_games(df_matches))
 
-    def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
+    def _lineups(self, game_id: int) -> list[dict[str, Any]]:
         competition_id, season_id = self._match_index.loc[game_id, ["competition_id", "season_id"]]
         path = os.path.join(self.root, self._index.at[(competition_id, season_id), "db_matches"])
         df_matches = pd.DataFrame(self.get(path)).set_index("wyId")
@@ -385,8 +385,8 @@ class WyscoutLoader(EventDataLoader):
         self,
         root: str = _wyscout_api,
         getter: Union[str, Callable[[str], JSONType]] = "remote",
-        feeds: Optional[Dict[str, str]] = None,
-        creds: Optional[Dict[str, str]] = None,
+        feeds: Optional[dict[str, str]] = None,
+        creds: Optional[dict[str, str]] = None,
     ) -> None:
         self.root = root
 
@@ -432,7 +432,7 @@ class WyscoutLoader(EventDataLoader):
         competition_id: Optional[int] = None,
         season_id: Optional[int] = None,
         game_id: Optional[int] = None,
-    ) -> List[str]:
+    ) -> list[str]:
         competition_id_glob = "*" if competition_id is None else competition_id
         season_id_glob = "*" if season_id is None else season_id
         game_id_glob = "*" if game_id is None else game_id
@@ -699,7 +699,7 @@ def _convert_games(matches: pd.DataFrame) -> pd.DataFrame:
     return games
 
 
-def _get_team_id(teamsData: Dict[int, Any], side: str) -> int:
+def _get_team_id(teamsData: dict[int, Any], side: str) -> int:
     for team_id, data in teamsData.items():
         if data["side"] == side:
             return int(team_id)
@@ -779,7 +779,7 @@ def _convert_events(raw_events: pd.DataFrame) -> pd.DataFrame:
 
 
 def _get_minutes_played(
-    teamsData: List[Dict[str, Any]], events: List[Dict[str, Any]]
+    teamsData: list[dict[str, Any]], events: list[dict[str, Any]]
 ) -> pd.DataFrame:
     # get duration of each period
     periods_ts = {i: [0] for i in range(6)}
@@ -793,7 +793,7 @@ def _get_minutes_played(
     duration = sum(periods_duration)
 
     # get stats for each player
-    playergames: Dict[int, Dict[str, Any]] = {}
+    playergames: dict[int, dict[str, Any]] = {}
     if isinstance(teamsData, dict):
         teamsData = list(teamsData.values())
     for teamData in teamsData:

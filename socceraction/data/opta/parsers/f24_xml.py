@@ -1,6 +1,6 @@
 """XML parser for Opta F24 feeds."""
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from lxml import objectify
 
@@ -19,7 +19,7 @@ class F24XMLParser(OptaXMLParser):
     def _get_doc(self) -> objectify.ObjectifiedElement:
         return self.root
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -53,7 +53,7 @@ class F24XMLParser(OptaXMLParser):
         )
         return {game_id: game_dict}
 
-    def extract_events(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_events(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns

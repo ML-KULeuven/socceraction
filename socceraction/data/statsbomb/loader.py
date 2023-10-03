@@ -1,6 +1,6 @@
 """Implements serializers for StatsBomb data."""
 import os
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Optional, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -59,7 +59,7 @@ class StatsBombLoader(EventDataLoader):
         self,
         getter: str = "remote",
         root: Optional[str] = None,
-        creds: Optional[Dict[str, str]] = None,
+        creds: Optional[dict[str, str]] = None,
     ) -> None:
         if getter == "remote":
             if sb is None:
@@ -177,7 +177,7 @@ class StatsBombLoader(EventDataLoader):
             gamesdf["referee"] = None
         return cast(DataFrame[StatsBombGameSchema], gamesdf[cols])
 
-    def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
+    def _lineups(self, game_id: int) -> list[dict[str, Any]]:
         if self._local:
             obj = _localloadjson(str(os.path.join(self._root, f"lineups/{game_id}.json")))
         else:
@@ -463,7 +463,7 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     return pg
 
 
-def _flatten_id(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def _flatten_id(d: dict[str, dict[str, Any]]) -> dict[str, Any]:
     newd = {}
     extra = {}
     for k, v in d.items():
@@ -479,7 +479,7 @@ def _flatten_id(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     return newd
 
 
-def _flatten(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def _flatten(d: dict[str, dict[str, Any]]) -> dict[str, Any]:
     newd = {}
     for k, v in d.items():
         if isinstance(v, dict):

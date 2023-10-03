@@ -26,20 +26,21 @@ class TestSpadlConvertor:
         assert ((df_actions.team_id == 782) | (df_actions.team_id == 778)).all()
 
     def test_convert_start_location(self) -> None:
+        print(self.events_japbel.event_id)
         event = self.events_japbel[
-            self.events_japbel.event_id == 'a1b55211-a292-4294-887b-5385cc3c5705'
+            self.events_japbel.event_id == '5171bb39-0c6c-4a3d-ae1c-756011dc219f'
         ]
         action = sb.convert_to_actions(event, self.id_bel).iloc[0]
-        assert action['start_x'] == ((61.0 - 1) / 119) * spadl.field_length
-        assert action['start_y'] == 68 - ((40.0 - 1) / 79) * spadl.field_width
+        assert action['start_x'] == ((25.0 - 1) / 119) * spadl.field_length
+        assert action['start_y'] == 68 - ((26.0 - 1) / 79) * spadl.field_width
 
     def test_convert_end_location(self) -> None:
         event = self.events_japbel[
-            self.events_japbel.event_id == 'a1b55211-a292-4294-887b-5385cc3c5705'
+            self.events_japbel.event_id == '5171bb39-0c6c-4a3d-ae1c-756011dc219f'
         ]
         action = sb.convert_to_actions(event, self.id_bel).iloc[0]
-        assert action['end_x'] == ((49.0 - 1) / 119) * spadl.field_length
-        assert action['end_y'] == 68 - ((43.0 - 1) / 79) * spadl.field_width
+        assert action['end_x'] == ((24.0 - 1) / 119) * spadl.field_length
+        assert action['end_y'] == 68 - ((28.0 - 1) / 79) * spadl.field_width
 
     @pytest.mark.parametrize(
         'period,timestamp,minute,second',
@@ -55,7 +56,7 @@ class TestSpadlConvertor:
     )
     def test_convert_time(self, period: int, timestamp: str, minute: int, second: int) -> None:
         event = self.events_japbel[
-            self.events_japbel.event_id == 'a1b55211-a292-4294-887b-5385cc3c5705'
+            self.events_japbel.event_id == '5171bb39-0c6c-4a3d-ae1c-756011dc219f'
         ].copy()
         event['period_id'] = period
         event['timestamp'] = timestamp
@@ -75,11 +76,11 @@ class TestSpadlConvertor:
 
     def test_convert_pass(self) -> None:
         pass_event = self.events_japbel[
-            self.events_japbel.event_id == 'a1b55211-a292-4294-887b-5385cc3c5705'
+            self.events_japbel.event_id == '0bc3262b-7cdb-4784-b159-4409317165a7'
         ]
         pass_action = sb.convert_to_actions(pass_event, self.id_bel).iloc[0]
         assert pass_action['team_id'] == 782
-        assert pass_action['player_id'] == 3289
+        assert pass_action['player_id'] == 3101
         assert pass_action['type_id'] == spadl.actiontypes.index('pass')
         assert pass_action['result_id'] == spadl.results.index('success')
         assert pass_action['bodypart_id'] == spadl.bodyparts.index('foot_right')
@@ -87,12 +88,12 @@ class TestSpadlConvertor:
     def test_convert_own_goal(self) -> None:
         events_morira = self.SBL.events(7577)
         own_goal_for_event = events_morira[
-            events_morira.event_id == '8981bc58-6041-4b78-95c5-ebe9677ca379'
+            events_morira.event_id == '467ab65e-af8b-45d2-b372-06ffb5c71332'
         ]
         own_goal_for_actions = sb.convert_to_actions(own_goal_for_event, 797)
         assert len(own_goal_for_actions) == 0
         own_goal_against_event = events_morira[
-            events_morira.event_id == 'cef0fcb6-28d0-49d7-8f93-4a0aef28001a'
+            events_morira.event_id == 'a21c104e-e944-41a2-91ce-700c5f9ae8e5'
         ]
         own_goal_against_actions = sb.convert_to_actions(own_goal_against_event, 797)
         assert len(own_goal_against_actions) == 1

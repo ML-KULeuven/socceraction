@@ -46,7 +46,7 @@ repos:
         entry: pyupgrade
         language: system
         types: [python]
-        args: [--py37-plus]
+        args: [--py39-plus]
       - id: isort
         name: Reorder python imports
         entry: isort

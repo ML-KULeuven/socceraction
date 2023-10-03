@@ -1,6 +1,6 @@
 """JSON parser for Stats Perform MA1 feeds."""
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from ...base import MissingDataError
 from .base import OptaJSONParser, assertget
@@ -15,24 +15,24 @@ class MA1JSONParser(OptaJSONParser):
         Path of the data file.
     """
 
-    def _get_matches(self) -> List[Dict[str, Any]]:
+    def _get_matches(self) -> list[dict[str, Any]]:
         if 'matchInfo' in self.root:
             return [self.root]
         if 'match' in self.root:
             return self.root['match']
         raise MissingDataError
 
-    def _get_match_info(self, match: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_match_info(self, match: dict[str, Any]) -> dict[str, Any]:
         if 'matchInfo' in match:
             return match['matchInfo']
         raise MissingDataError
 
-    def _get_live_data(self, match: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_live_data(self, match: dict[str, Any]) -> dict[str, Any]:
         if 'liveData' in match:
             return match['liveData']
         return {}
 
-    def _get_name(self, obj: Dict[str, Any]) -> Optional[str]:
+    def _get_name(self, obj: dict[str, Any]) -> Optional[str]:
         if "name" in obj:
             return assertget(obj, "name")
         if "firstName" in obj:
@@ -40,7 +40,7 @@ class MA1JSONParser(OptaJSONParser):
         return None
 
     @staticmethod
-    def _extract_team_id(teams: List[Dict[str, str]], side: str) -> Optional[str]:
+    def _extract_team_id(teams: list[dict[str, str]], side: str) -> Optional[str]:
         for team in teams:
             team_side = assertget(team, "position")
             if team_side == side:
@@ -48,7 +48,7 @@ class MA1JSONParser(OptaJSONParser):
                 return team_id
         raise MissingDataError
 
-    def extract_competitions(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
+    def extract_competitions(self) -> dict[tuple[str, str], dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
@@ -72,7 +72,7 @@ class MA1JSONParser(OptaJSONParser):
             )
         return competitions
 
-    def extract_games(self) -> Dict[str, Dict[str, Any]]:
+    def extract_games(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -132,7 +132,7 @@ class MA1JSONParser(OptaJSONParser):
                                 games[game_id]["referee"] = self._get_name(official)
         return games
 
-    def extract_teams(self) -> Dict[str, Dict[str, Any]]:
+    def extract_teams(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -154,7 +154,7 @@ class MA1JSONParser(OptaJSONParser):
                 teams[team_id] = team
         return teams
 
-    def extract_players(self) -> Dict[Tuple[str, str], Dict[str, Any]]:  # noqa: C901
+    def extract_players(self) -> dict[tuple[str, str], dict[str, Any]]:  # noqa: C901
         """Return a dictionary with all available players.
 
         Returns
@@ -234,7 +234,7 @@ class MA1JSONParser(OptaJSONParser):
                             players[(game_id, player_id)]["minutes_played"] = 0
         return players
 
-    def extract_substitutions(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_substitutions(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all substitution events.
 
         Returns

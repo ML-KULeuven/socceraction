@@ -1,6 +1,6 @@
 """XML parser for Opta F7 feeds."""
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from lxml import objectify
 
@@ -20,7 +20,7 @@ class F7XMLParser(OptaXMLParser):
         optadocument = self.root.find('SoccerDocument')
         return optadocument
 
-    def _get_stats(self, obj: objectify.ObjectifiedElement) -> Dict[str, Any]:
+    def _get_stats(self, obj: objectify.ObjectifiedElement) -> dict[str, Any]:
         stats = {}
         for stat in obj.find('Stat'):
             stats[stat.attrib['Type']] = stat.text
@@ -31,7 +31,7 @@ class F7XMLParser(OptaXMLParser):
             return obj.Known
         return obj.First + " " + obj.Last
 
-    def extract_competitions(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_competitions(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
@@ -54,7 +54,7 @@ class F7XMLParser(OptaXMLParser):
         )
         return {(competition_id, season_id): competition_dict}
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -113,7 +113,7 @@ class F7XMLParser(OptaXMLParser):
         )
         return {game_id: game_dict}
 
-    def extract_teams(self) -> Dict[int, Dict[str, Any]]:
+    def extract_teams(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -134,7 +134,7 @@ class F7XMLParser(OptaXMLParser):
             )
         return teams
 
-    def extract_lineups(self) -> Dict[int, Dict[str, Any]]:
+    def extract_lineups(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with the lineup of each team.
 
         Returns
@@ -204,7 +204,7 @@ class F7XMLParser(OptaXMLParser):
                 )
         return lineups
 
-    def extract_players(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_players(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available players.
 
         Returns
