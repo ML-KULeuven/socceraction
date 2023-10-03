@@ -14,15 +14,13 @@ actiontypes : list(str)
     The action types used in the SPADL language.
 
 """
-from typing import List
-
 import pandas as pd  # type: ignore
 
 field_length: float = 105.0  # unit: meters
 field_width: float = 68.0  # unit: meters
 
-bodyparts: List[str] = ['foot', 'head', 'other', 'head/other', 'foot_left', 'foot_right']
-results: List[str] = [
+bodyparts: list[str] = ['foot', 'head', 'other', 'head/other', 'foot_left', 'foot_right']
+results: list[str] = [
     'fail',
     'success',
     'offside',
@@ -30,7 +28,7 @@ results: List[str] = [
     'yellow_card',
     'red_card',
 ]
-actiontypes: List[str] = [
+actiontypes: list[str] = [
     'pass',
     'cross',
     'throw_in',

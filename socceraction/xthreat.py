@@ -1,7 +1,7 @@
 """Implements the xT framework."""
 import json
 import os
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -23,7 +23,7 @@ N: int = 16
 
 def _get_cell_indexes(
     x: Series[float], y: Series[float], l: int = N, w: int = M
-) -> Tuple[Series[int], Series[int]]:
+) -> tuple[Series[int], Series[int]]:
     xi = x.divide(spadlconfig.field_length).multiply(l)
     yj = y.divide(spadlconfig.field_width).multiply(w)
     xi = xi.astype("int64").clip(0, l - 1)
@@ -142,7 +142,7 @@ def get_successful_move_actions(actions: DataFrame[SPADLSchema]) -> DataFrame[SP
 
 def action_prob(
     actions: DataFrame[SPADLSchema], l: int = N, w: int = M
-) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """Compute the probability of taking an action in each cell of the grid.
 
     The options are: shooting or moving.
@@ -267,7 +267,7 @@ class ExpectedThreat:
         self.l = l
         self.w = w
         self.eps = eps
-        self.heatmaps: List[npt.NDArray[np.float64]] = []
+        self.heatmaps: list[npt.NDArray[np.float64]] = []
         self.xT: npt.NDArray[np.float64] = np.zeros((self.w, self.l))
         self.scoring_prob_matrix: Optional[npt.NDArray[np.float64]] = None
         self.shot_prob_matrix: Optional[npt.NDArray[np.float64]] = None

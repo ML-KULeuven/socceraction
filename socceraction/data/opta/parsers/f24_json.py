@@ -1,6 +1,6 @@
 """JSON parser for Opta F24 feeds."""
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from ...base import MissingDataError
 from .base import OptaJSONParser, _get_end_x, _get_end_y, assertget
@@ -15,13 +15,13 @@ class F24JSONParser(OptaJSONParser):
         Path of the data file.
     """
 
-    def _get_doc(self) -> Dict[str, Any]:
+    def _get_doc(self) -> dict[str, Any]:
         for node in self.root:
             if 'Games' in node['data'].keys():
                 return node
         raise MissingDataError
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -64,7 +64,7 @@ class F24JSONParser(OptaJSONParser):
         }
         return game_dict
 
-    def extract_events(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_events(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns

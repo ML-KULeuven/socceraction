@@ -1,5 +1,5 @@
 """Wyscout event stream data to SPADL converter."""
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, Optional, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -51,7 +51,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     return cast(DataFrame[SPADLSchema], actions)
 
 
-def _get_tag_set(tags: List[Dict[str, Any]]) -> Set[int]:
+def _get_tag_set(tags: list[dict[str, Any]]) -> set[int]:
     return {tag["id"] for tag in tags}
 
 
@@ -138,7 +138,7 @@ wyscout_tags = [
 ]
 
 
-def _make_position_vars(event_id: int, positions: List[Dict[str, Optional[float]]]) -> pd.Series:
+def _make_position_vars(event_id: int, positions: list[dict[str, Optional[float]]]) -> pd.Series:
     if len(positions) == 2:  # if less than 2 then action is removed
         start_x = positions[0]["x"]
         start_y = positions[0]["y"]

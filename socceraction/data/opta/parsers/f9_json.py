@@ -1,6 +1,6 @@
 """JSON parser for Opta F9 feeds."""
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from ...base import MissingDataError
 from .base import OptaJSONParser, assertget
@@ -15,20 +15,20 @@ class F9JSONParser(OptaJSONParser):
         Path of the data file.
     """
 
-    def _get_feed(self) -> Dict[str, Any]:
+    def _get_feed(self) -> dict[str, Any]:
         for node in self.root:
             if "OptaFeed" in node["data"].keys():
                 return node
         raise MissingDataError
 
-    def _get_doc(self) -> Dict[str, Any]:
+    def _get_doc(self) -> dict[str, Any]:
         f9 = self._get_feed()
         data = assertget(f9, "data")
         optafeed = assertget(data, "OptaFeed")
         optadocument = assertget(optafeed, "OptaDocument")[0]
         return optadocument
 
-    def _get_stats(self, obj: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_stats(self, obj: dict[str, Any]) -> dict[str, Any]:
         if "Stat" not in obj:
             return {}
 
@@ -38,14 +38,14 @@ class F9JSONParser(OptaJSONParser):
             stats[stat["@attributes"]['Type']] = stat["@value"]
         return stats
 
-    def _get_name(self, obj: Dict[str, Any]) -> Optional[str]:
+    def _get_name(self, obj: dict[str, Any]) -> Optional[str]:
         if "Known" in obj and obj["Known"].strip():
             return obj["Known"]
         if "First" in obj and "Last" in obj and obj["Last"].strip() or obj["First"].strip():
             return (obj["First"] + " " + obj["Last"]).strip()
         return None
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -112,7 +112,7 @@ class F9JSONParser(OptaJSONParser):
                 game_dict['away_manager'] = manager
         return {game_id: game_dict}
 
-    def extract_teams(self) -> Dict[int, Dict[str, Any]]:
+    def extract_teams(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -136,7 +136,7 @@ class F9JSONParser(OptaJSONParser):
                 )
         return teams
 
-    def extract_players(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_players(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available players.
 
         Returns
@@ -191,7 +191,7 @@ class F9JSONParser(OptaJSONParser):
                     players[(game_id, player_id)] = player
         return players
 
-    def extract_lineups(self) -> Dict[int, Dict[str, Any]]:
+    def extract_lineups(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with the lineup of each team.
 
         Raises
@@ -216,7 +216,7 @@ class F9JSONParser(OptaJSONParser):
         matchstats = [matchstats] if isinstance(matchstats, dict) else matchstats
         matchstatsdict = {stat["@attributes"]["Type"]: stat["@value"] for stat in matchstats}
 
-        lineups: Dict[int, Dict[str, Any]] = {}
+        lineups: dict[int, dict[str, Any]] = {}
         for team in rootf9:
             # lineup attributes
             team_id = int(team["@attributes"]["TeamRef"].replace("t", ""))
@@ -262,7 +262,7 @@ class F9JSONParser(OptaJSONParser):
                 )
         return lineups
 
-    def extract_teamgamestats(self) -> List[Dict[str, Any]]:
+    def extract_teamgamestats(self) -> list[dict[str, Any]]:
         """Return some aggregated statistics of each team.
 
         Raises
