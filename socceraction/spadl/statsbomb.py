@@ -1,6 +1,9 @@
 """StatsBomb event stream data to SPADL converter."""
-from typing import Any, cast
+import warnings
+from typing import Any, Optional, cast
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
@@ -9,7 +12,12 @@ from .base import _add_dribbles, _fix_clearances, _fix_direction_of_play
 from .schema import SPADLSchema
 
 
-def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPADLSchema]:
+def convert_to_actions(
+    events: pd.DataFrame,
+    home_team_id: int,
+    xy_fidelity_version: Optional[int] = None,
+    shot_fidelity_version: Optional[int] = None,
+) -> DataFrame[SPADLSchema]:
     """
     Convert StatsBomb events to SPADL actions.
 
@@ -19,6 +27,13 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
         DataFrame containing StatsBomb events from a single game.
     home_team_id : int
         ID of the home team in the corresponding game.
+    xy_fidelity_version : int, optional
+        Whether low or high fidelity coordinates are used in the event data.
+        If not specified, the fidelity version is inferred from the data.
+    shot_fidelity_version : int, optional
+        Whether low or high fidelity coordinates are used in the event data
+        for shots. If not specified, the fidelity version is inferred from the
+        data.
 
     Returns
     -------
@@ -28,9 +43,34 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     """
     actions = pd.DataFrame()
 
+    # Determine xy_fidelity_version and shot_fidelity_version
+    infered_xy_fidelity_version, infered_shot_fidelity_version = _infer_xy_fidelity_versions(
+        events
+    )
+    if xy_fidelity_version is None:
+        xy_fidelity_version = infered_xy_fidelity_version
+        warnings.warn(
+            f'Inferred xy_fidelity_version={infered_xy_fidelity_version}.'
+            + ' If this is incorrect, please specify the correct version'
+            + ' using the xy_fidelity_version argument'
+        )
+    else:
+        assert xy_fidelity_version in [1, 2], 'xy_fidelity_version must be 1 or 2'
+    if shot_fidelity_version is None:
+        if xy_fidelity_version == 2:
+            shot_fidelity_version = 2
+        else:
+            shot_fidelity_version = infered_shot_fidelity_version
+            warnings.warn(
+                f'Inferred shot_fidelity_version={infered_shot_fidelity_version}.'
+                + ' If this is incorrect, please specify the correct version'
+                + ' using the shot_fidelity_version argument'
+            )
+    else:
+        assert shot_fidelity_version in [1, 2], 'shot_fidelity_version must be 1 or 2'
+
     events = events.copy()
     events['extra'].fillna({}, inplace=True)
-    events.fillna(0, inplace=True)
 
     actions['game_id'] = events.game_id
     actions['original_event_id'] = events.event_id
@@ -47,16 +87,25 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['team_id'] = events.team_id
     actions['player_id'] = events.player_id
 
-    actions['start_x'] = events.location.apply(lambda x: x[0] if x else 1).clip(1, 120)
-    actions['start_y'] = events.location.apply(lambda x: x[1] if x else 1).clip(1, 80)
-    actions['start_x'] = ((actions['start_x'] - 1) / 119) * spadlconfig.field_length
-    actions['start_y'] = 68 - ((actions['start_y'] - 1) / 79) * spadlconfig.field_width
-
+    # split (end)location column into x and y columns
     end_location = events[['location', 'extra']].apply(_get_end_location, axis=1)
-    actions['end_x'] = end_location.apply(lambda x: x[0] if x else 1).clip(1, 120)
-    actions['end_y'] = end_location.apply(lambda x: x[1] if x else 1).clip(1, 80)
-    actions['end_x'] = ((actions['end_x'] - 1) / 119) * spadlconfig.field_length
-    actions['end_y'] = 68 - ((actions['end_y'] - 1) / 79) * spadlconfig.field_width
+    # convert StatsBomb coordinates to spadl coordinates
+    actions.loc[events.type_name == 'Shot', ['start_x', 'start_y']] = _convert_locations(
+        events.loc[events.type_name == 'Shot', 'location'],
+        shot_fidelity_version,
+    )
+    actions.loc[events.type_name != 'Shot', ['start_x', 'start_y']] = _convert_locations(
+        events.loc[events.type_name != 'Shot', 'location'],
+        shot_fidelity_version,
+    )
+    actions.loc[events.type_name == 'Shot', ['end_x', 'end_y']] = _convert_locations(
+        end_location.loc[events.type_name == 'Shot'],
+        shot_fidelity_version,
+    )
+    actions.loc[events.type_name != 'Shot', ['end_x', 'end_y']] = _convert_locations(
+        end_location.loc[events.type_name != 'Shot'],
+        shot_fidelity_version,
+    )
 
     actions[['type_id', 'result_id', 'bodypart_id']] = events[['type_name', 'extra']].apply(
         _parse_event, axis=1, result_type='expand'
@@ -77,6 +126,53 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
 
 
 Location = tuple[float, float]
+
+
+def _infer_xy_fidelity_versions(events: pd.DataFrame) -> tuple[int, int]:
+    """Find out if x and y are integers disguised as floats."""
+    mask_shot = events.type_name == "Shot"
+    mask_other = events.type_name != "Shot"
+    locations = events.location.apply(pd.Series)
+    mask_valid_location = locations.notna().any(axis=1)
+    high_fidelity_shots = (locations.loc[mask_valid_location & mask_shot] % 1 != 0).any(axis=None)
+    high_fidelity_other = (locations.loc[mask_valid_location & mask_other] % 1 != 0).any(axis=None)
+    xy_fidelity_version = 2 if high_fidelity_other else 1
+    shot_fidelity_version = 2 if high_fidelity_shots else xy_fidelity_version
+    return shot_fidelity_version, xy_fidelity_version
+
+
+def _convert_locations(locations: pd.Series, fidelity_version: int) -> npt.NDArray[np.float32]:
+    """Convert StatsBomb locations to spadl coordinates.
+
+    StatsBomb coordinates are cell-based, using a 120x80 grid, so 1,1 is the
+    top-left square 'yard' of the field (in landscape), even though 0,0 is the
+    true coordinate of the corner flag.
+
+    Some matches have metadata like "xy_fidelity_version" : "2", which means
+    the grid has higher granularity. In this case 0.1,0.1 is the top left
+    cell.
+    """
+    # [1, 120] x [1, 80]
+    # +-----+------+
+    # | 1,1 | 2, 1 |
+    # +-----+------+
+    # | 1,2 | 2,2  |
+    # +-----+------+
+    cell_side = 0.1 if fidelity_version == 2 else 1.0
+    cell_relative_center = cell_side / 2
+    coordinates = np.empty((len(locations), 2), dtype=float)
+    for i, loc in enumerate(locations):
+        if isinstance(loc, list):
+            coordinates[i, 0] = (
+                (loc[0] - cell_relative_center) / (120 - cell_side) * spadlconfig.field_length
+            )
+            coordinates[i, 1] = (
+                spadlconfig.field_width
+                - (loc[1] - cell_relative_center) / (80 - cell_side) * spadlconfig.field_width
+            )
+    coordinates[:, 0] = np.clip(coordinates[:, 0], 0, spadlconfig.field_length)
+    coordinates[:, 1] = np.clip(coordinates[:, 1], 0, spadlconfig.field_width)
+    return coordinates
 
 
 def _get_end_location(q: tuple[Location, dict[str, Any]]) -> Location:
