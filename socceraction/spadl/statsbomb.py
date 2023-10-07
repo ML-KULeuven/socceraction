@@ -163,12 +163,10 @@ def _convert_locations(locations: pd.Series, fidelity_version: int) -> npt.NDArr
     coordinates = np.empty((len(locations), 2), dtype=float)
     for i, loc in enumerate(locations):
         if isinstance(loc, list):
-            coordinates[i, 0] = (
-                (loc[0] - cell_relative_center) / (120 - cell_side) * spadlconfig.field_length
-            )
+            coordinates[i, 0] = (loc[0] - cell_relative_center) / 120 * spadlconfig.field_length
             coordinates[i, 1] = (
                 spadlconfig.field_width
-                - (loc[1] - cell_relative_center) / (80 - cell_side) * spadlconfig.field_width
+                - (loc[1] - cell_relative_center) / 80 * spadlconfig.field_width
             )
     coordinates[:, 0] = np.clip(coordinates[:, 0], 0, spadlconfig.field_length)
     coordinates[:, 1] = np.clip(coordinates[:, 1], 0, spadlconfig.field_width)

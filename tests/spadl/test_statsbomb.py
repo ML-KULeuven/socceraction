@@ -30,23 +30,23 @@ class TestSpadlConvertor:
             self.events_japbel.event_id == '5171bb39-0c6c-4a3d-ae1c-756011dc219f'
         ]
         action = sb.convert_to_actions(event, self.id_bel).iloc[0]
-        assert action['start_x'] == ((25.0 - 0.5) / 119) * spadl.field_length
-        assert action['start_y'] == 68 - ((26.0 - 0.5) / 79) * spadl.field_width
+        assert action['start_x'] == ((25.0 - 0.5) / 120) * spadl.field_length
+        assert action['start_y'] == 68 - ((26.0 - 0.5) / 80) * spadl.field_width
 
     def test_convert_end_location(self) -> None:
         event = self.events_japbel[
             self.events_japbel.event_id == '5171bb39-0c6c-4a3d-ae1c-756011dc219f'
         ]
         action = sb.convert_to_actions(event, self.id_bel).iloc[0]
-        assert action['end_x'] == ((24.0 - 0.5) / 119) * spadl.field_length
-        assert action['end_y'] == 68 - ((28.0 - 0.5) / 79) * spadl.field_width
+        assert action['end_x'] == ((24.0 - 0.5) / 120) * spadl.field_length
+        assert action['end_y'] == spadl.field_width - ((28.0 - 0.5) / 80) * spadl.field_width
 
     def test_convert_start_location_high_fidelity(self) -> None:
         events = self.SBL.events(9912)
-        event = events[events.event_id == 'ed7efc2d-36f9-4293-b7b6-9158eb985d1e']
-        action = sb.convert_to_actions(event, 219).iloc[0]
-        assert action['start_x'] == ((60.0 - 0.05) / 119.9) * spadl.field_length
-        assert action['start_y'] == 68 - ((40.0 - 0.05) / 79.9) * spadl.field_width
+        event = events[events.event_id == '60392108-2599-4875-bcc7-48462d530edf']
+        action = sb.convert_to_actions(event, 217).iloc[0]
+        assert action['start_x'] == ((64.0 - 0.05) / 120) * spadl.field_length
+        assert action['start_y'] == spadl.field_width - ((73.6 - 0.05) / 80) * spadl.field_width
 
     @pytest.mark.parametrize(
         'period,timestamp,minute,second',
