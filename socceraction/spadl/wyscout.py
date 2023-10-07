@@ -171,12 +171,12 @@ def make_new_positions(events: pd.DataFrame) -> pd.DataFrame:
         Wyscout event dataframe with start and end coordinates for each action.
     """
     new_positions = events[["event_id", "positions"]].apply(
-        lambda x: _make_position_vars(x[0], x[1]), axis=1
+        lambda row: _make_position_vars(row["event_id"], row["positions"]), axis=1
     )
     new_positions.columns = ["event_id", "start_x", "start_y", "end_x", "end_y"]
     events = pd.merge(events, new_positions, left_on="event_id", right_on="event_id")
-    events[["start_x", "end_x"]] = events[["start_x", "end_x"]]
-    events[["start_y", "end_y"]] = events[["start_y", "end_y"]]
+    events[["start_x", "end_x"]] = events[["start_x", "end_x"]].astype(float)
+    events[["start_y", "end_y"]] = events[["start_y", "end_y"]].astype(float)
     events = events.drop("positions", axis=1)
     return events
 
