@@ -49,18 +49,20 @@ class TestSpadlConvertor:
         assert action['start_y'] == spadl.field_width - ((73.6 - 0.05) / 80) * spadl.field_width
 
     @pytest.mark.parametrize(
-        'period,timestamp,minute,second',
+        'period,timestamp,minute,second,spadl_time',
         [
-            (1, '00:00:00.920', 0, 0),  # FH
-            (1, '00:47:09.453', 47, 9),  # FH extra time
-            (2, '00:19:51.740', 64, 51),  # SH (starts again at 45 min)
-            (2, '00:48:10.733', 93, 10),  # SH extra time
-            (3, '00:10:12.188', 100, 12),  # FH of extensions
-            (4, '00:13:31.190', 118, 31),  # SH of extensions
-            (5, '00:02:37.133', 122, 37),  # Penalties
+            (1, '00:00:00.920', 0, 0, 0 * 60 + 0.920),  # FH
+            (1, '00:47:09.453', 47, 9, 47 * 60 + 9.453),  # FH extra time
+            (2, '00:19:51.740', 64, 51, 19 * 60 + 51.740),  # SH (starts again at 45 min)
+            (2, '00:48:10.733', 93, 10, 48 * 60 + 10.733),  # SH extra time
+            (3, '00:10:12.188', 100, 12, 10 * 60 + 12.188),  # FH of extensions
+            (4, '00:13:31.190', 118, 31, 13 * 60 + 31.190),  # SH of extensions
+            (5, '00:02:37.133', 122, 37, 2 * 60 + 37.133),  # Penalties
         ],
     )
-    def test_convert_time(self, period: int, timestamp: str, minute: int, second: int) -> None:
+    def test_convert_time(
+        self, period: int, timestamp: str, minute: int, second: int, spadl_time: float
+    ) -> None:
         event = self.events_japbel[
             self.events_japbel.event_id == '5171bb39-0c6c-4a3d-ae1c-756011dc219f'
         ].copy()
@@ -70,15 +72,7 @@ class TestSpadlConvertor:
         event['second'] = second
         action = sb.convert_to_actions(event, self.id_bel).iloc[0]
         assert action['period_id'] == period
-        assert (
-            action['time_seconds']
-            == 60 * minute
-            - ((period > 1) * 45 * 60)
-            - ((period > 2) * 45 * 60)
-            - ((period > 3) * 15 * 60)
-            - ((period > 4) * 15 * 60)
-            + second
-        )
+        assert action['time_seconds'] == spadl_time
 
     def test_convert_pass(self) -> None:
         pass_event = self.events_japbel[
