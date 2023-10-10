@@ -329,7 +329,7 @@ class StatsBombLoader(EventDataLoader):
 
         eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
         eventsdf["match_id"] = game_id
-        eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"], format="%H:%M:%S.%f")
+        eventsdf["timestamp"] = pd.to_timedelta(eventsdf["timestamp"])
         eventsdf["related_events"] = eventsdf["related_events"].apply(
             lambda d: d if isinstance(d, list) else []
         )
