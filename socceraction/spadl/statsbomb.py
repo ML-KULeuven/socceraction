@@ -75,15 +75,7 @@ def convert_to_actions(
     actions['game_id'] = events.game_id
     actions['original_event_id'] = events.event_id
     actions['period_id'] = events.period_id
-
-    actions['time_seconds'] = (
-        60 * events.minute
-        + events.second
-        - ((events.period_id > 1) * 45 * 60)
-        - ((events.period_id > 2) * 45 * 60)
-        - ((events.period_id > 3) * 15 * 60)
-        - ((events.period_id > 4) * 15 * 60)
-    )
+    actions['time_seconds'] = pd.to_timedelta(events.timestamp).dt.total_seconds()
     actions['team_id'] = events.team_id
     actions['player_id'] = events.player_id
 
