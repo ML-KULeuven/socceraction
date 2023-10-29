@@ -28,11 +28,14 @@ def _fix_direction_of_play(actions: pd.DataFrame, home_team_id: int) -> pd.DataF
 
     return actions
 
+
 def _fix_headers_after_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     next_actions = actions.shift(-1)
     next_actions[-1:] = actions[-1:]
 
-    headed_shots = next_actions[(next_actions.type_id == 11) & (next_actions.bodypart_id == 1)].index
+    headed_shots = next_actions[
+        (next_actions.type_id == 11) & (next_actions.bodypart_id == 1)
+    ].index
     ## Create a dataframe with all indices of actions but False where indices match with headed_shots
     headed_idx = pd.Series(next_actions.index.isin(headed_shots))
 
@@ -61,8 +64,9 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
 
     dribbled_headers = _fix_headers_after_dribbles(actions)
 
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period & \
-                  dribbled_headers
+    dribble_idx = (
+        same_team & far_enough & not_too_far & same_phase & same_period & dribbled_headers
+    )
 
     dribbles = pd.DataFrame()
     prev = actions[dribble_idx]
