@@ -35,12 +35,15 @@ def _fix_actions_to_foul(actions: pd.DataFrame) -> pd.DataFrame:
     }
     unsuccessful_idx = actions.result_id == 0
     combined_idx = pd.concat(action_indices.values(), axis=1).any(axis=1)
-    flagged_idx = (
+
+    flagged_pass = (
         combined_idx
         & (next_actions.type_id == spadlconfig.actiontypes.index('foul'))
         & unsuccessful_idx
     ).astype(bool)
-    return ~flagged_idx
+    flagged_foul = flagged_pass.shift(1)
+    flagged_idx = flagged_pass | flagged_foul
+    return actions[~flagged_idx].reset_index(drop=True)
 
 
 def _fix_direction_of_play(actions: pd.DataFrame, home_team_id: int) -> pd.DataFrame:
@@ -73,9 +76,7 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     same_phase = dt < max_dribble_duration
     same_period = actions.period_id == next_actions.period_id
 
-    foul_dribbles = _fix_actions_to_foul(actions)
-
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period & foul_dribbles
+    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
 
     dribbles = pd.DataFrame()
     prev = actions[dribble_idx]
