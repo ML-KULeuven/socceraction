@@ -7,6 +7,7 @@ from pandera.typing import DataFrame
 from . import config as spadlconfig
 from .base import (
     _add_dribbles,
+    _fix_actions_to_foul,
     _fix_clearances,
     _fix_direction_of_play,
     min_dribble_length,
@@ -69,6 +70,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions = _fix_owngoals(actions)
     actions = _fix_direction_of_play(actions, home_team_id)
     actions = _fix_clearances(actions)
+    actions = _fix_actions_to_foul(actions)
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
