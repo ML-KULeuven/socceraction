@@ -36,7 +36,6 @@ def _fix_headers_after_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     headed_shots = next_actions[
         (next_actions.type_id == 11) & (next_actions.bodypart_id == 1)
     ].index
-    ## Create a dataframe with all indices of actions but False where indices match with headed_shots
     headed_idx = pd.Series(next_actions.index.isin(headed_shots))
 
     return ~headed_idx
