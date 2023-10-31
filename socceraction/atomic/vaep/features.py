@@ -131,7 +131,7 @@ def actiontype_onehot(actions: Actions) -> Features:
     """
     X = {}
     for type_id, type_name in enumerate(atomicspadl.actiontypes):
-        col = 'type_' + type_name
+        col = 'actiontype_' + type_name
         X[col] = actions['type_id'] == type_id
     return pd.DataFrame(X, index=actions.index)
 
