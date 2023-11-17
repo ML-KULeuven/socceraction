@@ -70,6 +70,7 @@ def convert_to_actions(
         assert shot_fidelity_version in [1, 2], 'shot_fidelity_version must be 1 or 2'
 
     events = events.copy()
+    events = _insert_interception_passes(events)
     events['extra'].fillna({}, inplace=True)
 
     actions['game_id'] = events.game_id
@@ -126,6 +127,42 @@ def convert_to_actions(
 
 
 Location = tuple[float, float]
+
+
+def _insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
+    """Insert interception actions before passes.
+
+    This function converts passes that are also interceptions (type 64) in the
+    StatsBomb event data into two separate events, first an interception and
+    then a pass.
+
+    Parameters
+    ----------
+    df_events : pd.DataFrame
+        StatsBomb event dataframe
+
+    Returns
+    -------
+    pd.DataFrame
+        StatsBomb event dataframe in which passes that were also denoted as
+        interceptions in the StatsBomb notation are transformed into two events.
+    """
+    is_interception_pass = (
+        lambda x: x.get("extra", {}).get("pass", {}).get("type", {}).get("name") == "Interception"
+    )
+    df_events_interceptions = df_events[df_events.apply(is_interception_pass, axis=1)].copy()
+
+    if not df_events_interceptions.empty:
+        df_events_interceptions["type_name"] = "Interception"
+        df_events_interceptions["extra"] = [
+            {"interception": {"outcome": {"id": 16, "name": "Success In Play"}}}
+        ] * len(df_events_interceptions)
+
+        df_events = pd.concat([df_events_interceptions, df_events], ignore_index=True)
+        df_events = df_events.sort_values(["timestamp"])
+        df_events = df_events.reset_index(drop=True)
+
+    return df_events
 
 
 def _infer_xy_fidelity_versions(events: pd.DataFrame) -> tuple[int, int]:
