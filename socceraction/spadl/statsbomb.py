@@ -431,7 +431,7 @@ def _parse_goalkeeper_event(extra: dict[str, Any]) -> tuple[str, str, str]:  # n
 
     bp = extra.get('goalkeeper', {}).get('body_part', {}).get('name')
     if bp is None:
-        b = 'foot'
+        b = 'other'
     elif 'Head' in bp:
         b = 'head'
     elif bp == 'Left Foot':
