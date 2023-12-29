@@ -242,6 +242,7 @@ def _parse_event_as_non_action(_extra: dict[str, Any]) -> tuple[str, str, str]:
 
 def _parse_pass_event(extra: dict[str, Any]) -> tuple[str, str, str]:  # noqa: C901
     a = 'pass'  # default
+    b = 'foot'  # default
     p = extra.get('pass', {})
     ptype = p.get('type', {}).get('name')
     height = p.get('height', {}).get('name')
@@ -260,6 +261,7 @@ def _parse_pass_event(extra: dict[str, Any]) -> tuple[str, str, str]:  # noqa: C
         a = 'goalkick'
     elif ptype == 'Throw-in':
         a = 'throw_in'
+        b = 'other'
     elif cross:
         a = 'cross'
     else:
@@ -278,18 +280,17 @@ def _parse_pass_event(extra: dict[str, Any]) -> tuple[str, str, str]:  # noqa: C
         r = 'success'
 
     bp = extra.get('pass', {}).get('body_part', {}).get('name')
-    if bp is None:
-        b = 'foot'
-    elif 'Head' in bp:
-        b = 'head'
-    elif bp == 'Left Foot':
-        b = 'foot_left'
-    elif bp == 'Right Foot':
-        b = 'foot_right'
-    elif 'Foot' in bp or bp == 'Drop Kick':
-        b = 'foot'
-    else:
-        b = 'other'
+    if bp is not None:
+        if 'Head' in bp:
+            b = 'head'
+        elif bp == 'Left Foot':
+            b = 'foot_left'
+        elif bp == 'Right Foot':
+            b = 'foot_right'
+        elif 'Foot' in bp or bp == 'Drop Kick':
+            b = 'foot'
+        else:
+            b = 'other'
 
     return a, r, b
 
