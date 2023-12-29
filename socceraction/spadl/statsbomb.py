@@ -106,7 +106,7 @@ def convert_to_actions(
 
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
-        .sort_values(['game_id', 'period_id', 'time_seconds'])
+        .sort_values(['game_id', 'period_id', 'time_seconds'], kind='mergesort')
         .reset_index(drop=True)
     )
     actions = _fix_direction_of_play(actions, home_team_id)
@@ -151,7 +151,7 @@ def _insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         ] * len(df_events_interceptions)
 
         df_events = pd.concat([df_events_interceptions, df_events], ignore_index=True)
-        df_events = df_events.sort_values(["timestamp"])
+        df_events = df_events.sort_values(["timestamp"], kind="mergesort")
         df_events = df_events.reset_index(drop=True)
 
     return df_events
@@ -191,11 +191,19 @@ def _convert_locations(locations: pd.Series, fidelity_version: int) -> npt.NDArr
     cell_relative_center = cell_side / 2
     coordinates = np.empty((len(locations), 2), dtype=float)
     for i, loc in enumerate(locations):
-        if isinstance(loc, list):
+        if isinstance(loc, list) and len(loc) == 2:
             coordinates[i, 0] = (loc[0] - cell_relative_center) / 120 * spadlconfig.field_length
             coordinates[i, 1] = (
                 spadlconfig.field_width
                 - (loc[1] - cell_relative_center) / 80 * spadlconfig.field_width
+            )
+        elif isinstance(loc, list) and len(loc) == 3:
+            # A coordinate in the goal frame, only used for the end location of
+            # Shot events. The y-coordinates and z-coordinates are always detailed
+            # to a tenth of a yard.
+            coordinates[i, 0] = (loc[0] - cell_relative_center) / 120 * spadlconfig.field_length
+            coordinates[i, 1] = (
+                spadlconfig.field_width - (loc[1] - 0.05) / 80 * spadlconfig.field_width
             )
     coordinates[:, 0] = np.clip(coordinates[:, 0], 0, spadlconfig.field_length)
     coordinates[:, 1] = np.clip(coordinates[:, 1], 0, spadlconfig.field_width)
@@ -327,7 +335,7 @@ def _parse_foul_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     elif 'Red' in foul_card:
         r = 'red_card'
     else:
-        r = 'success'
+        r = 'fail'
 
     b = 'foot'
 

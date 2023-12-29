@@ -260,8 +260,8 @@ class MA3JSONParser(OptaJSONParser):
             }
             start_x = float(assertget(element, "x"))
             start_y = float(assertget(element, "y"))
-            end_x = _get_end_x(qualifiers) or start_x
-            end_y = _get_end_y(qualifiers) or start_y
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
 
             event_id = int(assertget(element, "id"))
             event = dict(
@@ -279,8 +279,8 @@ class MA3JSONParser(OptaJSONParser):
                 outcome=bool(int(element.get("outcome", 1))),
                 start_x=start_x,
                 start_y=start_y,
-                end_x=end_x,
-                end_y=end_y,
+                end_x=end_x if end_x is not None else start_x,
+                end_y=end_y if end_y is not None else start_y,
                 qualifiers=qualifiers,
                 # Optional fields
                 assist=bool(int(element.get("assist", 0))),
