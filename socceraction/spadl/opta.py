@@ -91,7 +91,10 @@ def _get_bodypart_id(args: tuple[str, bool, dict[int, Any]]) -> int:
     elif 107 in q:  # throw-in
         b = 'other'
     else:
-        b = 'foot'
+        if e in ['save', 'claim', 'punch', 'keeper pick-up']:
+            b = 'other'
+        else:
+            b = 'foot'
     return spadlconfig.bodyparts.index(b)
 
 
