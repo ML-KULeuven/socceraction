@@ -327,7 +327,7 @@ def _parse_foul_event(extra: dict[str, Any]) -> tuple[str, str, str]:
     elif 'Red' in foul_card:
         r = 'red_card'
     else:
-        r = 'success'
+        r = 'fail'
 
     b = 'foot'
 
