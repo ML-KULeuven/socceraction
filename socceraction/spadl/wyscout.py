@@ -595,6 +595,10 @@ def determine_bodypart_id(event: pd.DataFrame) -> int:
         body_part = "head"
     elif event["type_id"] == 10 and event["head/body"]:
         body_part = "head/other"
+    elif event["left_foot"]:
+        body_part = "foot_left"
+    elif event["right_foot"]:
+        body_part = "foot_right"
     else:  # all other cases
         body_part = "foot"
     return spadlconfig.bodyparts.index(body_part)
