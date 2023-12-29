@@ -681,7 +681,11 @@ def determine_result_id(event: pd.DataFrame) -> int:  # noqa: C901
     if event["offside"] == 1:
         return 2
     if event["type_id"] == 2:  # foul
-        return 1
+        if event["yellow_card"]:
+            return 4
+        elif event["second_yellow_card"] or event["red_card"]:
+            return 5
+        return 0
     if event["goal"]:  # goal
         return 1
     if event["own_goal"]:  # own goal
