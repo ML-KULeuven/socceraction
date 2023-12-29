@@ -216,69 +216,72 @@ def create_shot_coordinates(df_events: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Wyscout event dataframe with end coordinates for shots
     """
+    shot = df_events.subtype_id.isin([33, 100])
+    pas = df_events.type_id == 8
+
     goal_center_idx = (
         df_events["position_goal_low_center"]
         | df_events["position_goal_mid_center"]
         | df_events["position_goal_high_center"]
     )
-    df_events.loc[goal_center_idx, "end_x"] = 100.0
-    df_events.loc[goal_center_idx, "end_y"] = 50.0
+    df_events.loc[shot & goal_center_idx, "end_x"] = 100.0
+    df_events.loc[shot & goal_center_idx, "end_y"] = 50.0
 
     goal_right_idx = (
         df_events["position_goal_low_right"]
         | df_events["position_goal_mid_right"]
         | df_events["position_goal_high_right"]
     )
-    df_events.loc[goal_right_idx, "end_x"] = 100.0
-    df_events.loc[goal_right_idx, "end_y"] = 55.0
+    df_events.loc[shot & goal_right_idx, "end_x"] = 100.0
+    df_events.loc[shot & goal_right_idx, "end_y"] = 55.0
 
     goal_left_idx = (
         df_events["position_goal_mid_left"]
         | df_events["position_goal_low_left"]
         | df_events["position_goal_high_left"]
     )
-    df_events.loc[goal_left_idx, "end_x"] = 100.0
-    df_events.loc[goal_left_idx, "end_y"] = 45.0
+    df_events.loc[shot & goal_left_idx, "end_x"] = 100.0
+    df_events.loc[shot & goal_left_idx, "end_y"] = 45.0
 
     out_center_idx = df_events["position_out_high_center"] | df_events["position_post_high_center"]
-    df_events.loc[out_center_idx, "end_x"] = 100.0
-    df_events.loc[out_center_idx, "end_y"] = 50.0
+    df_events.loc[shot & out_center_idx, "end_x"] = 100.0
+    df_events.loc[shot & out_center_idx, "end_y"] = 50.0
 
     out_right_idx = (
         df_events["position_out_low_right"]
         | df_events["position_out_mid_right"]
         | df_events["position_out_high_right"]
     )
-    df_events.loc[out_right_idx, "end_x"] = 100.0
-    df_events.loc[out_right_idx, "end_y"] = 60.0
+    df_events.loc[shot & out_right_idx, "end_x"] = 100.0
+    df_events.loc[shot & out_right_idx, "end_y"] = 60.0
 
     out_left_idx = (
         df_events["position_out_mid_left"]
         | df_events["position_out_low_left"]
         | df_events["position_out_high_left"]
     )
-    df_events.loc[out_left_idx, "end_x"] = 100.0
-    df_events.loc[out_left_idx, "end_y"] = 40.0
+    df_events.loc[shot & out_left_idx, "end_x"] = 100.0
+    df_events.loc[shot & out_left_idx, "end_y"] = 40.0
 
     post_left_idx = (
         df_events["position_post_mid_left"]
         | df_events["position_post_low_left"]
         | df_events["position_post_high_left"]
     )
-    df_events.loc[post_left_idx, "end_x"] = 100.0
-    df_events.loc[post_left_idx, "end_y"] = 55.38
+    df_events.loc[shot & post_left_idx, "end_x"] = 100.0
+    df_events.loc[shot & post_left_idx, "end_y"] = 55.38
 
     post_right_idx = (
         df_events["position_post_low_right"]
         | df_events["position_post_mid_right"]
         | df_events["position_post_high_right"]
     )
-    df_events.loc[post_right_idx, "end_x"] = 100.0
-    df_events.loc[post_right_idx, "end_y"] = 44.62
+    df_events.loc[shot & post_right_idx, "end_x"] = 100.0
+    df_events.loc[shot & post_right_idx, "end_y"] = 44.62
 
     blocked_idx = df_events["blocked"]
-    df_events.loc[blocked_idx, "end_x"] = df_events.loc[blocked_idx, "start_x"]
-    df_events.loc[blocked_idx, "end_y"] = df_events.loc[blocked_idx, "start_y"]
+    df_events.loc[(shot | pas) & blocked_idx, "end_x"] = df_events.loc[blocked_idx, "start_x"]
+    df_events.loc[(shot | pas) & blocked_idx, "end_y"] = df_events.loc[blocked_idx, "start_y"]
 
     return df_events
 
