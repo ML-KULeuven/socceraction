@@ -57,7 +57,9 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['result_id'] = events[['type_name', 'outcome', 'qualifiers']].apply(
         _get_result_id, axis=1
     )
-    actions['bodypart_id'] = events.qualifiers.apply(_get_bodypart_id)
+    actions['bodypart_id'] = events[['type_name', 'outcome', 'qualifiers']].apply(
+        _get_bodypart_id, axis=1
+    )
 
     actions = _fix_recoveries(actions, events.type_name)
     actions = _fix_unintentional_ball_touches(actions, events.type_name, events.outcome)
@@ -75,19 +77,23 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     return cast(DataFrame[SPADLSchema], actions)
 
 
-def _get_bodypart_id(qualifiers: dict[int, Any]) -> int:
-    if 15 in qualifiers or 3 in qualifiers or 168 in qualifiers:
+def _get_bodypart_id(args: tuple[str, bool, dict[int, Any]]) -> int:
+    e, outcome, q = args
+    if 15 in q or 3 in q or 168 in q:
         b = 'head'
-    elif 21 in qualifiers:
+    elif 21 in q:
         b = 'other'
-    elif 20 in qualifiers:
+    elif 20 in q:
         b = 'foot_right'
-    elif 72 in qualifiers:
+    elif 72 in q:
         b = 'foot_left'
-    elif 21 in qualifiers:
+    elif 21 in q:
         b = 'other'
     else:
-        b = 'foot'
+        if e in ['save', 'claim', 'punch', 'keeper pick-up']:
+            b = 'other'
+        else:
+            b = 'foot'
     return spadlconfig.bodyparts.index(b)
 
 
