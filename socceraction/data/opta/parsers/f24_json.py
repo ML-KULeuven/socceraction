@@ -92,8 +92,8 @@ class F24JSONParser(OptaJSONParser):
             }
             start_x = float(assertget(attr, 'x'))
             start_y = float(assertget(attr, 'y'))
-            end_x = _get_end_x(qualifiers) or start_x
-            end_y = _get_end_y(qualifiers) or start_y
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
 
             event_id = int(assertget(attr, 'id'))
             events[(game_id, event_id)] = dict(
@@ -112,8 +112,8 @@ class F24JSONParser(OptaJSONParser):
                 outcome=bool(int(attr.get('outcome', 1))),
                 start_x=start_x,
                 start_y=start_y,
-                end_x=end_x,
-                end_y=end_y,
+                end_x=end_x if end_x is not None else start_x,
+                end_y=end_y if end_y is not None else start_y,
                 qualifiers=qualifiers,
                 # Optional fields
                 assist=bool(int(attr.get('assist', 0))),
