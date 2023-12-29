@@ -196,7 +196,7 @@ def fix_wyscout_events(df_events: pd.DataFrame) -> pd.DataFrame:
     """
     df_events = create_shot_coordinates(df_events)
     df_events = convert_duels(df_events)
-    df_events = insert_interception_passes(df_events)
+    df_events = insert_interceptions(df_events)
     df_events = add_offside_variable(df_events)
     df_events = convert_touches(df_events)
     df_events = convert_simulations(df_events)
@@ -373,12 +373,13 @@ def convert_duels(df_events: pd.DataFrame) -> pd.DataFrame:
     return df_events
 
 
-def insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
-    """Insert interception actions before passes.
+def insert_interceptions(df_events: pd.DataFrame) -> pd.DataFrame:
+    """Insert interception actions before passes, clearances and dribbles.
 
-    This function converts passes (type_id 8) that are also interceptions
-    (tag interception) in the Wyscout event data into two separate events,
-    first an interception and then a pass.
+    This function converts passes (type_id 8), clearances (subtype_id 71) and
+    accelerations (subtype_id 70) that are also interceptions (tag
+    interception) in the Wyscout event data into two separate events, first an
+    interception and then a pass/clearance/dribble.
 
     Parameters
     ----------
@@ -392,7 +393,12 @@ def insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         interceptions in the Wyscout notation are transformed into two events
     """
     df_events_interceptions = df_events[
-        df_events["interception"] & (df_events["type_id"] == 8)
+        df_events["interception"]
+        & (
+            (df_events["type_id"] == 8)
+            | (df_events["subtype_id"] == 70)
+            | (df_events["subtype_id"] == 71)
+        )
     ].copy()
 
     if not df_events_interceptions.empty:
