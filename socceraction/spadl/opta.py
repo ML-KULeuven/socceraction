@@ -63,7 +63,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions = _fix_unintentional_ball_touches(actions, events.type_name, events.outcome)
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
-        .sort_values(['game_id', 'period_id', 'time_seconds'])
+        .sort_values(['game_id', 'period_id', 'time_seconds'], kind='mergesort')
         .reset_index(drop=True)
     )
     actions = _fix_owngoals(actions)

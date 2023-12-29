@@ -402,7 +402,7 @@ def insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         ]
 
         df_events = pd.concat([df_events_interceptions, df_events], ignore_index=True)
-        df_events = df_events.sort_values(["period_id", "milliseconds"])
+        df_events = df_events.sort_values(["period_id", "milliseconds"], kind="mergesort")
         df_events = df_events.reset_index(drop=True)
 
     return df_events
