@@ -512,7 +512,9 @@ def convert_touches(df_events: pd.DataFrame) -> pd.DataFrame:
     """
     df_events1 = df_events.shift(-1)
 
-    selector_touch = (df_events["subtype_id"] == 72) & ~df_events["interception"]
+    selector_touch = (
+        (df_events["subtype_id"] == 72) & ~df_events["interception"] & ~df_events["missed_ball"]
+    )
 
     selector_same_player = df_events["player_id"] == df_events1["player_id"]
     selector_same_team = df_events["team_id"] == df_events1["team_id"]
