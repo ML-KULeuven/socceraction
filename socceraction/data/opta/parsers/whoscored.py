@@ -208,8 +208,8 @@ class WhoScoredParser(OptaParser):
             qualifiers = {
                 int(q["type"]["value"]): q.get("value", True) for q in attr.get("qualifiers", [])
             }
-            end_x = attr.get("endX") or _get_end_x(qualifiers) or start_x
-            end_y = attr.get("endY") or _get_end_y(qualifiers) or start_y
+            end_x = attr.get("endX", _get_end_x(qualifiers))
+            end_y = attr.get("endY", _get_end_y(qualifiers))
             events[(self.game_id, event_id)] = dict(
                 # Fields required by the base schema
                 game_id=self.game_id,
@@ -229,8 +229,8 @@ class WhoScoredParser(OptaParser):
                 outcome=bool(attr["outcomeType"].get("value")) if "outcomeType" in attr else None,
                 start_x=start_x,
                 start_y=start_y,
-                end_x=end_x,
-                end_y=end_y,
+                end_x=end_x if end_x is not None else start_x,
+                end_y=end_y if end_y is not None else start_y,
                 qualifiers=qualifiers,
                 # Optional fields
                 related_player_id=int(attr.get("relatedPlayerId"))
