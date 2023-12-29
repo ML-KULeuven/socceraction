@@ -69,6 +69,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions = _fix_owngoals(actions)
     actions = _fix_direction_of_play(actions, home_team_id)
     actions = _fix_clearances(actions)
+    actions = _fix_interceptions(actions)
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
@@ -225,6 +226,25 @@ def _fix_recoveries(df_actions: pd.DataFrame, opta_types: pd.Series) -> pd.DataF
         selector_recovery, ['start_x', 'start_y']
     ].values
 
+    return df_actions
+
+
+def _fix_interceptions(df_actions: pd.DataFrame) -> pd.DataFrame:
+    """Set the result of interceptions to 'fail' if they do not regain possession.
+
+    Parameters
+    ----------
+    df_actions : pd.DataFrame
+        Opta actions dataframe.
+
+    Returns
+    -------
+    pd.DataFrame
+        Opta event dataframe without any ball recovery events
+    """
+    mask_interception = df_actions.type_id == spadlconfig.actiontypes.index('interception')
+    same_team = df_actions.team_id == df_actions.shift(-1).team_id
+    df_actions.loc[mask_interception & ~same_team, 'result_id'] = spadlconfig.results.index('fail')
     return df_actions
 
 
