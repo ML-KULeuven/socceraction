@@ -120,13 +120,15 @@ def _get_type_id(args: tuple[str, bool, dict[int, Any]]) -> int:  # noqa: C901
         a = 'non_action'
     elif eventname in ('pass', 'offside pass'):
         cross = 2 in q
+        longball = 1 in q
+        chipped = 155 in q
         freekick = 5 in q
         corner = 6 in q
         throw_in = 107 in q
         goalkick = 124 in q
         if throw_in:
             a = 'throw_in'
-        elif freekick and cross:
+        elif freekick and (cross or longball or chipped):
             a = 'freekick_crossed'
         elif freekick:
             a = 'freekick_short'
