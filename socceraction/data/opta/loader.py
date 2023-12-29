@@ -442,13 +442,17 @@ class OptaLoader(EventDataLoader):
         events = (
             pd.DataFrame(list(data.values()))
             .merge(_eventtypesdf, on="type_id", how="left")
-            .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
+            .sort_values(
+                ["game_id", "period_id", "minute", "second", "timestamp"], kind="mergesort"
+            )
             .reset_index(drop=True)
         )
 
         # sometimes pre-match events has -3, -2 and -1 seconds
         events.loc[events.second < 0, "second"] = 0
-        events = events.sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
+        events = events.sort_values(
+            ["game_id", "period_id", "minute", "second", "timestamp"], kind="mergesort"
+        )
 
         # deleted events has wrong datetime which occurs OutOfBoundsDatetime error
         events = events[events.type_id != 43]

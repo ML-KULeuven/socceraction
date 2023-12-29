@@ -106,7 +106,7 @@ def convert_to_actions(
 
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
-        .sort_values(['game_id', 'period_id', 'time_seconds'])
+        .sort_values(['game_id', 'period_id', 'time_seconds'], kind='mergesort')
         .reset_index(drop=True)
     )
     actions = _fix_direction_of_play(actions, home_team_id)
@@ -151,7 +151,7 @@ def _insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         ] * len(df_events_interceptions)
 
         df_events = pd.concat([df_events_interceptions, df_events], ignore_index=True)
-        df_events = df_events.sort_values(["timestamp"])
+        df_events = df_events.sort_values(["timestamp"], kind="mergesort")
         df_events = df_events.reset_index(drop=True)
 
     return df_events
