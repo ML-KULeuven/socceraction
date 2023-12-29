@@ -53,10 +53,12 @@ class TestSpadlConvertor:
         events_morira = self.WSL.events(2057961)
         own_goal_event = events_morira[events_morira.event_id == 258696133]
         own_goal_actions = wy.convert_to_actions(own_goal_event, 16216)
-        assert len(own_goal_actions) == 1
-        assert own_goal_actions.iloc[0]['type_id'] == spadl.actiontypes.index('bad_touch')
-        assert own_goal_actions.iloc[0]['result_id'] == spadl.results.index('owngoal')
-        assert own_goal_actions.iloc[0]['bodypart_id'] == spadl.bodyparts.index('foot')
+        assert len(own_goal_actions) == 2  # interception + clearance
+        assert own_goal_actions.iloc[0]['type_id'] == spadl.actiontypes.index('interception')
+        assert own_goal_actions.iloc[0]['result_id'] == spadl.results.index('success')
+        assert own_goal_actions.iloc[1]['type_id'] == spadl.actiontypes.index('bad_touch')
+        assert own_goal_actions.iloc[1]['result_id'] == spadl.results.index('owngoal')
+        assert own_goal_actions.iloc[1]['bodypart_id'] == spadl.bodyparts.index('foot')
 
     def test_convert_own_goal_touches(self) -> None:
         """Tests conversion of own goals following a bad touch.
