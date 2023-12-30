@@ -6,7 +6,7 @@ encoded in the file.
 
 """
 import json  # type: ignore
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from lxml import objectify
 
@@ -23,7 +23,7 @@ class OptaParser:
     def __init__(self, path: str, **kwargs: Any) -> None:
         raise NotImplementedError
 
-    def extract_competitions(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
+    def extract_competitions(self) -> dict[tuple[Any, Any], dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
@@ -34,7 +34,7 @@ class OptaParser:
         """
         return {}
 
-    def extract_games(self) -> Dict[Any, Dict[str, Any]]:
+    def extract_games(self) -> dict[Any, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -45,7 +45,7 @@ class OptaParser:
         """
         return {}
 
-    def extract_teams(self) -> Dict[Any, Dict[str, Any]]:
+    def extract_teams(self) -> dict[Any, dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -56,7 +56,7 @@ class OptaParser:
         """
         return {}
 
-    def extract_players(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
+    def extract_players(self) -> dict[tuple[Any, Any], dict[str, Any]]:
         """Return a dictionary with all available players.
 
         Returns
@@ -67,7 +67,7 @@ class OptaParser:
         """
         return {}
 
-    def extract_lineups(self) -> Dict[Any, Dict[str, Any]]:
+    def extract_lineups(self) -> dict[Any, dict[str, Any]]:
         """Return a dictionary with the lineup of each team.
 
         Returns
@@ -78,7 +78,7 @@ class OptaParser:
         """
         return {}
 
-    def extract_events(self) -> Dict[Tuple[Any, Any], Dict[str, Any]]:
+    def extract_events(self) -> dict[tuple[Any, Any], dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
@@ -118,7 +118,7 @@ class OptaXMLParser(OptaParser):
             self.root = objectify.fromstring(fh.read())
 
 
-def assertget(dictionary: Dict[str, Any], key: str) -> Any:
+def assertget(dictionary: dict[str, Any], key: str) -> Any:
     """Return the value of the item with the specified key.
 
     In contrast to the default `get` method, this version will raise an
@@ -146,7 +146,7 @@ def assertget(dictionary: Dict[str, Any], key: str) -> Any:
     return value
 
 
-def _get_end_x(qualifiers: Dict[int, Any]) -> Optional[float]:
+def _get_end_x(qualifiers: dict[int, Any]) -> Optional[float]:
     try:
         # pass
         if 140 in qualifiers:
@@ -162,7 +162,7 @@ def _get_end_x(qualifiers: Dict[int, Any]) -> Optional[float]:
         return None
 
 
-def _get_end_y(qualifiers: Dict[int, Any]) -> Optional[float]:
+def _get_end_y(qualifiers: dict[int, Any]) -> Optional[float]:
     try:
         # pass
         if 141 in qualifiers:

@@ -1,6 +1,6 @@
 """XML parser for Opta F24 feeds."""
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from lxml import objectify
 
@@ -19,7 +19,7 @@ class F24XMLParser(OptaXMLParser):
     def _get_doc(self) -> objectify.ObjectifiedElement:
         return self.root
 
-    def extract_games(self) -> Dict[int, Dict[str, Any]]:
+    def extract_games(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -53,7 +53,7 @@ class F24XMLParser(OptaXMLParser):
         )
         return {game_id: game_dict}
 
-    def extract_events(self) -> Dict[Tuple[int, int], Dict[str, Any]]:
+    def extract_events(self) -> dict[tuple[int, int], dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
@@ -76,8 +76,8 @@ class F24XMLParser(OptaXMLParser):
             }
             start_x = float(assertget(attr, 'x'))
             start_y = float(assertget(attr, 'y'))
-            end_x = _get_end_x(qualifiers) or start_x
-            end_y = _get_end_y(qualifiers) or start_y
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
 
             events[(game_id, event_id)] = dict(
                 # Fields required by the base schema
@@ -95,8 +95,8 @@ class F24XMLParser(OptaXMLParser):
                 outcome=bool(int(attr["outcome"])) if "outcome" in attr else None,
                 start_x=start_x,
                 start_y=start_y,
-                end_x=end_x,
-                end_y=end_y,
+                end_x=end_x if end_x is not None else start_x,
+                end_y=end_y if end_y is not None else start_y,
                 qualifiers=qualifiers,
                 # Optional fields
                 assist=bool(int(attr.get('assist', 0))),

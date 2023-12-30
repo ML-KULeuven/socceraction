@@ -5,8 +5,9 @@ import glob
 import os
 import re
 import warnings
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Type, Union, cast
+from typing import Any, Optional, Union, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -145,7 +146,7 @@ _eventtypesdf = pd.DataFrame(
 )
 
 
-def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
+def _deepupdate(target: dict[Any, Any], src: dict[Any, Any]) -> None:
     """Deep update target dict with src.
 
     For each k,v in src: if k doesn't exist in target, it is deep copied from
@@ -187,7 +188,7 @@ def _deepupdate(target: Dict[Any, Any], src: Dict[Any, Any]) -> None:
             target[k] = copy.copy(v)
 
 
-def _extract_ids_from_path(path: str, pattern: str) -> Dict[str, Union[str, int]]:
+def _extract_ids_from_path(path: str, pattern: str) -> dict[str, Union[str, int]]:
     regex = re.compile(
         ".+?"
         + re.escape(pattern)
@@ -248,8 +249,8 @@ class OptaLoader(EventDataLoader):
     def __init__(  # noqa: C901
         self,
         root: str,
-        parser: Union[str, Mapping[str, Type[OptaParser]]] = "xml",
-        feeds: Optional[Dict[str, str]] = None,
+        parser: Union[str, Mapping[str, type[OptaParser]]] = "xml",
+        feeds: Optional[dict[str, str]] = None,
     ) -> None:
         self.root = root
         if parser == "json":
@@ -289,8 +290,8 @@ class OptaLoader(EventDataLoader):
         self.feeds = {k: str(Path(v)) for k, v in feeds.items()}
 
     def _get_parsers_for_feeds(
-        self, available_parsers: Mapping[str, Type[OptaParser]], feeds: Dict[str, str]
-    ) -> Mapping[str, Type[OptaParser]]:
+        self, available_parsers: Mapping[str, type[OptaParser]], feeds: dict[str, str]
+    ) -> Mapping[str, type[OptaParser]]:
         """Select the appropriate parser for each feed.
 
         Parameters
@@ -328,7 +329,7 @@ class OptaLoader(EventDataLoader):
             A dataframe containing all available competitions and seasons. See
             :class:`~socceraction.spadl.opta.OptaCompetitionSchema` for the schema.
         """
-        data: Dict[int, Dict[str, Any]] = {}
+        data: dict[int, dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id="*")
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
@@ -354,7 +355,7 @@ class OptaLoader(EventDataLoader):
             A dataframe containing all available games. See
             :class:`~socceraction.spadl.opta.OptaGameSchema` for the schema.
         """
-        data: Dict[int, Dict[str, Any]] = {}
+        data: dict[int, dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(
                 competition_id=competition_id, season_id=season_id, game_id="*"
@@ -380,7 +381,7 @@ class OptaLoader(EventDataLoader):
             A dataframe containing both teams. See
             :class:`~socceraction.spadl.opta.OptaTeamSchema` for the schema.
         """
-        data: Dict[int, Dict[str, Any]] = {}
+        data: dict[int, dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
@@ -404,7 +405,7 @@ class OptaLoader(EventDataLoader):
             A dataframe containing all players. See
             :class:`~socceraction.spadl.opta.OptaPlayerSchema` for the schema.
         """
-        data: Dict[int, Dict[str, Any]] = {}
+        data: dict[int, dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
@@ -430,7 +431,7 @@ class OptaLoader(EventDataLoader):
             A dataframe containing the event stream. See
             :class:`~socceraction.spadl.opta.OptaEventSchema` for the schema.
         """
-        data: Dict[int, Dict[str, Any]] = {}
+        data: dict[int, dict[str, Any]] = {}
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id=game_id)
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
@@ -441,13 +442,17 @@ class OptaLoader(EventDataLoader):
         events = (
             pd.DataFrame(list(data.values()))
             .merge(_eventtypesdf, on="type_id", how="left")
-            .sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
+            .sort_values(
+                ["game_id", "period_id", "minute", "second", "timestamp"], kind="mergesort"
+            )
             .reset_index(drop=True)
         )
 
         # sometimes pre-match events has -3, -2 and -1 seconds
         events.loc[events.second < 0, "second"] = 0
-        events = events.sort_values(["game_id", "period_id", "minute", "second", "timestamp"])
+        events = events.sort_values(
+            ["game_id", "period_id", "minute", "second", "timestamp"], kind="mergesort"
+        )
 
         # deleted events has wrong datetime which occurs OutOfBoundsDatetime error
         events = events[events.type_id != 43]

@@ -1,6 +1,6 @@
 """Implements serializers for StatsBomb data."""
 import os
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Optional, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -59,7 +59,7 @@ class StatsBombLoader(EventDataLoader):
         self,
         getter: str = "remote",
         root: Optional[str] = None,
-        creds: Optional[Dict[str, str]] = None,
+        creds: Optional[dict[str, str]] = None,
     ) -> None:
         if getter == "remote":
             if sb is None:
@@ -145,7 +145,7 @@ class StatsBombLoader(EventDataLoader):
         ]
         if self._local:
             obj = _localloadjson(
-                str(os.path.join(self._root, f"matches/{competition_id}/{season_id}.json"))
+                str(os.path.join(self._root, "matches", f"{competition_id}", f"{season_id}.json"))
             )
         else:
             obj = list(
@@ -177,9 +177,9 @@ class StatsBombLoader(EventDataLoader):
             gamesdf["referee"] = None
         return cast(DataFrame[StatsBombGameSchema], gamesdf[cols])
 
-    def _lineups(self, game_id: int) -> List[Dict[str, Any]]:
+    def _lineups(self, game_id: int) -> list[dict[str, Any]]:
         if self._local:
-            obj = _localloadjson(str(os.path.join(self._root, f"lineups/{game_id}.json")))
+            obj = _localloadjson(str(os.path.join(self._root, "lineups", f"{game_id}.json")))
         else:
             obj = list(sb.lineups(game_id, fmt="dict", creds=self._creds).values())
         if not isinstance(obj, list):
@@ -319,7 +319,7 @@ class StatsBombLoader(EventDataLoader):
         ]
         # Load the events
         if self._local:
-            obj = _localloadjson(str(os.path.join(self._root, f"events/{game_id}.json")))
+            obj = _localloadjson(str(os.path.join(self._root, "events", f"{game_id}.json")))
         else:
             obj = list(sb.events(game_id, fmt="dict", creds=self._creds).values())
         if not isinstance(obj, list):
@@ -329,7 +329,7 @@ class StatsBombLoader(EventDataLoader):
 
         eventsdf = pd.DataFrame(_flatten_id(e) for e in obj)
         eventsdf["match_id"] = game_id
-        eventsdf["timestamp"] = pd.to_datetime(eventsdf["timestamp"], format="%H:%M:%S.%f")
+        eventsdf["timestamp"] = pd.to_timedelta(eventsdf["timestamp"])
         eventsdf["related_events"] = eventsdf["related_events"].apply(
             lambda d: d if isinstance(d, list) else []
         )
@@ -345,7 +345,7 @@ class StatsBombLoader(EventDataLoader):
         # Load the 360 data
         cols_360 = ["visible_area_360", "freeze_frame_360"]
         if self._local:
-            obj = _localloadjson(str(os.path.join(self._root, f"three-sixty/{game_id}.json")))
+            obj = _localloadjson(str(os.path.join(self._root, "three-sixty", f"{game_id}.json")))
         else:
             obj = sb.frames(game_id, fmt="dict", creds=self._creds)
         if not isinstance(obj, list):
@@ -463,7 +463,7 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     return pg
 
 
-def _flatten_id(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def _flatten_id(d: dict[str, dict[str, Any]]) -> dict[str, Any]:
     newd = {}
     extra = {}
     for k, v in d.items():
@@ -479,7 +479,7 @@ def _flatten_id(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     return newd
 
 
-def _flatten(d: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def _flatten(d: dict[str, dict[str, Any]]) -> dict[str, Any]:
     newd = {}
     for k, v in d.items():
         if isinstance(v, dict):

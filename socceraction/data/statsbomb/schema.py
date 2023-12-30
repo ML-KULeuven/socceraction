@@ -2,7 +2,7 @@
 from typing import Optional
 
 import pandera as pa
-from pandera.typing import DateTime, Object, Series
+from pandera.typing import Object, Series, Timedelta
 
 from socceraction.data.schema import (
     CompetitionSchema,
@@ -57,7 +57,7 @@ class StatsBombEventSchema(EventSchema):
 
     index: Series[int]
     """Sequence notation for the ordering of events within each match."""
-    timestamp: Series[DateTime]
+    timestamp: Series[Timedelta]
     """Time in the match the event takes place, recorded to the millisecond."""
     minute: Series[int]
     """The minutes on the clock at the time of this event."""

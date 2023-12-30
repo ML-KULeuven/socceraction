@@ -1,6 +1,6 @@
 """JSON parser for Stats Perform MA3 feeds."""
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -25,17 +25,17 @@ class MA3JSONParser(OptaJSONParser):
         5: "Substitute",
     }
 
-    def _get_match_info(self) -> Dict[str, Any]:
+    def _get_match_info(self) -> dict[str, Any]:
         if "matchInfo" in self.root:
             return self.root["matchInfo"]
         raise MissingDataError
 
-    def _get_live_data(self) -> Dict[str, Any]:
+    def _get_live_data(self) -> dict[str, Any]:
         if "liveData" in self.root:
             return self.root["liveData"]
         raise MissingDataError
 
-    def extract_competitions(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
+    def extract_competitions(self) -> dict[tuple[str, str], dict[str, Any]]:
         """Return a dictionary with all available competitions.
 
         Returns
@@ -58,7 +58,7 @@ class MA3JSONParser(OptaJSONParser):
         )
         return {(competition_id, season_id): season}
 
-    def extract_games(self) -> Dict[str, Dict[str, Any]]:
+    def extract_games(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary with all available games.
 
         Returns
@@ -98,7 +98,7 @@ class MA3JSONParser(OptaJSONParser):
 
         return {game_id: game_obj}
 
-    def extract_teams(self) -> Dict[str, Dict[str, Any]]:
+    def extract_teams(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -120,7 +120,7 @@ class MA3JSONParser(OptaJSONParser):
             teams[team_id] = team
         return teams
 
-    def extract_players(self) -> Dict[Tuple[str, str], Dict[str, Any]]:  # noqa: C901
+    def extract_players(self) -> dict[tuple[str, str], dict[str, Any]]:  # noqa: C901
         """Return a dictionary with all available players.
 
         Returns
@@ -137,7 +137,7 @@ class MA3JSONParser(OptaJSONParser):
         game_duration = self._extract_duration()
         playerid_to_name = {}
 
-        players_data: Dict[str, List[Any]] = {
+        players_data: dict[str, list[Any]] = {
             "starting_position_id": [],
             "player_id": [],
             "team_id": [],
@@ -237,7 +237,7 @@ class MA3JSONParser(OptaJSONParser):
                 }
         return players
 
-    def extract_events(self) -> Dict[Tuple[str, int], Dict[str, Any]]:
+    def extract_events(self) -> dict[tuple[str, int], dict[str, Any]]:
         """Return a dictionary with all available events.
 
         Returns
@@ -260,8 +260,8 @@ class MA3JSONParser(OptaJSONParser):
             }
             start_x = float(assertget(element, "x"))
             start_y = float(assertget(element, "y"))
-            end_x = _get_end_x(qualifiers) or start_x
-            end_y = _get_end_y(qualifiers) or start_y
+            end_x = _get_end_x(qualifiers)
+            end_y = _get_end_y(qualifiers)
 
             event_id = int(assertget(element, "id"))
             event = dict(
@@ -279,8 +279,8 @@ class MA3JSONParser(OptaJSONParser):
                 outcome=bool(int(element.get("outcome", 1))),
                 start_x=start_x,
                 start_y=start_y,
-                end_x=end_x,
-                end_y=end_y,
+                end_x=end_x if end_x is not None else start_x,
+                end_y=end_y if end_y is not None else start_y,
                 qualifiers=qualifiers,
                 # Optional fields
                 assist=bool(int(element.get("assist", 0))),
@@ -289,7 +289,7 @@ class MA3JSONParser(OptaJSONParser):
             events[(game_id, event_id)] = event
         return events
 
-    def extract_substitutions(self) -> Dict[int, Dict[str, Any]]:
+    def extract_substitutions(self) -> dict[int, dict[str, Any]]:
         """Return a dictionary with all substitution events.
 
         Returns
@@ -338,7 +338,7 @@ class MA3JSONParser(OptaJSONParser):
         return game_duration
 
     @staticmethod
-    def _extract_team_id(teams: List[Dict[str, str]], side: str) -> Optional[str]:
+    def _extract_team_id(teams: list[dict[str, str]], side: str) -> Optional[str]:
         for team in teams:
             team_side = assertget(team, "position")
             if team_side == side:

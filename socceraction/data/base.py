@@ -7,12 +7,12 @@ import base64
 import json
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 from urllib import request
 
 from pandera.typing import DataFrame
 
-JSONType = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
+JSONType = Union[str, int, float, bool, None, dict[str, Any], list[Any]]
 
 
 class ParseError(Exception):
@@ -76,7 +76,7 @@ def _localloadjson(path: str) -> JSONType:
         return json.load(fh)
 
 
-def _has_auth(creds: Dict[str, str]) -> bool:
+def _has_auth(creds: dict[str, str]) -> bool:
     """Check if user credentials are provided.
 
     Parameters
@@ -96,7 +96,7 @@ def _has_auth(creds: Dict[str, str]) -> bool:
     return True
 
 
-def _expand_minute(minute: int, periods_duration: List[int]) -> int:
+def _expand_minute(minute: int, periods_duration: list[int]) -> int:
     """Expand a timestamp with injury time of previous periods.
 
     Parameters

@@ -45,17 +45,17 @@ def offensive_value(
         The offensive value of each action.
     """
     sameteam = _prev(actions.team_id) == actions.team_id
-    prev_scores = _prev(scores) * sameteam + _prev(concedes) * (~sameteam)
+    prev_scores = (_prev(scores) * sameteam + _prev(concedes) * (~sameteam)).astype(float)
 
     # if the previous action was too long ago, the odds of scoring are now 0
     toolong_idx = abs(actions.time_seconds - _prev(actions.time_seconds)) > _samephase_nb
-    prev_scores[toolong_idx] = 0
+    prev_scores[toolong_idx] = 0.0
 
     # if the previous action was a goal, the odds of scoring are now 0
     prevgoal_idx = (_prev(actions.type_name).isin(['shot', 'shot_freekick', 'shot_penalty'])) & (
         _prev(actions.result_name) == 'success'
     )
-    prev_scores[prevgoal_idx] = 0
+    prev_scores[prevgoal_idx] = 0.0
 
     # fixed odds of scoring when penalty
     penalty_idx = actions.type_name == 'shot_penalty'
@@ -99,16 +99,16 @@ def defensive_value(
         The defensive value of each action.
     """
     sameteam = _prev(actions.team_id) == actions.team_id
-    prev_concedes = _prev(concedes) * sameteam + _prev(scores) * (~sameteam)
+    prev_concedes = (_prev(concedes) * sameteam + _prev(scores) * (~sameteam)).astype(float)
 
     toolong_idx = abs(actions.time_seconds - _prev(actions.time_seconds)) > _samephase_nb
-    prev_concedes[toolong_idx] = 0
+    prev_concedes[toolong_idx] = 0.0
 
     # if the previous action was a goal, the odds of conceding are now 0
     prevgoal_idx = (_prev(actions.type_name).isin(['shot', 'shot_freekick', 'shot_penalty'])) & (
         _prev(actions.result_name) == 'success'
     )
-    prev_concedes[prevgoal_idx] = 0
+    prev_concedes[prevgoal_idx] = 0.0
 
     return -(concedes - prev_concedes)
 

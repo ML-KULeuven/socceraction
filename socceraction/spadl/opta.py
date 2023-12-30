@@ -1,5 +1,5 @@
 """Opta event stream data to SPADL converter."""
-from typing import Any, Dict, Tuple, cast
+from typing import Any, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -57,41 +57,48 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     actions['result_id'] = events[['type_name', 'outcome', 'qualifiers']].apply(
         _get_result_id, axis=1
     )
-    actions['bodypart_id'] = events.qualifiers.apply(_get_bodypart_id)
+    actions['bodypart_id'] = events[['type_name', 'outcome', 'qualifiers']].apply(
+        _get_bodypart_id, axis=1
+    )
 
     actions = _fix_recoveries(actions, events.type_name)
     actions = _fix_unintentional_ball_touches(actions, events.type_name, events.outcome)
     actions = (
         actions[actions.type_id != spadlconfig.actiontypes.index('non_action')]
-        .sort_values(['game_id', 'period_id', 'time_seconds'])
+        .sort_values(['game_id', 'period_id', 'time_seconds'], kind='mergesort')
         .reset_index(drop=True)
     )
     actions = _fix_owngoals(actions)
     actions = _fix_direction_of_play(actions, home_team_id)
     actions = _fix_clearances(actions)
+    actions = _fix_interceptions(actions)
     actions['action_id'] = range(len(actions))
     actions = _add_dribbles(actions)
 
     return cast(DataFrame[SPADLSchema], actions)
 
 
-def _get_bodypart_id(qualifiers: Dict[int, Any]) -> int:
-    if 15 in qualifiers or 3 in qualifiers or 168 in qualifiers:
+def _get_bodypart_id(args: tuple[str, bool, dict[int, Any]]) -> int:
+    e, outcome, q = args
+    if 15 in q or 3 in q or 168 in q:
         b = 'head'
-    elif 21 in qualifiers:
+    elif 21 in q:
         b = 'other'
-    elif 20 in qualifiers:
+    elif 20 in q:
         b = 'foot_right'
-    elif 72 in qualifiers:
+    elif 72 in q:
         b = 'foot_left'
-    elif 21 in qualifiers:
+    elif 107 in q:  # throw-in
         b = 'other'
     else:
-        b = 'foot'
+        if e in ['save', 'claim', 'punch', 'keeper pick-up']:
+            b = 'other'
+        else:
+            b = 'foot'
     return spadlconfig.bodyparts.index(b)
 
 
-def _get_result_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:
+def _get_result_id(args: tuple[str, bool, dict[int, Any]]) -> int:
     e, outcome, q = args
     if e == 'offside pass':
         r = 'offside'  # offside
@@ -113,20 +120,22 @@ def _get_result_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:
     return spadlconfig.results.index(r)
 
 
-def _get_type_id(args: Tuple[str, bool, Dict[int, Any]]) -> int:  # noqa: C901
+def _get_type_id(args: tuple[str, bool, dict[int, Any]]) -> int:  # noqa: C901
     eventname, outcome, q = args
     fairplay = 238 in q
     if fairplay:
         a = 'non_action'
     elif eventname in ('pass', 'offside pass'):
         cross = 2 in q
+        longball = 1 in q
+        chipped = 155 in q
         freekick = 5 in q
         corner = 6 in q
         throw_in = 107 in q
         goalkick = 124 in q
         if throw_in:
             a = 'throw_in'
-        elif freekick and cross:
+        elif freekick and (cross or longball or chipped):
             a = 'freekick_crossed'
         elif freekick:
             a = 'freekick_short'
@@ -225,6 +234,25 @@ def _fix_recoveries(df_actions: pd.DataFrame, opta_types: pd.Series) -> pd.DataF
         selector_recovery, ['start_x', 'start_y']
     ].values
 
+    return df_actions
+
+
+def _fix_interceptions(df_actions: pd.DataFrame) -> pd.DataFrame:
+    """Set the result of interceptions to 'fail' if they do not regain possession.
+
+    Parameters
+    ----------
+    df_actions : pd.DataFrame
+        Opta actions dataframe.
+
+    Returns
+    -------
+    pd.DataFrame
+        Opta event dataframe without any ball recovery events
+    """
+    mask_interception = df_actions.type_id == spadlconfig.actiontypes.index('interception')
+    same_team = df_actions.team_id == df_actions.shift(-1).team_id
+    df_actions.loc[mask_interception & ~same_team, 'result_id'] = spadlconfig.results.index('fail')
     return df_actions
 
 

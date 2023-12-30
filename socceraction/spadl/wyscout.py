@@ -1,5 +1,5 @@
 """Wyscout event stream data to SPADL converter."""
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, Optional, cast
 
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
@@ -51,7 +51,7 @@ def convert_to_actions(events: pd.DataFrame, home_team_id: int) -> DataFrame[SPA
     return cast(DataFrame[SPADLSchema], actions)
 
 
-def _get_tag_set(tags: List[Dict[str, Any]]) -> Set[int]:
+def _get_tag_set(tags: list[dict[str, Any]]) -> set[int]:
     return {tag["id"] for tag in tags}
 
 
@@ -138,7 +138,7 @@ wyscout_tags = [
 ]
 
 
-def _make_position_vars(event_id: int, positions: List[Dict[str, Optional[float]]]) -> pd.Series:
+def _make_position_vars(event_id: int, positions: list[dict[str, Optional[float]]]) -> pd.Series:
     if len(positions) == 2:  # if less than 2 then action is removed
         start_x = positions[0]["x"]
         start_y = positions[0]["y"]
@@ -171,12 +171,12 @@ def make_new_positions(events: pd.DataFrame) -> pd.DataFrame:
         Wyscout event dataframe with start and end coordinates for each action.
     """
     new_positions = events[["event_id", "positions"]].apply(
-        lambda x: _make_position_vars(x[0], x[1]), axis=1
+        lambda row: _make_position_vars(row["event_id"], row["positions"]), axis=1
     )
     new_positions.columns = ["event_id", "start_x", "start_y", "end_x", "end_y"]
     events = pd.merge(events, new_positions, left_on="event_id", right_on="event_id")
-    events[["start_x", "end_x"]] = events[["start_x", "end_x"]]
-    events[["start_y", "end_y"]] = events[["start_y", "end_y"]]
+    events[["start_x", "end_x"]] = events[["start_x", "end_x"]].astype(float)
+    events[["start_y", "end_y"]] = events[["start_y", "end_y"]].astype(float)
     events = events.drop("positions", axis=1)
     return events
 
@@ -196,7 +196,7 @@ def fix_wyscout_events(df_events: pd.DataFrame) -> pd.DataFrame:
     """
     df_events = create_shot_coordinates(df_events)
     df_events = convert_duels(df_events)
-    df_events = insert_interception_passes(df_events)
+    df_events = insert_interceptions(df_events)
     df_events = add_offside_variable(df_events)
     df_events = convert_touches(df_events)
     df_events = convert_simulations(df_events)
@@ -216,69 +216,72 @@ def create_shot_coordinates(df_events: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Wyscout event dataframe with end coordinates for shots
     """
+    shot = df_events.subtype_id.isin([33, 100])
+    pas = df_events.type_id == 8
+
     goal_center_idx = (
         df_events["position_goal_low_center"]
         | df_events["position_goal_mid_center"]
         | df_events["position_goal_high_center"]
     )
-    df_events.loc[goal_center_idx, "end_x"] = 100.0
-    df_events.loc[goal_center_idx, "end_y"] = 50.0
+    df_events.loc[shot & goal_center_idx, "end_x"] = 100.0
+    df_events.loc[shot & goal_center_idx, "end_y"] = 50.0
 
     goal_right_idx = (
         df_events["position_goal_low_right"]
         | df_events["position_goal_mid_right"]
         | df_events["position_goal_high_right"]
     )
-    df_events.loc[goal_right_idx, "end_x"] = 100.0
-    df_events.loc[goal_right_idx, "end_y"] = 55.0
+    df_events.loc[shot & goal_right_idx, "end_x"] = 100.0
+    df_events.loc[shot & goal_right_idx, "end_y"] = 55.0
 
     goal_left_idx = (
         df_events["position_goal_mid_left"]
         | df_events["position_goal_low_left"]
         | df_events["position_goal_high_left"]
     )
-    df_events.loc[goal_left_idx, "end_x"] = 100.0
-    df_events.loc[goal_left_idx, "end_y"] = 45.0
+    df_events.loc[shot & goal_left_idx, "end_x"] = 100.0
+    df_events.loc[shot & goal_left_idx, "end_y"] = 45.0
 
     out_center_idx = df_events["position_out_high_center"] | df_events["position_post_high_center"]
-    df_events.loc[out_center_idx, "end_x"] = 100.0
-    df_events.loc[out_center_idx, "end_y"] = 50.0
+    df_events.loc[shot & out_center_idx, "end_x"] = 100.0
+    df_events.loc[shot & out_center_idx, "end_y"] = 50.0
 
     out_right_idx = (
         df_events["position_out_low_right"]
         | df_events["position_out_mid_right"]
         | df_events["position_out_high_right"]
     )
-    df_events.loc[out_right_idx, "end_x"] = 100.0
-    df_events.loc[out_right_idx, "end_y"] = 60.0
+    df_events.loc[shot & out_right_idx, "end_x"] = 100.0
+    df_events.loc[shot & out_right_idx, "end_y"] = 60.0
 
     out_left_idx = (
         df_events["position_out_mid_left"]
         | df_events["position_out_low_left"]
         | df_events["position_out_high_left"]
     )
-    df_events.loc[out_left_idx, "end_x"] = 100.0
-    df_events.loc[out_left_idx, "end_y"] = 40.0
+    df_events.loc[shot & out_left_idx, "end_x"] = 100.0
+    df_events.loc[shot & out_left_idx, "end_y"] = 40.0
 
     post_left_idx = (
         df_events["position_post_mid_left"]
         | df_events["position_post_low_left"]
         | df_events["position_post_high_left"]
     )
-    df_events.loc[post_left_idx, "end_x"] = 100.0
-    df_events.loc[post_left_idx, "end_y"] = 55.38
+    df_events.loc[shot & post_left_idx, "end_x"] = 100.0
+    df_events.loc[shot & post_left_idx, "end_y"] = 55.38
 
     post_right_idx = (
         df_events["position_post_low_right"]
         | df_events["position_post_mid_right"]
         | df_events["position_post_high_right"]
     )
-    df_events.loc[post_right_idx, "end_x"] = 100.0
-    df_events.loc[post_right_idx, "end_y"] = 44.62
+    df_events.loc[shot & post_right_idx, "end_x"] = 100.0
+    df_events.loc[shot & post_right_idx, "end_y"] = 44.62
 
     blocked_idx = df_events["blocked"]
-    df_events.loc[blocked_idx, "end_x"] = df_events.loc[blocked_idx, "start_x"]
-    df_events.loc[blocked_idx, "end_y"] = df_events.loc[blocked_idx, "start_y"]
+    df_events.loc[(shot | pas) & blocked_idx, "end_x"] = df_events.loc[blocked_idx, "start_x"]
+    df_events.loc[(shot | pas) & blocked_idx, "end_y"] = df_events.loc[blocked_idx, "start_y"]
 
     return df_events
 
@@ -370,12 +373,13 @@ def convert_duels(df_events: pd.DataFrame) -> pd.DataFrame:
     return df_events
 
 
-def insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
-    """Insert interception actions before passes.
+def insert_interceptions(df_events: pd.DataFrame) -> pd.DataFrame:
+    """Insert interception actions before passes, clearances and dribbles.
 
-    This function converts passes (type_id 8) that are also interceptions
-    (tag interception) in the Wyscout event data into two separate events,
-    first an interception and then a pass.
+    This function converts passes (type_id 8), clearances (subtype_id 71) and
+    accelerations (subtype_id 70) that are also interceptions (tag
+    interception) in the Wyscout event data into two separate events, first an
+    interception and then a pass/clearance/dribble.
 
     Parameters
     ----------
@@ -389,7 +393,12 @@ def insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         interceptions in the Wyscout notation are transformed into two events
     """
     df_events_interceptions = df_events[
-        df_events["interception"] & (df_events["type_id"] == 8)
+        df_events["interception"]
+        & (
+            (df_events["type_id"] == 8)
+            | (df_events["subtype_id"] == 70)
+            | (df_events["subtype_id"] == 71)
+        )
     ].copy()
 
     if not df_events_interceptions.empty:
@@ -402,7 +411,7 @@ def insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         ]
 
         df_events = pd.concat([df_events_interceptions, df_events], ignore_index=True)
-        df_events = df_events.sort_values(["period_id", "milliseconds"])
+        df_events = df_events.sort_values(["period_id", "milliseconds"], kind="mergesort")
         df_events = df_events.reset_index(drop=True)
 
     return df_events
@@ -509,7 +518,9 @@ def convert_touches(df_events: pd.DataFrame) -> pd.DataFrame:
     """
     df_events1 = df_events.shift(-1)
 
-    selector_touch = (df_events["subtype_id"] == 72) & ~df_events["interception"]
+    selector_touch = (
+        (df_events["subtype_id"] == 72) & ~df_events["interception"] & ~df_events["missed_ball"]
+    )
 
     selector_same_player = df_events["player_id"] == df_events1["player_id"]
     selector_same_team = df_events["team_id"] == df_events1["team_id"]
@@ -595,6 +606,10 @@ def determine_bodypart_id(event: pd.DataFrame) -> int:
         body_part = "head"
     elif event["type_id"] == 10 and event["head/body"]:
         body_part = "head/other"
+    elif event["left_foot"]:
+        body_part = "foot_left"
+    elif event["right_foot"]:
+        body_part = "foot_right"
     else:  # all other cases
         body_part = "foot"
     return spadlconfig.bodyparts.index(body_part)
@@ -681,7 +696,11 @@ def determine_result_id(event: pd.DataFrame) -> int:  # noqa: C901
     if event["offside"] == 1:
         return 2
     if event["type_id"] == 2:  # foul
-        return 1
+        if event["yellow_card"]:
+            return 4
+        elif event["second_yellow_card"] or event["red_card"]:
+            return 5
+        return 0
     if event["goal"]:  # goal
         return 1
     if event["own_goal"]:  # own goal
