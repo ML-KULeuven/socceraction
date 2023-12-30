@@ -39,6 +39,9 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
 
     same_team = actions.team_id == next_actions.team_id
     # not_clearance = actions.type_id != actiontypes.index("clearance")
+    not_offensive_foul = same_team & (
+        next_actions.type_id != spadlconfig.actiontypes.index('foul')
+    )
 
     dx = actions.end_x - next_actions.start_x
     dy = actions.end_y - next_actions.start_y
@@ -49,7 +52,9 @@ def _add_dribbles(actions: pd.DataFrame) -> pd.DataFrame:
     same_phase = dt < max_dribble_duration
     same_period = actions.period_id == next_actions.period_id
 
-    dribble_idx = same_team & far_enough & not_too_far & same_phase & same_period
+    dribble_idx = (
+        same_team & far_enough & not_too_far & same_phase & same_period & not_offensive_foul
+    )
 
     dribbles = pd.DataFrame()
     prev = actions[dribble_idx]
