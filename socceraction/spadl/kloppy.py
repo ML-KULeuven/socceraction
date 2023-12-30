@@ -1,9 +1,43 @@
 """Kloppy EventDataset to SPADL converter."""
-# pyright: reportUnboundVariable=false
 import warnings
 from typing import Any, Optional, cast
 
+import kloppy
 import pandas as pd  # type: ignore
+from kloppy.domain import (
+    BodyPart,
+    CardType,
+    CarryEvent,
+    ClearanceEvent,
+    CoordinateSystem,
+    Dimension,
+    DuelEvent,
+    DuelResult,
+    DuelType,
+    Event,
+    EventDataset,
+    EventType,
+    FoulCommittedEvent,
+    GoalkeeperActionType,
+    GoalkeeperEvent,
+    InterceptionResult,
+    MiscontrolEvent,
+    Orientation,
+    Origin,
+    PassEvent,
+    PassResult,
+    PassType,
+    PitchDimensions,
+    Provider,
+    Qualifier,
+    RecoveryEvent,
+    SetPieceType,
+    ShotEvent,
+    ShotResult,
+    TakeOnEvent,
+    TakeOnResult,
+    VerticalOrientation,
+)
 from packaging import version
 from pandera.typing import DataFrame
 
@@ -11,50 +45,10 @@ from . import config as spadlconfig
 from .base import _add_dribbles, _fix_clearances
 from .schema import SPADLSchema
 
-_HAS_KLOPPY = True
-try:
-    import kloppy
-    from kloppy.domain import (
-        BodyPart,
-        CardType,
-        CarryEvent,
-        ClearanceEvent,
-        CoordinateSystem,
-        Dimension,
-        DuelEvent,
-        DuelResult,
-        DuelType,
-        Event,
-        EventDataset,
-        EventType,
-        FoulCommittedEvent,
-        GoalkeeperActionType,
-        GoalkeeperEvent,
-        InterceptionResult,
-        MiscontrolEvent,
-        Orientation,
-        Origin,
-        PassEvent,
-        PassResult,
-        PassType,
-        PitchDimensions,
-        Provider,
-        Qualifier,
-        RecoveryEvent,
-        SetPieceType,
-        ShotEvent,
-        ShotResult,
-        TakeOnEvent,
-        TakeOnResult,
-        VerticalOrientation,
-    )
-
-    _KLOPPY_VERSION = version.parse(kloppy.__version__)
-    _SUPPORTED_PROVIDERS = {
-        Provider.STATSBOMB: version.parse("3.14.0"),
-    }
-except ImportError:
-    _HAS_KLOPPY = False
+_KLOPPY_VERSION = version.parse(kloppy.__version__)
+_SUPPORTED_PROVIDERS = {
+    Provider.STATSBOMB: version.parse("3.14.0"),
+}
 
 
 def convert_to_actions(
@@ -70,11 +64,6 @@ def convert_to_actions(
         The identifier of the game. If not provided, the game id will not be
         set in the SPADL DataFrame.
 
-    Raises
-    ------
-    ImportError
-        If the Kloppy package is not installed.
-
     Returns
     -------
     actions : pd.DataFrame
@@ -82,8 +71,6 @@ def convert_to_actions(
 
     """
     # Check if Kloppy is installed and if the version is supported
-    if not _HAS_KLOPPY:
-        raise ImportError("Kloppy is required. Install with `pip install kloppy`.")
     if dataset.metadata.provider not in _SUPPORTED_PROVIDERS:
         warnings.warn(
             f"Converting {dataset.metadata.provider} data is not yet supported. "
