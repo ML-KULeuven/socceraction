@@ -13,14 +13,14 @@ jobs:
     steps:
       - name: Cache StatsBomb test data
         id: cache-statsbomb
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: tests/datasets/statsbomb
           key: cache-statsbomb-data
 
       - name: Cache public Wyscout test data
         id: cache-public-wyscout
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: tests/datasets/wyscout_public
           key: cache-public-wyscout-data
@@ -113,7 +113,7 @@ jobs:
       - name: Load cached StatsBomb test data
         if: matrix.session == 'tests'
         id: cache-statsbomb
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: tests/datasets/statsbomb
           key: cache-statsbomb-data
@@ -121,7 +121,7 @@ jobs:
       - name: Load cached Wyscout test data
         if: matrix.session == 'tests'
         id: cache-public-wyscout
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: tests/datasets/wyscout_public
           key: cache-public-wyscout-data
@@ -142,7 +142,7 @@ jobs:
           print("::set-output name=result::{}".format(result))
 
       - name: Restore pre-commit cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.session == 'pre-commit'
         with:
           path: ~/.cache/pre-commit
