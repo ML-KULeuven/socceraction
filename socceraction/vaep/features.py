@@ -216,7 +216,7 @@ def result(actions: SPADLActions) -> Features:
     X = pd.DataFrame(index=actions.index)
     X["result"] = pd.Categorical(
         actions["result_id"].replace(spadlcfg.results_df().result_name.to_dict()),
-        categories=spadlcfg.actiontypes,
+        categories=spadlcfg.results,
         ordered=False,
     )
     return X
