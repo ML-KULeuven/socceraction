@@ -627,6 +627,34 @@ def space_delta(gamestates: GameStates) -> Features:
     return spaced
 
 
+def speed(gamestates: GameStates) -> Features:
+    """Get the speed at which the ball moved during the previous actions.
+
+    Parameters
+    ----------
+    gamestates : GameStates
+        The game states of a game.
+
+    Returns
+    -------
+    Features
+        A dataframe with columns 'speedx_a0i', 'speedy_a0i', 'speed_a0i'
+        for each <nb_prev_actions> containing the ball speed in m/s  between
+        action ai and action a0.
+    """
+    a0 = gamestates[0]
+    speed = pd.DataFrame(index=a0.index)
+    for i, a in enumerate(gamestates[1:]):
+        dx = a.end_x - a0.start_x
+        dy = a.end_y - a0.start_y
+        dt = a0.time_seconds - a.time_seconds
+        dt[dt <= 0] = 1e-6
+        speed["speedx_a0" + (str(i + 1))] = dx.abs() / dt
+        speed["speedy_a0" + (str(i + 1))] = dy.abs() / dt
+        speed["speed_a0" + (str(i + 1))] = np.sqrt(dx**2 + dy**2) / dt
+    return speed
+
+
 # CONTEXT FEATURES
 
 
