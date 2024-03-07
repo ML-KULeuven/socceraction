@@ -552,6 +552,36 @@ def movement(actions: SPADLActions) -> Features:
     return mov
 
 
+@simple
+def player_possession_time(actions: SPADLActions) -> Features:
+    """Get the time (sec) a player was in ball possession before attempting the action.
+
+    We only look at the dribble preceding the action and reset the possession
+    time after a defensive interception attempt or a take-on.
+
+    Parameters
+    ----------
+    actions : SPADLActions
+        The actions of a game.
+
+    Returns
+    -------
+    Features
+        The 'player_possession_time' of each action.
+    """
+    cur_action = actions[["period_id", "time_seconds", "player_id", "type_id"]]
+    prev_action = actions.shift(1)[["period_id", "time_seconds", "player_id", "type_id"]]
+    df = cur_action.join(prev_action, rsuffix="_prev")
+    same_player = df.player_id == df.player_id_prev
+    same_period = df.period_id == df.period_id_prev
+    prev_dribble = df.type_id_prev == spadlcfg.actiontypes.index("dribble")
+    mask = same_period & same_player & prev_dribble
+    df.loc[mask, "player_possession_time"] = (
+        df.loc[mask, "time_seconds"] - df.loc[mask, "time_seconds_prev"]
+    )
+    return df[["player_possession_time"]].fillna(0.0)
+
+
 # STATE FEATURES
 
 

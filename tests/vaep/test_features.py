@@ -90,3 +90,13 @@ def test_bodypart_onehot(spadl_actions: DataFrame[SPADLSchema]) -> None:
     ltr_gamestates = fs.play_left_to_right(gamestates, 782)
     out = fs.bodypart_onehot(ltr_gamestates)
     assert out.shape == (len(spadl_actions), 4 * 3)
+
+
+def test_player_possession_time(spadl_actions: DataFrame[SPADLSchema]) -> None:
+    gamestates = fs.gamestates(spadl_actions)
+    out = fs.player_possession_time(gamestates)
+    assert out.shape == (len(spadl_actions), len(gamestates))
+    assert "player_possession_time_a0" in out.columns
+    assert out.loc[10, "player_possession_time_a0"] == 0.0
+    assert out.loc[11, "player_possession_time_a0"] == 0.0
+    assert out.loc[12, "player_possession_time_a0"] == 0.881
