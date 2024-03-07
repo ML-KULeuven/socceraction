@@ -297,7 +297,7 @@ def _parse_shot_event(event: ShotEvent) -> tuple[str, str, str]:
         r = "success"
     elif event.result == ShotResult.OWN_GOAL:
         a = "bad_touch"
-        r = "own_goal"
+        r = "owngoal"
     else:
         r = "fail"
 
