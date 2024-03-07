@@ -15,6 +15,7 @@ from socceraction.vaep.features import (
     bodypart_detailed_onehot,
     bodypart_onehot,
     gamestates,
+    player_possession_time,
     simple,
     team,
     time,
@@ -39,6 +40,7 @@ __all__ = [
     'movement_polar',
     'direction',
     'goalscore',
+    'player_possession_time',
 ]
 
 Actions = Union[DataFrame[SPADLSchema], DataFrame[AtomicSPADLSchema]]

@@ -13,7 +13,10 @@ tests/datasets/statsbomb/:
 tests/datasets/wyscout_public/:
 	$(BIN)python tests/datasets/download.py --download-wyscout --convert-wyscout
 
-test: tests/datasets/statsbomb/  tests/datasets/wyscout_public/
+tests/datasets/spadl/:
+	$(BIN)python tests/datasets/download.py --spadl
+
+test: tests/datasets/statsbomb/  tests/datasets/wyscout_public/ tests/datasets/spadl/
 	nox -rs tests -- $(args)
 
 mypy:
