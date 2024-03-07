@@ -330,11 +330,22 @@ class OptaLoader(EventDataLoader):
             :class:`~socceraction.spadl.opta.OptaCompetitionSchema` for the schema.
         """
         data: dict[int, dict[str, Any]] = {}
+        loaded_seasons = set()
         for feed, feed_pattern in self.feeds.items():
             glob_pattern = feed_pattern.format(competition_id="*", season_id="*", game_id="*")
             feed_files = glob.glob(os.path.join(self.root, glob_pattern))
             for ffp in feed_files:
                 ids = _extract_ids_from_path(ffp, feed_pattern)
+                # For efficiency, we only parse one game for each season. This
+                # only works if both the competition and season are part of
+                # the file name.
+                competition_id = ids.get("competition_id")
+                season_id = ids.get("season_id")
+                if competition_id is not None and season_id is not None:
+                    if (competition_id, season_id) in loaded_seasons:
+                        continue
+                    else:
+                        loaded_seasons.add((competition_id, season_id))
                 parser = self.parsers[feed](ffp, **ids)
                 _deepupdate(data, parser.extract_competitions())
         return cast(DataFrame[OptaCompetitionSchema], pd.DataFrame(list(data.values())))
