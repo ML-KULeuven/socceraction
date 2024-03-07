@@ -77,6 +77,11 @@ Body Part
   `other` and `none`. For Wyscout, which does not distinguish between the
   head and other body parts a special body part `head/other` is used.
 
+All actions, except for some dribbles, are derived from an event in the
+original event stream data. They can be linked back to the original data by
+the `original_event_id` attribute. Synthetic dribbles are added to fill gaps
+between two events. These synthetic dribbles do not have an
+`original_event_id`.
 
 Example
 -------
