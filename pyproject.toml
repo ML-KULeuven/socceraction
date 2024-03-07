@@ -71,6 +71,7 @@ source = ["socceraction", "*/site-packages"]
 [tool.coverage.run]
 branch = true
 source = ["socceraction"]
+relative_files = true
 
 [tool.coverage.report]
 show_missing = true
