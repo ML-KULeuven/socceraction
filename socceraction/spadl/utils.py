@@ -37,7 +37,8 @@ def play_left_to_right(
     """Perform all action in the same playing direction.
 
     This changes the start and end location of each action, such that all actions
-    are performed as if the team plays from left to right.
+    are performed as if the team that executes the action plays from left to
+    right.
 
     Parameters
     ----------
@@ -50,6 +51,10 @@ def play_left_to_right(
     -------
     list(pd.DataFrame)
         All actions performed left to right.
+
+    See Also
+    --------
+    socceraction.vaep.features.play_left_to_right : For transforming gamestates.
     """
     ltr_actions = actions.copy()
     away_idx = actions.team_id != home_team_id

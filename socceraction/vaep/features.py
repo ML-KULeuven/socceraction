@@ -96,10 +96,11 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
 
 
 def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
-    """Perform all action in the same playing direction.
+    """Perform all actions in a gamestate in the same playing direction.
 
-    This changes the start and end location of each action, such that all actions
-    are performed as if the team plays from left to right.
+    This changes the start and end location of each action in a gamestate,
+    such that all actions are performed as if the team that performs the first
+    action in the gamestate plays from left to right.
 
     Parameters
     ----------
@@ -112,6 +113,10 @@ def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
     -------
     GameStates
         The game states with all actions performed left to right.
+
+    See Also
+    --------
+    socceraction.vaep.features.play_left_to_right : For transforming actions.
     """
     a0 = gamestates[0]
     away_idx = a0.team_id != home_team_id
