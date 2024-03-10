@@ -524,7 +524,7 @@ def endpolar(actions: SPADLActions) -> Features:
     Returns
     -------
     Features
-        The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
+        The 'end_dist_to_goal' and 'end_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame(index=actions.index)
     dx = (_goal_x - actions['end_x']).abs().values
