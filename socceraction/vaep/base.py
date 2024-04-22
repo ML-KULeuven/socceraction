@@ -110,10 +110,13 @@ class VAEP:
         features : pd.DataFrame
             Returns the feature-based representation of each game state in the game.
         """
-        game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
-        gamestates = self._fs.gamestates(game_actions_with_names, self.nb_prev_actions)
-        gamestates = self._fs.play_left_to_right(gamestates, game.home_team_id)
-        return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
+        try:
+            game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
+            gamestates = self._fs.gamestates(game_actions_with_names, self.nb_prev_actions)
+            gamestates = self._fs.play_left_to_right(gamestates, game.home_team_id)
+            return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
+        except ValueError:
+            return pd.DataFrame()
 
     def compute_labels(
         self, game: pd.Series, game_actions: fs.Actions  # pylint: disable=W0613
@@ -133,8 +136,11 @@ class VAEP:
         labels : pd.DataFrame
             Returns the labels of each game state in the game.
         """
-        game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
-        return pd.concat([fn(game_actions_with_names) for fn in self.yfns], axis=1)
+        try:
+            game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
+            return pd.concat([fn(game_actions_with_names) for fn in self.yfns], axis=1)
+        except ValueError:
+            return pd.DataFrame()  # Return an empty DataFrame if concatenation fails
 
     def fit(
         self,
@@ -320,12 +326,16 @@ class VAEP:
             Returns the VAEP rating for each given action, as well as the
             offensive and defensive value of each action.
         """
-        if not self.__models:
-            raise NotFittedError()
-
-        game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
-        if game_states is None:
-            game_states = self.compute_features(game, game_actions)
+        try:
+            if not self.__models:
+                raise NotFittedError()
+            game_actions_with_names = self._spadlcfg.add_names(game_actions)  # type: ignore
+            if game_states is None:
+                game_states = self.compute_features(game, game_actions)
+            if game_states.empty:
+                return pd.DataFrame()
+        except ValueError:
+            return pd.DataFrame()
 
         y_hat = self._estimate_probabilities(game_states)
         p_scores, p_concedes = y_hat.scores, y_hat.concedes
