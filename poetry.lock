@@ -521,13 +521,13 @@ pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
 name = "flake8-annotations"
-version = "3.0.1"
+version = "3.1.0"
 description = "Flake8 Type Annotation Checks"
 optional = false
 python-versions = ">=3.8.1"
 files = [
-    {file = "flake8_annotations-3.0.1-py3-none-any.whl", hash = "sha256:af78e3216ad800d7e144745ece6df706c81b3255290cbf870e54879d495e8ade"},
-    {file = "flake8_annotations-3.0.1.tar.gz", hash = "sha256:ff37375e71e3b83f2a5a04d443c41e2c407de557a884f3300a7fa32f3c41cb0a"},
+    {file = "flake8_annotations-3.1.0-py3-none-any.whl", hash = "sha256:aa4660bedaa1aff4a5220e92c4469188fbd6e463a21d9a7bad60d1cde42b25bb"},
+    {file = "flake8_annotations-3.1.0.tar.gz", hash = "sha256:e1a2f0d0190aa20b8621e8d899a6d8e27a05650ae0717765a5c857d71cd0359e"},
 ]
 
 [package.dependencies]
