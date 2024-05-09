@@ -1,8 +1,8 @@
 from pandera.typing import DataFrame
 
-from socceraction.spadl import SPADLSchema
 import socceraction.spadl.utils as spu
 import socceraction.vaep.labels as lab
+from socceraction.spadl import SPADLSchema
 
 
 def test_scores(spadl_actions: DataFrame[SPADLSchema]) -> None:
