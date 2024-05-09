@@ -1,4 +1,3 @@
-from pandas import testing as tm
 from pandera.typing import DataFrame
 
 from socceraction.spadl import SPADLSchema
