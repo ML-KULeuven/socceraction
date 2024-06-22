@@ -6,7 +6,6 @@ import pytest
 from kloppy import opta, statsbomb, wyscout
 from kloppy.domain import Orientation
 from pandas.testing import assert_frame_equal
-
 from socceraction.data.opta import OptaLoader
 from socceraction.data.statsbomb import StatsBombLoader
 from socceraction.data.wyscout import PublicWyscoutLoader, WyscoutLoader
@@ -16,8 +15,8 @@ from socceraction.spadl import opta as spadl_opta
 from socceraction.spadl import statsbomb as sb
 from socceraction.spadl import wyscout as spadl_wyscout
 
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", None)
 
 
 class Dataset(NamedTuple):
@@ -25,15 +24,15 @@ class Dataset(NamedTuple):
     socceraction: pd.DataFrame
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def statsbomb_actions() -> Dataset:
-    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'statsbomb', 'raw')
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "statsbomb", "raw")
     kloppy_dataset = statsbomb.load(
         event_data=os.path.join(data_dir, "events", "7584.json"),
         lineup_data=os.path.join(data_dir, "lineups", "7584.json"),
     )
     df_actions_kl = kl.convert_to_actions(kloppy_dataset, game_id=7584)
-    SBL = StatsBombLoader(root=data_dir, getter='local')
+    SBL = StatsBombLoader(root=data_dir, getter="local")
     df_actions_sa = sb.convert_to_actions(SBL.events(7584), 782)
 
     return Dataset(df_actions_kl, df_actions_sa)
@@ -43,19 +42,19 @@ def statsbomb_actions() -> Dataset:
 def test_kloppy_to_actions_statsbomb(statsbomb_actions: Dataset, actiontype: str) -> None:
     # columns to compare
     cols = [
-        'game_id',
-        'original_event_id',
-        'period_id',
-        'time_seconds',
-        'team_id',
-        'player_id',
-        'start_x',
-        'start_y',
-        'end_x',
-        'end_y',
-        'type_id',
-        'result_id',
-        'bodypart_id',
+        "game_id",
+        "original_event_id",
+        "period_id",
+        "time_seconds",
+        "team_id",
+        "player_id",
+        "start_x",
+        "start_y",
+        "end_x",
+        "end_y",
+        "type_id",
+        "result_id",
+        "bodypart_id",
         # 'action_id',
     ]
     # load statsbomb data using socceraction
@@ -70,9 +69,9 @@ def test_kloppy_to_actions_statsbomb(statsbomb_actions: Dataset, actiontype: str
     ].replace({"original_event_id": {"interception-": ""}}, regex=True)
     # FIXME
     sel_actions_sa["team_id"] = sel_actions_sa["team_id"].astype(str)
-    sel_actions_sa["player_id"] = sel_actions_sa["player_id"].astype('Int64').astype(str)
-    if actiontype in ['keeper_save', 'keeper_punch']:
-        sel_actions_sa['result_id'] = spadl.results.index('success')
+    sel_actions_sa["player_id"] = sel_actions_sa["player_id"].astype("Int64").astype(str)
+    if actiontype in ["keeper_save", "keeper_punch"]:
+        sel_actions_sa["result_id"] = spadl.results.index("success")
     #
     print(
         "These events should not be included",
@@ -89,9 +88,9 @@ def test_kloppy_to_actions_statsbomb(statsbomb_actions: Dataset, actiontype: str
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def opta_actions() -> Dataset:
-    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "opta")
     kloppy_dataset = opta.load(
         f7_data=os.path.join(data_dir, "f7-23-2018-1009316-matchresults.xml"),
         f24_data=os.path.join(data_dir, "f24-23-2018-1009316-eventdetails.xml"),
@@ -99,10 +98,10 @@ def opta_actions() -> Dataset:
     df_actions_kl = kl.convert_to_actions(kloppy_dataset, game_id=1009316)
     loader = OptaLoader(
         root=data_dir,
-        parser='xml',
+        parser="xml",
         feeds={
-            'f7': 'f7-{competition_id}-{season_id}-{game_id}-matchresults.xml',
-            'f24': 'f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml',
+            "f7": "f7-{competition_id}-{season_id}-{game_id}-matchresults.xml",
+            "f24": "f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml",
         },
     )
     df_actions_sa = spadl_opta.convert_to_actions(loader.events(1009316), 174)
@@ -141,19 +140,19 @@ def opta_actions() -> Dataset:
 def test_kloppy_to_actions_opta(opta_actions: Dataset, actiontype: str) -> None:
     # columns to compare
     cols = [
-        'game_id',
-        'original_event_id',
-        'period_id',
+        "game_id",
+        "original_event_id",
+        "period_id",
         # 'time_seconds', # FIXME
-        'team_id',
-        'player_id',
-        'start_x',
-        'start_y',
-        'end_x',
-        'end_y',
-        'type_id',
-        'result_id',
-        'bodypart_id',
+        "team_id",
+        "player_id",
+        "start_x",
+        "start_y",
+        "end_x",
+        "end_y",
+        "type_id",
+        "result_id",
+        "bodypart_id",
         # 'action_id',
     ]
     # load statsbomb data using socceraction
@@ -187,21 +186,21 @@ def test_kloppy_to_actions_opta(opta_actions: Dataset, actiontype: str) -> None:
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def wyscout_actions() -> Dataset:
-    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'wyscout_api')
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "wyscout_api")
     kloppy_dataset = wyscout.load(
         event_data=os.path.join(data_dir, "events_2852835.json"),
     )
     df_actions_kl = kl.convert_to_actions(kloppy_dataset, game_id=2852835)
     WSL = WyscoutLoader(
         root=data_dir,
-        getter='local',
+        getter="local",
         feeds={
-            'competitions': 'competitions.json',
-            'seasons': 'seasons_{competition_id}.json',
+            "competitions": "competitions.json",
+            "seasons": "seasons_{competition_id}.json",
             # "games": "matches_{season_id}.json",
-            'events': 'events_{game_id}.json',
+            "events": "events_{game_id}.json",
         },
     )
     df_actions_sa = spadl_wyscout.convert_to_actions(WSL.events(2852835), 3166)
@@ -209,10 +208,10 @@ def wyscout_actions() -> Dataset:
     return Dataset(df_actions_kl, df_actions_sa)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def public_wyscout_actions() -> tuple[pd.DataFrame, pd.DataFrame]:
     data_dir = os.path.join(
-        os.path.dirname(__file__), os.pardir, 'datasets', 'wyscout_public', 'raw'
+        os.path.dirname(__file__), os.pardir, "datasets", "wyscout_public", "raw"
     )
     kloppy_dataset = wyscout.load_open_data(match_id="2058007")
     kloppy_dataset.metadata.orientation = Orientation.ACTION_EXECUTING_TEAM
@@ -244,19 +243,19 @@ def public_wyscout_actions() -> tuple[pd.DataFrame, pd.DataFrame]:
 def test_kloppy_to_actions_wyscout(public_wyscout_actions: Dataset, actiontype: str) -> None:
     # columns to compare
     cols = [
-        'game_id',
-        'original_event_id',
-        'period_id',
-        'time_seconds',
-        'team_id',
-        'player_id',
-        'start_x',
-        'start_y',
-        'end_x',
-        'end_y',
-        'type_id',
-        'result_id',
-        'bodypart_id',
+        "game_id",
+        "original_event_id",
+        "period_id",
+        "time_seconds",
+        "team_id",
+        "player_id",
+        "start_x",
+        "start_y",
+        "end_x",
+        "end_y",
+        "type_id",
+        "result_id",
+        "bodypart_id",
         # 'action_id',
     ]
     # load statsbomb data using socceraction

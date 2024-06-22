@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from socceraction.data import wyscout as wy
 from socceraction.data.wyscout import (
     WyscoutCompetitionSchema,
@@ -15,7 +14,7 @@ from socceraction.data.wyscout import (
 class TestPublicWyscoutLoader:
     def setup_method(self) -> None:
         data_dir = os.path.join(
-            os.path.dirname(__file__), os.pardir, 'datasets', 'wyscout_public', 'raw'
+            os.path.dirname(__file__), os.pardir, "datasets", "wyscout_public", "raw"
         )
         self.WSL = wy.PublicWyscoutLoader(root=data_dir, download=False)
 
@@ -69,14 +68,14 @@ class TestPublicWyscoutLoader:
 
 class TestWyscoutLoader:
     def setup_method(self) -> None:
-        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'wyscout_api')
+        data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "wyscout_api")
         feeds = {
-            'competitions': 'competitions.json',
-            'seasons': 'seasons_{competition_id}.json',
+            "competitions": "competitions.json",
+            "seasons": "seasons_{competition_id}.json",
             # "games": "matches_{season_id}.json",
-            'events': 'events_{game_id}.json',
+            "events": "events_{game_id}.json",
         }
-        self.WSL = wy.WyscoutLoader(root=data_dir, getter='local', feeds=feeds)
+        self.WSL = wy.WyscoutLoader(root=data_dir, getter="local", feeds=feeds)
 
     def test_competitions(self) -> None:
         df_competitions = self.WSL.competitions()

@@ -178,7 +178,6 @@ pre-commit hooks.
 Docstrings are to follow the `numpydoc guidelines`_.
 
 .. _PEP 8: https://pep8.org/
-.. _black: https://black.readthedocs.io/en/stable/
 .. _numpydoc guidelines: https://numpydoc.readthedocs.io/en/latest/format.html
 
 Submitting changes

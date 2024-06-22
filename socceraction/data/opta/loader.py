@@ -1,4 +1,5 @@
 """Implements serializers for Opta data."""
+
 import copy
 import datetime
 import glob
@@ -192,9 +193,9 @@ def _extract_ids_from_path(path: str, pattern: str) -> dict[str, Union[str, int]
     regex = re.compile(
         ".+?"
         + re.escape(pattern)
-        .replace(r"\{competition_id\}", r"(?P<competition_id>[a-zA-Z0-9-_ ]+)")
-        .replace(r"\{season_id\}", r"(?P<season_id>[a-zA-Z0-9-_ ]+)")
-        .replace(r"\{game_id\}", r"(?P<game_id>[a-zA-Z0-9-_ ]+)")
+        .replace(r"\{competition_id\}", r"(?P<competition_id>[a-zA-Zà-üÀ-Ü0-9-_ ]+)")
+        .replace(r"\{season_id\}", r"(?P<season_id>[a-zA-Zà-üÀ-Ü0-9-_ ]+)")
+        .replace(r"\{game_id\}", r"(?P<game_id>[a-zA-Zà-üÀ-Ü0-9-_ ]+)")
     )
     m = re.match(regex, path)
     if m is None:

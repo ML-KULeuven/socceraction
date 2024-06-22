@@ -3,7 +3,6 @@ from datetime import datetime
 
 import pandas as pd
 from pytest import fixture
-
 from socceraction.data.opta import OptaCompetitionSchema, OptaGameSchema
 from socceraction.data.opta.parsers import F1JSONParser
 

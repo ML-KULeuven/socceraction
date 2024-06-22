@@ -5,6 +5,7 @@ included in these base schemas. Each serializer can add different additional
 fields on top.
 
 """
+
 import pandas as pd
 import pandera as pa
 from pandera.typing import DateTime, Object, Series

@@ -1,7 +1,6 @@
+import socceraction.atomic.spadl as spadlcfg
 from pandas import testing as tm
 from pandera.typing import DataFrame
-
-import socceraction.atomic.spadl as spadlcfg
 from socceraction.atomic.spadl import AtomicSPADLSchema
 from socceraction.atomic.vaep import features as fs
 

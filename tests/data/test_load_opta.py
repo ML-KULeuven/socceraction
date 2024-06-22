@@ -3,7 +3,6 @@ import sys
 
 import pytest
 from py.path import local
-
 from socceraction.data import opta as opta
 from socceraction.data.opta import (
     OptaCompetitionSchema,
@@ -32,8 +31,8 @@ def test_create_opta_json_loader(tmpdir: local) -> None:
 def test_create_opta_xml_loader(tmpdir: local) -> None:
     """It should be able to parse F7 and F24 XML feeds."""
     feeds = {
-        "f7": "f7-{competition_id}-{season_id}-{game_id}.json",
-        "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+        "f7": "f7-{competition_id}-{season_id}-{game_id}.xml",
+        "f24": "f24-{competition_id}-{season_id}-{game_id}.xml",
     }
     loader = opta.OptaLoader(root=str(tmpdir), parser="xml", feeds=feeds)
     assert loader.parsers == {
@@ -111,42 +110,72 @@ def test_universal_feeds(tmpdir: local) -> None:
     }
     loader = opta.OptaLoader(root=str(tmpdir), parser=parser, feeds=feeds)
 
-    if 'win' in sys.platform:
+    if "win" in sys.platform:
         assert loader.feeds["myfeed"] == "{competition_id}\\{season_id}\\{game_id}.json"
 
-    elif 'linux' in sys.platform:
+    elif "linux" in sys.platform:
         assert loader.feeds["myfeed"] == "{competition_id}/{season_id}/{game_id}.json"
 
 
 def test_deepupdate() -> None:
     """It should update a dict with another dict."""
     # list
-    t1 = {'name': 'ferry', 'hobbies': ['programming', 'sci-fi']}
-    opta.loader._deepupdate(t1, {'hobbies': ['gaming'], 'jobs': ['student']})
+    t1 = {"name": "ferry", "hobbies": ["programming", "sci-fi"]}
+    opta.loader._deepupdate(t1, {"hobbies": ["gaming"], "jobs": ["student"]})
     assert t1 == {
-        'name': 'ferry',
-        'hobbies': ['programming', 'sci-fi', 'gaming'],
-        'jobs': ['student'],
+        "name": "ferry",
+        "hobbies": ["programming", "sci-fi", "gaming"],
+        "jobs": ["student"],
     }
     # set
-    t2 = {'name': 'ferry', 'hobbies': {'programming', 'sci-fi'}}
-    opta.loader._deepupdate(t2, {'hobbies': {'gaming'}, 'jobs': {'student'}})
+    t2 = {"name": "ferry", "hobbies": {"programming", "sci-fi"}}
+    opta.loader._deepupdate(t2, {"hobbies": {"gaming"}, "jobs": {"student"}})
     assert t2 == {
-        'name': 'ferry',
-        'hobbies': {'programming', 'sci-fi', 'gaming'},
-        'jobs': {'student'},
+        "name": "ferry",
+        "hobbies": {"programming", "sci-fi", "gaming"},
+        "jobs": {"student"},
     }
     # dict
-    t3 = {'name': 'ferry', 'hobbies': {'programming': True, 'sci-fi': True}}
-    opta.loader._deepupdate(t3, {'hobbies': {'gaming': True}})
+    t3 = {"name": "ferry", "hobbies": {"programming": True, "sci-fi": True}}
+    opta.loader._deepupdate(t3, {"hobbies": {"gaming": True}})
     assert t3 == {
-        'name': 'ferry',
-        'hobbies': {'programming': True, 'sci-fi': True, 'gaming': True},
+        "name": "ferry",
+        "hobbies": {"programming": True, "sci-fi": True, "gaming": True},
     }
     # value
-    t4 = {'name': 'ferry', 'hobby': 'programming'}
-    opta.loader._deepupdate(t4, {'hobby': 'gaming'})
-    assert t4 == {'name': 'ferry', 'hobby': 'gaming'}
+    t4 = {"name": "ferry", "hobby": "programming"}
+    opta.loader._deepupdate(t4, {"hobby": "gaming"})
+    assert t4 == {"name": "ferry", "hobby": "gaming"}
+
+
+def test_extract_ids_from_path() -> None:
+    feeds = {
+        "f1": "f1-{competition_id}-{season_id}.json",
+        "f9": "f9-{competition_id}-{season_id}-{game_id}.json",
+        "f24": "f24-{competition_id}-{season_id}-{game_id}.json",
+    }
+    assert opta.loader._extract_ids_from_path("./f24-23-2018-1.json", feeds["f24"]) == {
+        "competition_id": 23,
+        "season_id": 2018,
+        "game_id": 1,
+    }
+    with pytest.raises(
+        ValueError,
+        match=f"The filepath ./f24-23-2018.json does not match the format {feeds['f24']}.",
+    ):
+        opta.loader._extract_ids_from_path("./f24-23-2018.json", feeds["f24"])
+    with pytest.raises(
+        ValueError,
+        match=f"The filepath ./f24-23-2018_1.json does not match the format {feeds['f24']}.",
+    ):
+        opta.loader._extract_ids_from_path("./f24-23-2018_1.json", feeds["f24"])
+    assert opta.loader._extract_ids_from_path(
+        "./f24-Brasileirão-2324-1716682.json", feeds["f24"]
+    ) == {
+        "competition_id": "Brasileirão",
+        "season_id": 2324,
+        "game_id": 1716682,
+    }
 
 
 class TestJSONOptaLoader:

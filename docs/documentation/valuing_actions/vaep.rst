@@ -23,7 +23,7 @@ That is, a gradient boosted binary classifier is
 trained on historical data to predict how a game state will turn out based on
 what happened in similar game states that arose in past games. VAEP also uses
 a more complex representation of the game state: it considers the three last
-actions that happened during the game: :math:`S_i = \{a_{i-2}, a_{i−1},
+actions that happened during the period: :math:`S_i = \{a_{i-2}, a_{i−1},
 a_i\}`. With the code below, you can convert the SPADL action of the game to
 these game states:
 

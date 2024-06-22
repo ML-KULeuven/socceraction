@@ -1,4 +1,5 @@
 """XML parser for Opta F7 feeds."""
+
 from datetime import datetime
 from typing import Any
 
@@ -17,13 +18,13 @@ class F7XMLParser(OptaXMLParser):
     """
 
     def _get_doc(self) -> objectify.ObjectifiedElement:
-        optadocument = self.root.find('SoccerDocument')
+        optadocument = self.root.find("SoccerDocument")
         return optadocument
 
     def _get_stats(self, obj: objectify.ObjectifiedElement) -> dict[str, Any]:
         stats = {}
-        for stat in obj.find('Stat'):
-            stats[stat.attrib['Type']] = stat.text
+        for stat in obj.find("Stat"):
+            stats[stat.attrib["Type"]] = stat.text
         return stats
 
     def _get_name(self, obj: objectify.ObjectifiedElement) -> str:
@@ -42,16 +43,16 @@ class F7XMLParser(OptaXMLParser):
         """
         optadocument = self._get_doc()
         competition = optadocument.Competition
-        competition_id = int(competition.attrib['uID'][1:])
+        competition_id = int(competition.attrib["uID"][1:])
         stats = self._get_stats(competition)
-        season_id = int(assertget(stats, 'season_id'))
-        competition_dict = dict(
+        season_id = int(assertget(stats, "season_id"))
+        competition_dict = {
             # Fields required by the base schema
-            competition_id=competition_id,
-            season_id=season_id,
-            season_name=assertget(stats, 'season_name'),
-            competition_name=competition.Name.text,
-        )
+            "competition_id": competition_id,
+            "season_id": season_id,
+            "season_name": assertget(stats, "season_name"),
+            "competition_name": competition.Name.text,
+        }
         return {(competition_id, season_id): competition_dict}
 
     def extract_games(self) -> dict[int, dict[str, Any]]:
@@ -65,52 +66,56 @@ class F7XMLParser(OptaXMLParser):
         """
         optadocument = self._get_doc()
         competition = optadocument.Competition
-        competition_id = int(competition.attrib['uID'][1:])
+        competition_id = int(competition.attrib["uID"][1:])
         competition_stats = self._get_stats(competition)
         match_info = optadocument.MatchData.MatchInfo
-        game_id = int(optadocument.attrib['uID'][1:])
+        game_id = int(optadocument.attrib["uID"][1:])
         stats = self._get_stats(optadocument.MatchData)
         team_data_elms = {
-            t.attrib['Side']: t for t in optadocument.MatchData.iterchildren('TeamData')
+            t.attrib["Side"]: t for t in optadocument.MatchData.iterchildren("TeamData")
         }
         team_officials = {}
-        for t in optadocument.iterchildren('Team'):
+        for t in optadocument.iterchildren("Team"):
             side = (
                 "Home"
-                if int(team_data_elms["Home"].attrib["TeamRef"][1:]) == int(t.attrib['uID'][1:])
+                if int(team_data_elms["Home"].attrib["TeamRef"][1:]) == int(t.attrib["uID"][1:])
                 else "Away"
             )
-            for m in t.iterchildren('TeamOfficial'):
+            for m in t.iterchildren("TeamOfficial"):
                 if m.attrib["Type"] == "Manager":
                     team_officials[side] = m
 
-        game_dict = dict(
+        game_dict = {
             # Fields required by the base schema
-            game_id=game_id,
-            season_id=int(assertget(competition_stats, 'season_id')),
-            competition_id=competition_id,
-            game_day=int(competition_stats['matchday'])
+            "game_id": game_id,
+            "season_id": int(assertget(competition_stats, "season_id")),
+            "competition_id": competition_id,
+            "game_day": int(competition_stats["matchday"])
             if "matchday" in competition_stats
             else None,
-            game_date=datetime.strptime(match_info.Date.text, '%Y%m%dT%H%M%S%z').replace(
+            "game_date": datetime.strptime(match_info.Date.text, "%Y%m%dT%H%M%S%z").replace(
                 tzinfo=None
             ),
-            home_team_id=int(assertget(assertget(team_data_elms, "Home").attrib, "TeamRef")[1:]),
-            away_team_id=int(assertget(assertget(team_data_elms, "Away").attrib, "TeamRef")[1:]),
+            "home_team_id": int(
+                assertget(assertget(team_data_elms, "Home").attrib, "TeamRef")[1:]
+            ),
+            "away_team_id": int(
+                assertget(assertget(team_data_elms, "Away").attrib, "TeamRef")[1:]
+            ),
             # Optional fields
-            home_score=int(assertget(assertget(team_data_elms, "Home").attrib, "Score")),
-            away_score=int(assertget(assertget(team_data_elms, "Away").attrib, "Score")),
-            duration=int(stats['match_time']),
-            referee=self._get_name(optadocument.MatchData.MatchOfficial.OfficialName),
-            venue=optadocument.Venue.Name.text,
-            attendance=int(match_info.Attendance),
-            home_manager=self._get_name(team_officials["Home"].PersonName)
+            "home_score": int(assertget(assertget(team_data_elms, "Home").attrib, "Score")),
+            "away_score": int(assertget(assertget(team_data_elms, "Away").attrib, "Score")),
+            "duration": int(stats["match_time"]),
+            "referee": self._get_name(optadocument.MatchData.MatchOfficial.OfficialName),
+            "venue": optadocument.Venue.Name.text,
+            "attendance": int(match_info.Attendance),
+            "home_manager": self._get_name(team_officials["Home"].PersonName)
             if "Home" in team_officials
             else None,
-            away_manager=self._get_name(team_officials["Away"].PersonName)
+            "away_manager": self._get_name(team_officials["Away"].PersonName)
             if "Away" in team_officials
             else None,
-        )
+        }
         return {game_id: game_dict}
 
     def extract_teams(self) -> dict[int, dict[str, Any]]:
@@ -123,15 +128,15 @@ class F7XMLParser(OptaXMLParser):
             each team in the data stream.
         """
         optadocument = self._get_doc()
-        team_elms = list(optadocument.iterchildren('Team'))
+        team_elms = list(optadocument.iterchildren("Team"))
         teams = {}
         for team_elm in team_elms:
-            team_id = int(assertget(team_elm.attrib, 'uID')[1:])
-            teams[team_id] = dict(
+            team_id = int(assertget(team_elm.attrib, "uID")[1:])
+            teams[team_id] = {
                 # Fields required by the base schema
-                team_id=team_id,
-                team_name=team_elm.Name.text,
-            )
+                "team_id": team_id,
+                "team_name": team_elm.Name.text,
+            }
         return teams
 
     def extract_lineups(self) -> dict[int, dict[str, Any]]:
@@ -146,25 +151,25 @@ class F7XMLParser(OptaXMLParser):
         optadocument = self._get_doc()
 
         stats = {}
-        for stat in optadocument.MatchData.find('Stat'):
-            stats[stat.attrib['Type']] = stat.text
+        for stat in optadocument.MatchData.find("Stat"):
+            stats[stat.attrib["Type"]] = stat.text
 
-        lineup_elms = optadocument.MatchData.iterchildren('TeamData')
+        lineup_elms = optadocument.MatchData.iterchildren("TeamData")
         lineups = {}
         for team_elm in lineup_elms:
             # lineup attributes
-            team_id = int(team_elm.attrib['TeamRef'][1:])
-            lineups[team_id] = dict(
-                formation=team_elm.attrib['Formation'],
-                score=int(team_elm.attrib['Score']),
-                side=team_elm.attrib['Side'],
-                players=dict(),
-            )
+            team_id = int(team_elm.attrib["TeamRef"][1:])
+            lineups[team_id] = {
+                "formation": team_elm.attrib["Formation"],
+                "score": int(team_elm.attrib["Score"]),
+                "side": team_elm.attrib["Side"],
+                "players": {},
+            }
             # substitutes
-            subst_elms = team_elm.iterchildren('Substitution')
+            subst_elms = team_elm.iterchildren("Substitution")
             subst = [subst_elm.attrib for subst_elm in subst_elms]
             # red_cards
-            booking_elms = team_elm.iterchildren('Booking')
+            booking_elms = team_elm.iterchildren("Booking")
             red_cards = {
                 int(booking_elm.attrib["PlayerRef"][1:]): int(booking_elm.attrib["Min"])
                 for booking_elm in booking_elms
@@ -173,35 +178,35 @@ class F7XMLParser(OptaXMLParser):
                 and "PlayerRef" in booking_elm.attrib  # not defined if a coach receives a red card
             }
             # players
-            player_elms = team_elm.PlayerLineUp.iterchildren('MatchPlayer')
+            player_elms = team_elm.PlayerLineUp.iterchildren("MatchPlayer")
             for player_elm in player_elms:
-                player_id = int(player_elm.attrib['PlayerRef'][1:])
+                player_id = int(player_elm.attrib["PlayerRef"][1:])
                 sub_on = int(
                     next(
                         (
-                            item['Time']
+                            item["Time"]
                             for item in subst
-                            if 'Retired' not in item and item['SubOn'] == f'p{player_id}'
+                            if "Retired" not in item and item["SubOn"] == f"p{player_id}"
                         ),
-                        stats['match_time'] if player_elm.attrib['Status'] == 'Sub' else 0,
+                        stats["match_time"] if player_elm.attrib["Status"] == "Sub" else 0,
                     )
                 )
                 sub_off = int(
                     next(
-                        (item['Time'] for item in subst if item['SubOff'] == f'p{player_id}'),
-                        stats['match_time']
+                        (item["Time"] for item in subst if item["SubOff"] == f"p{player_id}"),
+                        stats["match_time"]
                         if player_id not in red_cards
                         else red_cards[player_id],
                     )
                 )
                 minutes_played = sub_off - sub_on
-                lineups[team_id]['players'][player_id] = dict(
-                    starting_position_id=int(player_elm.attrib['Formation_Place']),
-                    starting_position_name=player_elm.attrib['Position'],
-                    jersey_number=int(player_elm.attrib['ShirtNumber']),
-                    is_starter=int(player_elm.attrib['Formation_Place']) != 0,
-                    minutes_played=minutes_played,
-                )
+                lineups[team_id]["players"][player_id] = {
+                    "starting_position_id": int(player_elm.attrib["Formation_Place"]),
+                    "starting_position_name": player_elm.attrib["Position"],
+                    "jersey_number": int(player_elm.attrib["ShirtNumber"]),
+                    "is_starter": int(player_elm.attrib["Formation_Place"]) != 0,
+                    "minutes_played": minutes_played,
+                }
         return lineups
 
     def extract_players(self) -> dict[tuple[int, int], dict[str, Any]]:
@@ -214,32 +219,32 @@ class F7XMLParser(OptaXMLParser):
             available about each player in the data stream.
         """
         optadocument = self._get_doc()
-        game_id = int(optadocument.attrib['uID'][1:])
+        game_id = int(optadocument.attrib["uID"][1:])
         lineups = self.extract_lineups()
-        team_elms = list(optadocument.iterchildren('Team'))
+        team_elms = list(optadocument.iterchildren("Team"))
         players = {}
         for team_elm in team_elms:
-            team_id = int(team_elm.attrib['uID'][1:])
-            for player_elm in team_elm.iterchildren('Player'):
-                player_id = int(player_elm.attrib['uID'][1:])
-                player = dict(
+            team_id = int(team_elm.attrib["uID"][1:])
+            for player_elm in team_elm.iterchildren("Player"):
+                player_id = int(player_elm.attrib["uID"][1:])
+                player = {
                     # Fields required by the base schema
-                    game_id=game_id,
-                    team_id=team_id,
-                    player_id=player_id,
-                    player_name=self._get_name(player_elm.PersonName),
-                    is_starter=lineups[team_id]['players'][player_id]["is_starter"],
-                    minutes_played=lineups[team_id]['players'][player_id]["minutes_played"],
-                    jersey_number=lineups[team_id]['players'][player_id]["jersey_number"],
+                    "game_id": game_id,
+                    "team_id": team_id,
+                    "player_id": player_id,
+                    "player_name": self._get_name(player_elm.PersonName),
+                    "is_starter": lineups[team_id]["players"][player_id]["is_starter"],
+                    "minutes_played": lineups[team_id]["players"][player_id]["minutes_played"],
+                    "jersey_number": lineups[team_id]["players"][player_id]["jersey_number"],
                     # Fields required by the opta schema
-                    starting_position=lineups[team_id]['players'][player_id][
+                    "starting_position": lineups[team_id]["players"][player_id][
                         "starting_position_name"
                     ],
                     # Optional fields
                     # height="?",
                     # weight="?",
                     # age="?",
-                )
+                }
                 players[(game_id, player_id)] = player
 
         return players

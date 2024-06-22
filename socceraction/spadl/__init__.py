@@ -1,17 +1,17 @@
 """Implementation of the SPADL language."""
 
 __all__ = [
-    'opta',
-    'statsbomb',
-    'wyscout',
-    'kloppy',
-    'config',
-    'SPADLSchema',
-    'bodyparts_df',
-    'actiontypes_df',
-    'results_df',
-    'add_names',
-    'play_left_to_right',
+    "opta",
+    "statsbomb",
+    "wyscout",
+    "kloppy",
+    "config",
+    "SPADLSchema",
+    "bodyparts_df",
+    "actiontypes_df",
+    "results_df",
+    "add_names",
+    "play_left_to_right",
 ]
 
 from . import config, opta, statsbomb, wyscout

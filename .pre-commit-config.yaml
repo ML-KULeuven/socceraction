@@ -1,11 +1,11 @@
 repos:
   - repo: local
     hooks:
-      - id: black
-        name: black
-        entry: black
+      - id: ruff-format
+        name: ruff-format
+        entry: ruff format --force-exclude
         language: system
-        types: [python]
+        types_or: [python, pyi]
         require_serial: true
       - id: check-added-large-files
         name: Check for added large files
@@ -33,13 +33,13 @@ repos:
         language: system
         types: [text]
         stages: [commit, push, manual]
-      - id: flake8
-        name: flake8
-        entry: flake8
+      - id: ruff
+        name: ruff
+        entry: ruff check --force-exclude
         language: system
-        types: [python]
+        types_or: [python, pyi]
         require_serial: true
-        args: [--darglint-ignore-regex, .*]
+        args: ["--fix"]
       - id: pyupgrade
         name: pyupgrade
         description: Automatically upgrade syntax for newer versions.
@@ -47,12 +47,6 @@ repos:
         language: system
         types: [python]
         args: [--py39-plus]
-      - id: isort
-        name: Reorder python imports
-        entry: isort
-        require_serial: true
-        language: system
-        types: [python]
       - id: trailing-whitespace
         name: Trim Trailing Whitespace
         entry: trailing-whitespace-fixer
@@ -60,6 +54,6 @@ repos:
         types: [text]
         stages: [commit, push, manual]
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.7.1
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier

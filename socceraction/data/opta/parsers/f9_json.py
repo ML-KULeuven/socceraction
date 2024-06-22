@@ -1,4 +1,5 @@
 """JSON parser for Opta F9 feeds."""
+
 from datetime import datetime
 from typing import Any, Optional
 
@@ -35,7 +36,7 @@ class F9JSONParser(OptaJSONParser):
         stats = {}
         statobj = obj["Stat"] if isinstance(obj["Stat"], list) else [obj["Stat"]]
         for stat in statobj:
-            stats[stat["@attributes"]['Type']] = stat["@value"]
+            stats[stat["@attributes"]["Type"]] = stat["@value"]
         return stats
 
     def _get_name(self, obj: dict[str, Any]) -> Optional[str]:
@@ -69,47 +70,47 @@ class F9JSONParser(OptaJSONParser):
             scores[t["@attributes"]["Side"]] = t["@attributes"]["Score"]
 
         game_id = int(assertget(attr, "uID")[1:])
-        game_dict = dict(
+        game_dict = {
             # Fields required by the base schema
-            game_id=game_id,
-            competition_id=int(assertget(assertget(competition, "@attributes"), "uID")[1:]),
-            season_id=assertget(competitionstat, "season_id"),
-            game_day=competitionstat["matchday"] if "matchday" in competitionstat else None,
-            game_date=datetime.strptime(assertget(matchinfo, "Date"), "%Y%m%dT%H%M%S%z").replace(
-                tzinfo=None
-            ),
+            "game_id": game_id,
+            "competition_id": int(assertget(assertget(competition, "@attributes"), "uID")[1:]),
+            "season_id": assertget(competitionstat, "season_id"),
+            "game_day": competitionstat["matchday"] if "matchday" in competitionstat else None,
+            "game_date": datetime.strptime(
+                assertget(matchinfo, "Date"), "%Y%m%dT%H%M%S%z"
+            ).replace(tzinfo=None),
             # home_team_id=see below
             # away_team_id=see below
             # Optional fields
-            home_score=int(scores["Home"]),
-            away_score=int(scores["Away"]),
-            duration=int(assertget(matchstat, "match_time")),
-            referee=self._get_name(matchofficial["OfficialName"])
+            "home_score": int(scores["Home"]),
+            "away_score": int(scores["Away"]),
+            "duration": int(assertget(matchstat, "match_time")),
+            "referee": self._get_name(matchofficial["OfficialName"])
             if "OfficialName" in matchofficial
             else None,
-            venue=venue["Name"] if "Name" in venue else None,
-            attendance=int(matchinfo["Attendance"]) if "Attendance" in matchinfo else None,
+            "venue": venue["Name"] if "Name" in venue else None,
+            "attendance": int(matchinfo["Attendance"]) if "Attendance" in matchinfo else None,
             # home_manager=see below
             # away_manager=see below
-        )
+        }
         for team in teamdata:
-            teamattr = assertget(team, '@attributes')
-            side = assertget(teamattr, 'Side')
-            teamid = assertget(teamattr, 'TeamRef')
-            score = assertget(teamattr, 'Score')
+            teamattr = assertget(team, "@attributes")
+            side = assertget(teamattr, "Side")
+            teamid = assertget(teamattr, "TeamRef")
+            score = assertget(teamattr, "Score")
             manager = (
                 self._get_name(team["TeamOfficial"]["PersonName"])
                 if "TeamOfficial" in team
                 else None
             )
-            if side == 'Home':
-                game_dict['home_team_id'] = int(teamid[1:])
-                game_dict['home_score'] = int(score)
-                game_dict['home_manager'] = manager
+            if side == "Home":
+                game_dict["home_team_id"] = int(teamid[1:])
+                game_dict["home_score"] = int(score)
+                game_dict["home_manager"] = manager
             else:
-                game_dict['away_team_id'] = int(teamid[1:])
-                game_dict['away_score'] = int(score)
-                game_dict['away_manager'] = manager
+                game_dict["away_team_id"] = int(teamid[1:])
+                game_dict["away_score"] = int(score)
+                game_dict["away_manager"] = manager
         return {game_id: game_dict}
 
     def extract_teams(self) -> dict[int, dict[str, Any]]:
@@ -129,11 +130,11 @@ class F9JSONParser(OptaJSONParser):
             if "id" in team.keys():
                 nameobj = team.get("nameObj")
                 team_id = int(team["id"])
-                teams[team_id] = dict(
+                teams[team_id] = {
                     # Fields required by the base schema
-                    team_id=team_id,
-                    team_name=nameobj.get("name"),
-                )
+                    "team_id": team_id,
+                    "team_name": nameobj.get("name"),
+                }
         return teams
 
     def extract_players(self) -> dict[tuple[int, int], dict[str, Any]]:
@@ -160,12 +161,12 @@ class F9JSONParser(OptaJSONParser):
                 assert "nameObj" in player["PersonName"]
                 nameobj = player["PersonName"]["nameObj"]
                 if not nameobj.get("is_unknown"):
-                    player = dict(
+                    player = {
                         # Fields required by the base schema
-                        game_id=game_id,
-                        team_id=team_id,
-                        player_id=player_id,
-                        player_name=self._get_name(player["PersonName"]),
+                        "game_id": game_id,
+                        "team_id": team_id,
+                        "player_id": player_id,
+                        "player_name": self._get_name(player["PersonName"]),
                         # is_starter=
                         # minutes_played=
                         # jersey_number=
@@ -175,7 +176,7 @@ class F9JSONParser(OptaJSONParser):
                         # height="?",
                         # weight="?",
                         # age="?",
-                    )
+                    }
                     if player_id in lineups[team_id]["players"]:
                         player = dict(
                             **player,
@@ -220,7 +221,7 @@ class F9JSONParser(OptaJSONParser):
         for team in rootf9:
             # lineup attributes
             team_id = int(team["@attributes"]["TeamRef"].replace("t", ""))
-            lineups[team_id] = dict(players=dict())
+            lineups[team_id] = {"players": {}}
             # substitutes
             subst = [s["@attributes"] for s in team["Substitution"]]
             # red cards

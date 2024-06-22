@@ -1,4 +1,5 @@
 """JSON parser for Stats Perform MA3 feeds."""
+
 from datetime import datetime
 from typing import Any, Optional
 
@@ -49,13 +50,13 @@ class MA3JSONParser(OptaJSONParser):
         competition = assertget(match_info, "competition")
         competition_id = assertget(competition, "id")
         season_id = assertget(season, "id")
-        season = dict(
+        season = {
             # Fields required by the base schema
-            season_id=season_id,
-            season_name=assertget(season, "name"),
-            competition_id=competition_id,
-            competition_name=assertget(competition, "name"),
-        )
+            "season_id": season_id,
+            "season_name": assertget(season, "name"),
+            "competition_id": competition_id,
+            "competition_name": assertget(competition, "name"),
+        }
         return {(competition_id, season_id): season}
 
     def extract_games(self) -> dict[str, dict[str, Any]]:
@@ -76,16 +77,16 @@ class MA3JSONParser(OptaJSONParser):
         game_time = assertget(match_info, "time")[0:8]
         game_datetime = f"{game_date}T{game_time}"
         venue = assertget(match_info, "venue")
-        game_obj = dict(
-            game_id=game_id,
-            competition_id=assertget(competition, "id"),
-            season_id=assertget(season, "id"),
-            game_day=int(match_info["week"]) if "week" in match_info else None,
-            game_date=datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
-            home_team_id=self._extract_team_id(contestant, "home"),
-            away_team_id=self._extract_team_id(contestant, "away"),
-            venue=assertget(venue, "shortName"),
-        )
+        game_obj = {
+            "game_id": game_id,
+            "competition_id": assertget(competition, "id"),
+            "season_id": assertget(season, "id"),
+            "game_day": int(match_info["week"]) if "week" in match_info else None,
+            "game_date": datetime.strptime(game_datetime, "%Y-%m-%dT%H:%M:%S"),
+            "home_team_id": self._extract_team_id(contestant, "home"),
+            "away_team_id": self._extract_team_id(contestant, "away"),
+            "venue": assertget(venue, "shortName"),
+        }
         live_data = self._get_live_data()
         if "matchDetails" in live_data:
             match_details = assertget(live_data, "matchDetails")
@@ -112,11 +113,11 @@ class MA3JSONParser(OptaJSONParser):
         teams = {}
         for contestant in contestants:
             team_id = assertget(contestant, "id")
-            team = dict(
+            team = {
                 # Fields required by the base schema
-                team_id=team_id,
-                team_name=assertget(contestant, "name"),
-            )
+                "team_id": team_id,
+                "team_name": assertget(contestant, "name"),
+            }
             teams[team_id] = team
         return teams
 
@@ -264,28 +265,28 @@ class MA3JSONParser(OptaJSONParser):
             end_y = _get_end_y(qualifiers)
 
             event_id = int(assertget(element, "id"))
-            event = dict(
+            event = {
                 # Fields required by the base schema
-                game_id=game_id,
-                event_id=event_id,
-                period_id=int(assertget(element, "periodId")),
-                team_id=assertget(element, "contestantId"),
-                player_id=element.get("playerId"),
-                type_id=int(assertget(element, "typeId")),
+                "game_id": game_id,
+                "event_id": event_id,
+                "period_id": int(assertget(element, "periodId")),
+                "team_id": assertget(element, "contestantId"),
+                "player_id": element.get("playerId"),
+                "type_id": int(assertget(element, "typeId")),
                 # Fields required by the opta schema
-                timestamp=timestamp,
-                minute=int(assertget(element, "timeMin")),
-                second=int(assertget(element, "timeSec")),
-                outcome=bool(int(element.get("outcome", 1))),
-                start_x=start_x,
-                start_y=start_y,
-                end_x=end_x if end_x is not None else start_x,
-                end_y=end_y if end_y is not None else start_y,
-                qualifiers=qualifiers,
+                "timestamp": timestamp,
+                "minute": int(assertget(element, "timeMin")),
+                "second": int(assertget(element, "timeSec")),
+                "outcome": bool(int(element.get("outcome", 1))),
+                "start_x": start_x,
+                "start_y": start_y,
+                "end_x": end_x if end_x is not None else start_x,
+                "end_y": end_y if end_y is not None else start_y,
+                "qualifiers": qualifiers,
                 # Optional fields
-                assist=bool(int(element.get("assist", 0))),
-                keypass=bool(int(element.get("keyPass", 0))),
-            )
+                "assist": bool(int(element.get("assist", 0))),
+                "keypass": bool(int(element.get("keyPass", 0))),
+            }
             events[(game_id, event_id)] = event
         return events
 

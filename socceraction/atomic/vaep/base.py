@@ -6,6 +6,7 @@ xfns_default : list(callable)
     The default VAEP features.
 
 """
+
 from typing import Optional
 
 import socceraction.atomic.spadl as spadlcfg

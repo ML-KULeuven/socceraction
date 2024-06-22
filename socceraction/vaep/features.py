@@ -1,4 +1,5 @@
 """Implements the feature tranformers of the VAEP framework."""
+
 from functools import wraps
 from typing import Any, Callable, Union, no_type_check
 
@@ -33,27 +34,27 @@ def feature_column_names(fs: list[FeatureTransfomer], nb_prev_actions: int = 3) 
         The name of each generated feature.
     """
     spadlcolumns = [
-        'game_id',
-        'original_event_id',
-        'action_id',
-        'period_id',
-        'time_seconds',
-        'team_id',
-        'player_id',
-        'start_x',
-        'start_y',
-        'end_x',
-        'end_y',
-        'result_id',
-        'result_name',
-        'bodypart_id',
-        'bodypart_name',
-        'type_id',
-        'type_name',
+        "game_id",
+        "original_event_id",
+        "action_id",
+        "period_id",
+        "time_seconds",
+        "team_id",
+        "player_id",
+        "start_x",
+        "start_y",
+        "end_x",
+        "end_y",
+        "result_id",
+        "result_name",
+        "bodypart_id",
+        "bodypart_name",
+        "type_id",
+        "type_name",
     ]
     dummy_actions = pd.DataFrame(np.zeros((10, len(spadlcolumns))), columns=spadlcolumns)
     for c in spadlcolumns:
-        if 'name' in c:
+        if "name" in c:
             dummy_actions[c] = dummy_actions[c].astype(str)
     gs = gamestates(dummy_actions, nb_prev_actions)  # type: ignore
     return list(pd.concat([f(gs) for f in fs], axis=1).columns.values)
@@ -86,11 +87,13 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
          The <nb_prev_actions> previous actions for each action.
     """
     if nb_prev_actions < 1:
-        raise ValueError('The game state should include at least one preceding action.')
+        raise ValueError("The game state should include at least one preceding action.")
     states = [actions]
     for i in range(1, nb_prev_actions):
-        prev_actions = actions.copy().shift(i, fill_value=0)
-        prev_actions.iloc[:i] = pd.concat([actions[:1]] * i, ignore_index=True)
+        prev_actions = actions.groupby(["game_id", "period_id"], sort=False, as_index=False).apply(
+            lambda x: x.shift(i, fill_value=float("nan")).fillna(x.iloc[0])  # noqa: B023
+        )
+        prev_actions.index = actions.index.copy()
         states.append(prev_actions)  # type: ignore
     return states
 
@@ -121,20 +124,20 @@ def play_left_to_right(gamestates: GameStates, home_team_id: int) -> GameStates:
     a0 = gamestates[0]
     away_idx = a0.team_id != home_team_id
     for actions in gamestates:
-        for col in ['start_x', 'end_x']:
+        for col in ["start_x", "end_x"]:
             actions.loc[away_idx, col] = spadlcfg.field_length - actions[away_idx][col].values
-        for col in ['start_y', 'end_y']:
+        for col in ["start_y", "end_y"]:
             actions.loc[away_idx, col] = spadlcfg.field_width - actions[away_idx][col].values
     return gamestates
 
 
 @no_type_check
-def simple(actionfn) -> FeatureTransfomer:
+def simple(actionfn: Callable) -> FeatureTransfomer:
     """Make a function decorator to apply actionfeatures to game states.
 
     Parameters
     ----------
-    actionfn : callable
+    actionfn : Callable
         A feature transformer that operates on actions.
 
     Returns
@@ -150,7 +153,7 @@ def simple(actionfn) -> FeatureTransfomer:
         X = []
         for i, a in enumerate(gamestates):
             Xi = actionfn(a)
-            Xi.columns = [c + '_a' + str(i) for c in Xi.columns]
+            Xi.columns = [c + "_a" + str(i) for c in Xi.columns]
             X.append(Xi)
         return pd.concat(X, axis=1)
 
@@ -199,8 +202,8 @@ def actiontype_onehot(actions: SPADLActions) -> Features:
     """
     X = {}
     for type_id, type_name in enumerate(spadlcfg.actiontypes):
-        col = 'actiontype_' + type_name
-        X[col] = actions['type_id'] == type_id
+        col = "actiontype_" + type_name
+        X[col] = actions["type_id"] == type_id
     return pd.DataFrame(X, index=actions.index)
 
 
@@ -243,8 +246,8 @@ def result_onehot(actions: SPADLActions) -> Features:
     """
     X = {}
     for result_id, result_name in enumerate(spadlcfg.results):
-        col = 'result_' + result_name
-        X[col] = actions['result_id'] == result_id
+        col = "result_" + result_name
+        X[col] = actions["result_id"] == result_id
     return pd.DataFrame(X, index=actions.index)
 
 
@@ -267,7 +270,7 @@ def actiontype_result_onehot(actions: SPADLActions) -> Features:
     df = {}
     for tyscol in list(tys.columns):
         for rescol in list(res.columns):
-            df[tyscol + '_' + rescol] = tys[tyscol] & res[rescol]
+            df[tyscol + "_" + rescol] = tys[tyscol] & res[rescol]
     return pd.DataFrame(df, index=actions.index)
 
 
@@ -360,21 +363,21 @@ def bodypart_onehot(actions: Actions) -> Features:
     """
     X = {}
     for bodypart_id, bodypart_name in enumerate(spadlcfg.bodyparts):
-        if bodypart_name in ('foot_left', 'foot_right'):
+        if bodypart_name in ("foot_left", "foot_right"):
             continue
-        col = 'bodypart_' + bodypart_name
-        if bodypart_name == 'foot':
+        col = "bodypart_" + bodypart_name
+        if bodypart_name == "foot":
             foot_id = spadlcfg.bodyparts.index("foot")
             left_foot_id = spadlcfg.bodyparts.index("foot_left")
             right_foot_id = spadlcfg.bodyparts.index("foot_right")
-            X[col] = actions['bodypart_id'].isin([foot_id, left_foot_id, right_foot_id])
-        elif bodypart_name == 'head/other':
+            X[col] = actions["bodypart_id"].isin([foot_id, left_foot_id, right_foot_id])
+        elif bodypart_name == "head/other":
             head_id = spadlcfg.bodyparts.index("head")
             other_id = spadlcfg.bodyparts.index("other")
             head_other_id = spadlcfg.bodyparts.index("head/other")
-            X[col] = actions['bodypart_id'].isin([head_id, other_id, head_other_id])
+            X[col] = actions["bodypart_id"].isin([head_id, other_id, head_other_id])
         else:
-            X[col] = actions['bodypart_id'] == bodypart_id
+            X[col] = actions["bodypart_id"] == bodypart_id
     return pd.DataFrame(X, index=actions.index)
 
 
@@ -402,19 +405,19 @@ def bodypart_detailed_onehot(actions: Actions) -> Features:
     """
     X = {}
     for bodypart_id, bodypart_name in enumerate(spadlcfg.bodyparts):
-        col = 'bodypart_' + bodypart_name
-        if bodypart_name == 'foot':
+        col = "bodypart_" + bodypart_name
+        if bodypart_name == "foot":
             foot_id = spadlcfg.bodyparts.index("foot")
             left_foot_id = spadlcfg.bodyparts.index("foot_left")
             right_foot_id = spadlcfg.bodyparts.index("foot_right")
-            X[col] = actions['bodypart_id'].isin([foot_id, left_foot_id, right_foot_id])
-        elif bodypart_name == 'head/other':
+            X[col] = actions["bodypart_id"].isin([foot_id, left_foot_id, right_foot_id])
+        elif bodypart_name == "head/other":
             head_id = spadlcfg.bodyparts.index("head")
             other_id = spadlcfg.bodyparts.index("other")
             head_other_id = spadlcfg.bodyparts.index("head/other")
-            X[col] = actions['bodypart_id'].isin([head_id, other_id, head_other_id])
+            X[col] = actions["bodypart_id"].isin([head_id, other_id, head_other_id])
         else:
-            X[col] = actions['bodypart_id'] == bodypart_id
+            X[col] = actions["bodypart_id"] == bodypart_id
     return pd.DataFrame(X, index=actions.index)
 
 
@@ -442,8 +445,8 @@ def time(actions: Actions) -> Features:
         The 'period_id', 'time_seconds' and 'time_seconds_overall' when each
         action was performed.
     """
-    timedf = actions[['period_id', 'time_seconds']].copy()
-    timedf['time_seconds_overall'] = ((timedf.period_id - 1) * 45 * 60) + timedf.time_seconds
+    timedf = actions[["period_id", "time_seconds"]].copy()
+    timedf["time_seconds_overall"] = ((timedf.period_id - 1) * 45 * 60) + timedf.time_seconds
     return timedf
 
 
@@ -461,7 +464,7 @@ def startlocation(actions: SPADLActions) -> Features:
     Features
         The 'start_x' and 'start_y' location of each action.
     """
-    return actions[['start_x', 'start_y']]
+    return actions[["start_x", "start_y"]]
 
 
 @simple
@@ -478,7 +481,7 @@ def endlocation(actions: SPADLActions) -> Features:
     Features
         The 'end_x' and 'end_y' location of each action.
     """
-    return actions[['end_x', 'end_y']]
+    return actions[["end_x", "end_y"]]
 
 
 _goal_x: float = spadlcfg.field_length
@@ -502,11 +505,11 @@ def startpolar(actions: SPADLActions) -> Features:
         The 'start_dist_to_goal' and 'start_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame(index=actions.index)
-    dx = (_goal_x - actions['start_x']).abs().values
-    dy = (_goal_y - actions['start_y']).abs().values
-    polardf['start_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        polardf['start_angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
+    dx = (_goal_x - actions["start_x"]).abs().values
+    dy = (_goal_y - actions["start_y"]).abs().values
+    polardf["start_dist_to_goal"] = np.sqrt(dx**2 + dy**2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        polardf["start_angle_to_goal"] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
 
 
@@ -527,11 +530,11 @@ def endpolar(actions: SPADLActions) -> Features:
         The 'end_dist_to_goal' and 'end_angle_to_goal' of each action.
     """
     polardf = pd.DataFrame(index=actions.index)
-    dx = (_goal_x - actions['end_x']).abs().values
-    dy = (_goal_y - actions['end_y']).abs().values
-    polardf['end_dist_to_goal'] = np.sqrt(dx**2 + dy**2)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        polardf['end_angle_to_goal'] = np.nan_to_num(np.arctan(dy / dx))
+    dx = (_goal_x - actions["end_x"]).abs().values
+    dy = (_goal_y - actions["end_y"]).abs().values
+    polardf["end_dist_to_goal"] = np.sqrt(dx**2 + dy**2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        polardf["end_angle_to_goal"] = np.nan_to_num(np.arctan(dy / dx))
     return polardf
 
 
@@ -551,9 +554,9 @@ def movement(actions: SPADLActions) -> Features:
         covered by each action.
     """
     mov = pd.DataFrame(index=actions.index)
-    mov['dx'] = actions.end_x - actions.start_x
-    mov['dy'] = actions.end_y - actions.start_y
-    mov['movement'] = np.sqrt(mov.dx**2 + mov.dy**2)
+    mov["dx"] = actions.end_x - actions.start_x
+    mov["dy"] = actions.end_y - actions.start_y
+    mov["movement"] = np.sqrt(mov.dx**2 + mov.dy**2)
     return mov
 
 
@@ -575,7 +578,7 @@ def player_possession_time(actions: SPADLActions) -> Features:
         The 'player_possession_time' of each action.
     """
     cur_action = actions[["period_id", "time_seconds", "player_id", "type_id"]]
-    prev_action = actions.shift(1)[["period_id", "time_seconds", "player_id", "type_id"]]
+    prev_action = actions.copy().shift(1)[["period_id", "time_seconds", "player_id", "type_id"]]
     df = cur_action.join(prev_action, rsuffix="_prev")
     same_player = df.player_id == df.player_id_prev
     same_period = df.period_id == df.period_id_prev
@@ -611,7 +614,7 @@ def team(gamestates: GameStates) -> Features:
     a0 = gamestates[0]
     teamdf = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
-        teamdf['team_' + (str(i + 1))] = a.team_id == a0.team_id
+        teamdf["team_" + (str(i + 1))] = a.team_id == a0.team_id
     return teamdf
 
 
@@ -632,7 +635,7 @@ def time_delta(gamestates: GameStates) -> Features:
     a0 = gamestates[0]
     dt = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
-        dt['time_delta_' + (str(i + 1))] = a0.time_seconds - a.time_seconds
+        dt["time_delta_" + (str(i + 1))] = a0.time_seconds - a.time_seconds
     return dt
 
 
@@ -655,10 +658,10 @@ def space_delta(gamestates: GameStates) -> Features:
     spaced = pd.DataFrame(index=a0.index)
     for i, a in enumerate(gamestates[1:]):
         dx = a.end_x - a0.start_x
-        spaced['dx_a0' + (str(i + 1))] = dx
+        spaced["dx_a0" + (str(i + 1))] = dx
         dy = a.end_y - a0.start_y
-        spaced['dy_a0' + (str(i + 1))] = dy
-        spaced['mov_a0' + (str(i + 1))] = np.sqrt(dx**2 + dy**2)
+        spaced["dy_a0" + (str(i + 1))] = dy
+        spaced["mov_a0" + (str(i + 1))] = np.sqrt(dx**2 + dy**2)
     return spaced
 
 
@@ -709,14 +712,14 @@ def goalscore(gamestates: GameStates) -> Features:
         and the goal difference between both teams ('goalscore_diff').
     """
     actions = gamestates[0]
-    teamA = actions['team_id'].values[0]
-    goals = actions['type_name'].str.contains('shot') & (
-        actions['result_id'] == spadlcfg.results.index('success')
+    teamA = actions["team_id"].values[0]
+    goals = actions["type_name"].str.contains("shot") & (
+        actions["result_id"] == spadlcfg.results.index("success")
     )
-    owngoals = actions['type_name'].str.contains('shot') & (
-        actions['result_id'] == spadlcfg.results.index('owngoal')
+    owngoals = actions["type_name"].str.contains("shot") & (
+        actions["result_id"] == spadlcfg.results.index("owngoal")
     )
-    teamisA = actions['team_id'] == teamA
+    teamisA = actions["team_id"] == teamA
     teamisB = ~teamisA
     goalsteamA = (goals & teamisA) | (owngoals & teamisB)
     goalsteamB = (goals & teamisB) | (owngoals & teamisA)
@@ -724,7 +727,7 @@ def goalscore(gamestates: GameStates) -> Features:
     goalscoreteamB = goalsteamB.cumsum() - goalsteamB
 
     scoredf = pd.DataFrame(index=actions.index)
-    scoredf['goalscore_team'] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
-    scoredf['goalscore_opponent'] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
-    scoredf['goalscore_diff'] = scoredf['goalscore_team'] - scoredf['goalscore_opponent']
+    scoredf["goalscore_team"] = (goalscoreteamA * teamisA) + (goalscoreteamB * teamisB)
+    scoredf["goalscore_opponent"] = (goalscoreteamB * teamisA) + (goalscoreteamA * teamisB)
+    scoredf["goalscore_diff"] = scoredf["goalscore_team"] - scoredf["goalscore_opponent"]
     return scoredf

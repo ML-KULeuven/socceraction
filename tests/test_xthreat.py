@@ -4,12 +4,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import socceraction.spadl as spadl
+import socceraction.xthreat as xt
 from pandera.typing import DataFrame, Series
 from pytest_mock import MockerFixture
 from sklearn.exceptions import NotFittedError
-
-import socceraction.spadl as spadl
-import socceraction.xthreat as xt
 from socceraction.spadl import SPADLSchema
 from socceraction.spadl.config import field_length, field_width
 
@@ -154,7 +153,7 @@ def test_move_transition_matrix() -> None:
         [
             {
                 "game_id": 1,
-                "original_event_id": 'a',
+                "original_event_id": "a",
                 "action_id": 1,
                 "period_id": 1,
                 "time_seconds": 1.0,
@@ -170,7 +169,7 @@ def test_move_transition_matrix() -> None:
             },
             {
                 "game_id": 1,
-                "original_event_id": 'a',
+                "original_event_id": "a",
                 "action_id": 2,
                 "period_id": 1,
                 "time_seconds": 1.2,
