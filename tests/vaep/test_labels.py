@@ -1,7 +1,6 @@
-from pandera.typing import DataFrame
-
 import socceraction.spadl.utils as spu
 import socceraction.vaep.labels as lab
+from pandera.typing import DataFrame
 from socceraction.spadl import SPADLSchema
 
 
