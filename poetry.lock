@@ -1139,6 +1139,7 @@ files = [
 numpy = [
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -2400,5 +2401,5 @@ xgboost = ["xgboost"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.9,<3.12"
-content-hash = "cef0ba800649b24a99ca94a10de77b8b7f6119c4cbfb4652b43fa4e8f819900e"
+python-versions = ">=3.9,<3.13"
+content-hash = "91069b2cc6212cb09998f433a7b6b640e4ead9b285d6563839e3e058db7bd440"
