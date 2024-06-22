@@ -281,12 +281,13 @@ def _fix_unintentional_ball_touches(
         Opta event dataframe without any unintentional ball touches.
     """
     df_actions_next = df_actions.shift(-2)
+    selector_pass = df_actions["type_id"] == spadlconfig.actiontypes.index("pass")
     selector_deflected = (opta_type.shift(-1) == "ball touch") & (opta_outcome.shift(-1))
     selector_same_team = df_actions["team_id"] == df_actions_next["team_id"]
     df_actions.loc[selector_deflected, ["end_x", "end_y"]] = df_actions_next.loc[
         selector_deflected, ["start_x", "start_y"]
     ].values
-    df_actions.loc[selector_deflected & selector_same_team, "result_id"] = (
+    df_actions.loc[selector_pass & selector_deflected & selector_same_team, "result_id"] = (
         spadlconfig.results.index("success")
     )
     return df_actions
