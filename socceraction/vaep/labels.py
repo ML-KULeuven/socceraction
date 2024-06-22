@@ -39,7 +39,7 @@ def scores(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> pd.DataFram
     for i in range(1, nr_actions):
         for c in ["team_id", "goal", "owngoal"]:
             shifted = y[c].shift(-i)
-            shifted[-i:] = y[c][len(y) - 1]
+            shifted[-i:] = y[c].iloc[len(y) - 1]
             y["%s+%d" % (c, i)] = shifted
 
     res = y["goal"]
@@ -82,7 +82,7 @@ def concedes(actions: DataFrame[SPADLSchema], nr_actions: int = 10) -> pd.DataFr
     for i in range(1, nr_actions):
         for c in ["team_id", "goal", "owngoal"]:
             shifted = y[c].shift(-i)
-            shifted[-i:] = y[c][len(y) - 1]
+            shifted[-i:] = y[c].iloc[len(y) - 1]
             y["%s+%d" % (c, i)] = shifted
 
     res = y["owngoal"]
