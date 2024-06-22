@@ -6,10 +6,9 @@ import unittest
 from importlib import reload
 
 import pytest
+import socceraction.data.statsbomb as sb
 from py.path import local
 from pytest import fixture
-
-import socceraction.data.statsbomb as sb
 from socceraction.data.base import ParseError
 from socceraction.data.statsbomb import (
     StatsBombCompetitionSchema,
@@ -21,7 +20,7 @@ from socceraction.data.statsbomb import (
 
 
 @fixture(scope="module", params=["local", "remote"])
-def SBL(request) -> sb.StatsBombLoader:  # type: ignore
+def SBL(request) -> sb.StatsBombLoader:  # type: ignore # noqa: ANN001
     """Create a StatsBombLoader instance."""
     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "statsbomb", "raw")
     return sb.StatsBombLoader(getter=request.param, root=data_dir)
@@ -231,7 +230,8 @@ def test_no_frames_empty(tmpdir: local) -> None:
     tmpdir.mkdir("events")
     datadir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "statsbomb", "raw")
     shutil.copy(
-        os.path.join(datadir, "events/7584.json"), os.path.join(tmpdir, "events/7584.json")
+        os.path.join(datadir, "events/7584.json"),
+        os.path.join(tmpdir, "events/7584.json"),
     )
     p = tmpdir.mkdir("three-sixty").join("7584.json")
     p.write(json.dumps([]))
@@ -248,7 +248,8 @@ def test_invalid_frames(tmpdir: local) -> None:
     tmpdir.mkdir("events")
     datadir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "statsbomb", "raw")
     shutil.copy(
-        os.path.join(datadir, "events/7584.json"), os.path.join(tmpdir, "events/7584.json")
+        os.path.join(datadir, "events/7584.json"),
+        os.path.join(tmpdir, "events/7584.json"),
     )
     p = tmpdir.mkdir("three-sixty").join("7584.json")
     p.write(json.dumps({"this is wrong": 1}))

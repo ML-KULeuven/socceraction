@@ -1,15 +1,15 @@
 """Parsers for Opta(-derived) event streams."""
 
 __all__ = [
-    'OptaParser',
-    'F1JSONParser',
-    'F9JSONParser',
-    'F24JSONParser',
-    'F7XMLParser',
-    'F24XMLParser',
-    'MA1JSONParser',
-    'MA3JSONParser',
-    'WhoScoredParser',
+    "OptaParser",
+    "F1JSONParser",
+    "F9JSONParser",
+    "F24JSONParser",
+    "F7XMLParser",
+    "F24XMLParser",
+    "MA1JSONParser",
+    "MA3JSONParser",
+    "WhoScoredParser",
 ]
 
 from .base import OptaParser

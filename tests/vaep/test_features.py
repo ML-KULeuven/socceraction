@@ -1,8 +1,7 @@
+import socceraction.spadl as spadl
+import socceraction.spadl as spadlcfg
 from pandas import testing as tm
 from pandera.typing import DataFrame
-
-import socceraction.spadl as spadlcfg
-import socceraction.spadl as spadl
 from socceraction.spadl import SPADLSchema
 from socceraction.vaep import features as fs
 

@@ -1,4 +1,5 @@
 """SPADL schema for Opta data."""
+
 from typing import Optional
 
 import pandas as pd

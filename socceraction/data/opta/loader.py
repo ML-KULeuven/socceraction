@@ -1,4 +1,5 @@
 """Implements serializers for Opta data."""
+
 import copy
 import datetime
 import glob

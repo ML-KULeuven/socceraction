@@ -1,6 +1,7 @@
 """Kloppy EventDataset to SPADL converter."""
+
 import warnings
-from typing import Any, Optional, cast
+from typing import Optional, Union, cast
 
 import kloppy
 import pandas as pd  # type: ignore
@@ -52,7 +53,7 @@ _SUPPORTED_PROVIDERS = {
 
 
 def convert_to_actions(
-    dataset: EventDataset, game_id: Optional[Any] = None
+    dataset: EventDataset, game_id: Optional[Union[str, int]] = None
 ) -> DataFrame[SPADLSchema]:
     """Convert a Kloppy event data set to SPADL actions.
 

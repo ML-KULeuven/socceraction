@@ -1,4 +1,5 @@
 """Utility functions for working with SPADL dataframes."""
+
 from typing import cast
 
 from pandera.typing import DataFrame

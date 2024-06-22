@@ -15,6 +15,9 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 
+[tool.poetry.urls]
+Changelog = "https://github.com/ML-KULeuven/socceraction/releases"
+
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 pandas = "^2.1.1"
@@ -33,33 +36,28 @@ xgboost = ["xgboost"]
 hdf = ["tables"]
 kloppy = ["kloppy"]
 
-[tool.poetry.group.dev.dependencies]
-black = "^23.9.1"
-flake8 = "^6.1.0"
-mypy = "^1.5.1"
+[tool.poetry.group.test.dependencies]
 pytest = "^7.4.2"
-bumpversion = "^0.6.0"
-coverage = {version = "^7.3.1", extras = ["toml"]}
-codecov = "^2.1.13"
-pre-commit = "^3.4.0"
-flake8-black = "^0.3.6"
-flake8-bugbear = "^23.9.16"
-flake8-annotations = "^3.0.1"
-flake8-docstrings = "^1.7.0"
-darglint = "^1.8.1"
-flake8-isort = "^6.1.0"
-flake8-rst-docstrings = "^0.3.0"
-pep8-naming = "^0.13.3"
-pyupgrade = "^3.13.0"
 pytest-mock = "^3.11.1"
 pytest-cov = "^4.1.0"
+coverage = {version = "^7.3.1", extras = ["toml"]}
+codecov = "^2.1.13"
 
+[tool.poetry.group.dev.dependencies]
+pygments = "^2.16.1"
+bumpversion = "^0.6.0"
+darglint = "^1.8.1"
+ruff = "*"
+mypy = "*"
+pep8-naming = "^0.13.3"
+pre-commit = "^3.4.0"
+pre-commit-hooks = "^4.3.0"
+pyupgrade = "^3.13.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.2.6"
 furo = "^2023.9.10"
 sphinx-autobuild = "^2021.3.14"
-pygments = "^2.16.1"
 sphinx-autodoc-typehints = "^1.24.0"
 
 [tool.pytest.ini_options]
@@ -76,21 +74,49 @@ relative_files = true
 [tool.coverage.report]
 show_missing = true
 
-[tool.isort]
-profile = "black"
-src_paths = ["socceraction", "tests"]
-balanced_wrapping = true
-default_section = "THIRDPARTY"
-include_trailing_comma = true
-known_first_party = ["socceraction", "tests"]
-line_length = 79
-multi_line_output = 3
-
-[tool.black]
+[tool.ruff]
+src = ["src", "tests"]
 line-length = 99
-target-version = ['py38']
-skip-string-normalization = 1
-include = '\.pyi?$'
+target-version = 'py38'
+
+[tool.ruff.lint]
+select = [
+    "ANN", # flake8-annotations
+    "B",   # flake8-bugbear
+    "C",   # pylint conventions
+    "D",   # pydocstyle
+    "E",   # pycodestyle errors
+    "W",   # pylint warnings
+    "F",   # pyflakes
+    "I",   # isort
+]
+ignore = [
+    # ambiguous variable names (e.g., l -> 1)
+    "E741",
+    # missing type annotation for self in method
+    "ANN101",
+    # whitespace before ':'
+    "E203",
+    # line 79 characters
+    "E501",
+    # no explicit stacklevel argument found.
+    "B028"
+]
+
+
+[tool.ruff.lint.per-file-ignores]
+"socceraction/__init__.py"=["D205","D400"]
+# "socceraction/xthreat.py"=["DAR000"]
+"tests/**"=["D100","D101","D102","D103","S101"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = 'numpy'
+
+[tool.ruff.lint.isort]
+known-first-party = ["soccerdata", "tests"]
 
 [tool.mypy]
 check_untyped_defs = true

@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 from py.path import local
 from pytest import fixture
-
 from socceraction.data.base import MissingDataError
 from socceraction.data.opta import (
     OptaEventSchema,

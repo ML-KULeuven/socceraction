@@ -1,4 +1,5 @@
 """SPADL schema for Wyscout data."""
+
 import pandera as pa
 from pandera.typing import DateTime, Object, Series
 

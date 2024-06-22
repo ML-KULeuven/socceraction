@@ -5,6 +5,7 @@ extract data about competitions, games, players, teams and events that is
 encoded in the file.
 
 """
+
 import json  # type: ignore
 from typing import Any, Optional
 
@@ -20,7 +21,7 @@ class OptaParser:
         Path of the data file.
     """
 
-    def __init__(self, path: str, **kwargs: Any) -> None:
+    def __init__(self, path: str, **kwargs: Any) -> None:  # noqa: ANN401
         raise NotImplementedError
 
     def extract_competitions(self) -> dict[tuple[Any, Any], dict[str, Any]]:
@@ -99,8 +100,8 @@ class OptaJSONParser(OptaParser):
         Path of the data file.
     """
 
-    def __init__(self, path: str, **kwargs: Any) -> None:
-        with open(path, encoding='utf-8') as fh:
+    def __init__(self, path: str, **kwargs: Any) -> None:  # noqa: ANN401
+        with open(path, encoding="utf-8") as fh:
             self.root = json.load(fh)
 
 
@@ -113,12 +114,12 @@ class OptaXMLParser(OptaParser):
         Path of the data file.
     """
 
-    def __init__(self, path: str, **kwargs: Any) -> None:
-        with open(path, 'rb') as fh:
+    def __init__(self, path: str, **kwargs: Any) -> None:  # noqa: ANN401
+        with open(path, "rb") as fh:
             self.root = objectify.fromstring(fh.read())
 
 
-def assertget(dictionary: dict[str, Any], key: str) -> Any:
+def assertget(dictionary: dict[str, Any], key: str) -> Any:  # noqa: ANN401
     """Return the value of the item with the specified key.
 
     In contrast to the default `get` method, this version will raise an
@@ -142,7 +143,7 @@ def assertget(dictionary: dict[str, Any], key: str) -> Any:
         If the given key could not be found in the dictionary.
     """
     value = dictionary.get(key)
-    assert value is not None, 'KeyError: ' + key + ' not found in ' + str(dictionary)
+    assert value is not None, "KeyError: " + key + " not found in " + str(dictionary)
     return value
 
 

@@ -3,7 +3,6 @@ import sys
 
 import pytest
 from py.path import local
-
 from socceraction.data import opta as opta
 from socceraction.data.opta import (
     OptaCompetitionSchema,
@@ -111,42 +110,42 @@ def test_universal_feeds(tmpdir: local) -> None:
     }
     loader = opta.OptaLoader(root=str(tmpdir), parser=parser, feeds=feeds)
 
-    if 'win' in sys.platform:
+    if "win" in sys.platform:
         assert loader.feeds["myfeed"] == "{competition_id}\\{season_id}\\{game_id}.json"
 
-    elif 'linux' in sys.platform:
+    elif "linux" in sys.platform:
         assert loader.feeds["myfeed"] == "{competition_id}/{season_id}/{game_id}.json"
 
 
 def test_deepupdate() -> None:
     """It should update a dict with another dict."""
     # list
-    t1 = {'name': 'ferry', 'hobbies': ['programming', 'sci-fi']}
-    opta.loader._deepupdate(t1, {'hobbies': ['gaming'], 'jobs': ['student']})
+    t1 = {"name": "ferry", "hobbies": ["programming", "sci-fi"]}
+    opta.loader._deepupdate(t1, {"hobbies": ["gaming"], "jobs": ["student"]})
     assert t1 == {
-        'name': 'ferry',
-        'hobbies': ['programming', 'sci-fi', 'gaming'],
-        'jobs': ['student'],
+        "name": "ferry",
+        "hobbies": ["programming", "sci-fi", "gaming"],
+        "jobs": ["student"],
     }
     # set
-    t2 = {'name': 'ferry', 'hobbies': {'programming', 'sci-fi'}}
-    opta.loader._deepupdate(t2, {'hobbies': {'gaming'}, 'jobs': {'student'}})
+    t2 = {"name": "ferry", "hobbies": {"programming", "sci-fi"}}
+    opta.loader._deepupdate(t2, {"hobbies": {"gaming"}, "jobs": {"student"}})
     assert t2 == {
-        'name': 'ferry',
-        'hobbies': {'programming', 'sci-fi', 'gaming'},
-        'jobs': {'student'},
+        "name": "ferry",
+        "hobbies": {"programming", "sci-fi", "gaming"},
+        "jobs": {"student"},
     }
     # dict
-    t3 = {'name': 'ferry', 'hobbies': {'programming': True, 'sci-fi': True}}
-    opta.loader._deepupdate(t3, {'hobbies': {'gaming': True}})
+    t3 = {"name": "ferry", "hobbies": {"programming": True, "sci-fi": True}}
+    opta.loader._deepupdate(t3, {"hobbies": {"gaming": True}})
     assert t3 == {
-        'name': 'ferry',
-        'hobbies': {'programming': True, 'sci-fi': True, 'gaming': True},
+        "name": "ferry",
+        "hobbies": {"programming": True, "sci-fi": True, "gaming": True},
     }
     # value
-    t4 = {'name': 'ferry', 'hobby': 'programming'}
-    opta.loader._deepupdate(t4, {'hobby': 'gaming'})
-    assert t4 == {'name': 'ferry', 'hobby': 'gaming'}
+    t4 = {"name": "ferry", "hobby": "programming"}
+    opta.loader._deepupdate(t4, {"hobby": "gaming"})
+    assert t4 == {"name": "ferry", "hobby": "gaming"}
 
 
 class TestJSONOptaLoader:

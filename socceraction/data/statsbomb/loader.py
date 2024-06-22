@@ -1,4 +1,5 @@
 """Implements serializers for StatsBomb data."""
+
 import os
 from typing import Any, Optional, cast
 

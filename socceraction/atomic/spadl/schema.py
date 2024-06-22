@@ -1,4 +1,5 @@
 """Schema for Atomic-SPADL actions."""
+
 from typing import Any, Optional
 
 import pandera as pa

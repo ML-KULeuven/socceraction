@@ -1,4 +1,5 @@
 """Nox sessions."""
+
 import shutil
 import sys
 from pathlib import Path
@@ -90,17 +91,12 @@ def precommit(session: Session) -> None:
         "--show-diff-on-failure",
     ]
     session.install(
-        "black",
         "darglint",
-        "flake8",
-        "flake8-bugbear",
-        "flake8-docstrings",
-        "flake8-rst-docstrings",
+        "ruff",
         "pep8-naming",
         "pre-commit",
         "pre-commit-hooks",
         "pyupgrade",
-        "isort",
     )
     session.run("pre-commit", *args)
     if args and args[0] == "install":
@@ -125,7 +121,14 @@ def tests(session: Session) -> None:
     session.install("coverage[toml]", "pytest", "pygments", "pytest-mock")
     try:
         session.run(
-            "coverage", "run", "--parallel", "-m", "pytest", "-m", "not e2e", *session.posargs
+            "coverage",
+            "run",
+            "--parallel",
+            "-m",
+            "pytest",
+            "-m",
+            "not e2e",
+            *session.posargs,
         )
     finally:
         if session.interactive:

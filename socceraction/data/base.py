@@ -3,6 +3,7 @@
 A serializer should extend the 'EventDataLoader' class to (down)load event
 stream data.
 """
+
 import base64
 import json
 import warnings
