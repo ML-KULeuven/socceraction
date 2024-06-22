@@ -24,13 +24,13 @@ class TestSpadlConvertor:
         )
 
         self.events = loader.events(1009316)
+        self.actions = opta.convert_to_actions(self.events, 174)
 
     def test_convert_to_actions(self) -> None:
-        df_actions = opta.convert_to_actions(self.events, 174)
-        assert len(df_actions) > 0
-        SPADLSchema.validate(df_actions)
-        assert (df_actions.game_id == 1009316).all()
-        assert ((df_actions.team_id == 174) | (df_actions.team_id == 957)).all()
+        assert len(self.actions) > 0
+        SPADLSchema.validate(self.actions)
+        assert (self.actions.game_id == 1009316).all()
+        assert ((self.actions.team_id == 174) | (self.actions.team_id == 957)).all()
 
     def test_convert_goalkick(self) -> None:
         event = pd.DataFrame(
@@ -52,7 +52,13 @@ class TestSpadlConvertor:
                     "end_y": 18.7,
                     "assist": False,
                     "keypass": False,
-                    "qualifiers": {56: "Right", 141: "18.7", 124: True, 140: "73.0", 1: True},
+                    "qualifiers": {
+                        56: "Right",
+                        141: "18.7",
+                        124: True,
+                        140: "73.0",
+                        1: True,
+                    },
                     "type_name": "pass",
                 }
             ]
@@ -88,6 +94,16 @@ class TestSpadlConvertor:
         action = opta.convert_to_actions(event, 0).iloc[0]
         assert action["type_id"] == spadlcfg.actiontypes.index("bad_touch")
         assert action["result_id"] == spadlcfg.results.index("owngoal")
+
+    def test_fix_deflected_passes(self) -> None:
+        # for a deflected pass, the end coordinates and result should be fixed
+        deflected_pass = self.actions.loc[self.actions.original_event_id == 2016736289].iloc[0]
+        assert deflected_pass["result_id"] == spadlcfg.results.index("success")
+        assert deflected_pass["end_x"] == (100 - 70.6) / 100 * spadlcfg.field_length
+        assert deflected_pass["end_y"] == (100 - 72.6) / 100 * spadlcfg.field_width
+        # other actions that are followed by a ball touch event should not be changed
+        tackle = self.actions.loc[self.actions.original_event_id == 1820711400].iloc[0]
+        assert tackle["result_id"] == spadlcfg.results.index("fail")
 
 
 def test_extract_lineups_f7xml() -> None:
