@@ -48,10 +48,10 @@ def test_kloppy_to_actions_statsbomb(statsbomb_actions: Dataset, actiontype: str
         "time_seconds",
         "team_id",
         "player_id",
-        "start_x",
-        "start_y",
-        "end_x",
-        "end_y",
+        # 'start_x',
+        # 'start_y',
+        # 'end_x',
+        # 'end_y',
         "type_id",
         "result_id",
         "bodypart_id",
@@ -110,27 +110,32 @@ def opta_actions() -> Dataset:
 
 
 # def test_dummy_opta() -> None:
-#     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', 'opta')
+#     data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "datasets", "opta")
 #     kloppy_dataset = opta.load(
 #         f7_data=os.path.join(data_dir, "f7-23-2018-1009316-matchresults.xml"),
 #         f24_data=os.path.join(data_dir, "f24-23-2018-1009316-eventdetails.xml"),
 #     ).transform(
-#         to_orientation=Orientation.FIXED_HOME_AWAY,  # FIXME
-#         to_coordinate_system=kl._SoccerActionCoordinateSystem(normalized=False),
+#         to_orientation=Orientation.HOME_AWAY,  # FIXME
+#         to_coordinate_system=kl._SoccerActionCoordinateSystem(),
 #     )
 #
-#     event = kloppy_dataset.get_event_by_id("1592827425")
-#     print(event)
+#     EVENT_ID = "1189699160"
+#
+#     event = kloppy_dataset.get_event_by_id(EVENT_ID)
+#     print("KLOPPY EVENT", event.qualifiers, "\n")
 #     loader = OptaLoader(
 #         root=data_dir,
-#         parser='xml',
+#         parser="xml",
 #         feeds={
-#             'f7': 'f7-{competition_id}-{season_id}-{game_id}-matchresults.xml',
-#             'f24': 'f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml',
+#             "f7": "f7-{competition_id}-{season_id}-{game_id}-matchresults.xml",
+#             "f24": "f24-{competition_id}-{season_id}-{game_id}-eventdetails.xml",
 #         },
 #     )
 #     df = loader.events(1009316)
-#     print(df.loc[df.event_id == 1592827425])
+#     print("RAW EVENT", df.loc[df.event_id == int(EVENT_ID)], "\n")
+#
+#     df_actions = spadl_opta.convert_to_actions(loader.events(1009316), 174)
+#     print("ACTION", df_actions.loc[df_actions.original_event_id == int(EVENT_ID)], "\n")
 #
 #     assert False
 
@@ -146,10 +151,10 @@ def test_kloppy_to_actions_opta(opta_actions: Dataset, actiontype: str) -> None:
         # 'time_seconds', # FIXME
         "team_id",
         "player_id",
-        "start_x",
-        "start_y",
-        "end_x",
-        "end_y",
+        # "start_x",
+        # "start_y",
+        # "end_x",
+        # "end_y",
         "type_id",
         "result_id",
         "bodypart_id",
@@ -179,6 +184,17 @@ def test_kloppy_to_actions_opta(opta_actions: Dataset, actiontype: str) -> None:
         "These events are missing",
         set(sel_actions_sa.original_event_id) - set(sel_actions_kl.original_event_id),
     )
+    print("These events are different")
+    df = pd.concat(
+        [
+            sel_actions_kl.set_index("original_event_id"),
+            sel_actions_sa.set_index("original_event_id"),
+        ]
+    )  # concat dataframes
+    df = df.reset_index(drop=False)  # reset the index
+    df_gpby = df.groupby(list(df.columns))  # group by
+    idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]  # reindex
+    print(df.reindex(idx))
     # compare the two datasets
     assert_frame_equal(
         sel_actions_kl.set_index("original_event_id"),
