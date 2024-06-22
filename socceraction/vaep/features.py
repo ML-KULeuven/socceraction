@@ -90,8 +90,10 @@ def gamestates(actions: Actions, nb_prev_actions: int = 3) -> GameStates:
         raise ValueError("The game state should include at least one preceding action.")
     states = [actions]
     for i in range(1, nb_prev_actions):
-        prev_actions = actions.copy().shift(i, fill_value=0)
-        prev_actions.iloc[:i] = pd.concat([actions[:1]] * i, ignore_index=True)
+        prev_actions = actions.groupby(["game_id", "period_id"], sort=False, as_index=False).apply(
+            lambda x: x.shift(i, fill_value=float("nan")).fillna(x.iloc[0])  # noqa: B023
+        )
+        prev_actions.index = actions.index.copy()
         states.append(prev_actions)  # type: ignore
     return states
 
@@ -576,7 +578,7 @@ def player_possession_time(actions: SPADLActions) -> Features:
         The 'player_possession_time' of each action.
     """
     cur_action = actions[["period_id", "time_seconds", "player_id", "type_id"]]
-    prev_action = actions.shift(1)[["period_id", "time_seconds", "player_id", "type_id"]]
+    prev_action = actions.copy().shift(1)[["period_id", "time_seconds", "player_id", "type_id"]]
     df = cur_action.join(prev_action, rsuffix="_prev")
     same_player = df.player_id == df.player_id_prev
     same_period = df.period_id == df.period_id_prev
