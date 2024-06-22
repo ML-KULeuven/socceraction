@@ -15,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
 import socceraction.spadl as spadlcfg
+from socceraction.types import Actions, Features, GameStatesFeatureTransfomer
 
 from . import features as fs
 from . import formula as vaep
@@ -86,7 +87,7 @@ class VAEP:
 
     def __init__(
         self,
-        xfns: Optional[list[fs.FeatureTransfomer]] = None,
+        xfns: Optional[list[GameStatesFeatureTransfomer]] = None,
         nb_prev_actions: int = 3,
     ) -> None:
         self.__models: dict[str, Any] = {}
@@ -94,7 +95,7 @@ class VAEP:
         self.yfns = [self._lab.scores, self._lab.concedes]
         self.nb_prev_actions = nb_prev_actions
 
-    def compute_features(self, game: pd.Series, game_actions: fs.Actions) -> pd.DataFrame:
+    def compute_features(self, game: pd.Series, game_actions: Actions) -> pd.DataFrame:
         """
         Transform actions to the feature-based representation of game states.
 
@@ -102,7 +103,7 @@ class VAEP:
         ----------
         game : pd.Series
             The SPADL representation of a single game.
-        game_actions : pd.DataFrame
+        game_actions : Actions
             The actions performed during `game` in the SPADL representation.
 
         Returns
@@ -116,7 +117,7 @@ class VAEP:
         return pd.concat([fn(gamestates) for fn in self.xfns], axis=1)
 
     def compute_labels(
-        self, game: pd.Series, game_actions: fs.Actions  # pylint: disable=W0613
+        self, game: pd.Series, game_actions: Actions  # pylint: disable=W0613
     ) -> pd.DataFrame:
         """
         Compute the labels for each game state in the given game.
@@ -125,7 +126,7 @@ class VAEP:
         ----------
         game : pd.Series
             The SPADL representation of a single game.
-        game_actions : pd.DataFrame
+        game_actions : Actions
             The actions performed during `game` in the SPADL representation.
 
         Returns
@@ -294,7 +295,7 @@ class VAEP:
         return Y_hat
 
     def rate(
-        self, game: pd.Series, game_actions: fs.Actions, game_states: Optional[fs.Features] = None
+        self, game: pd.Series, game_actions: Actions, game_states: Optional[Features] = None
     ) -> pd.DataFrame:
         """
         Compute the VAEP rating for the given game states.
@@ -303,7 +304,7 @@ class VAEP:
         ----------
         game : pd.Series
             The SPADL representation of a single game.
-        game_actions : pd.DataFrame
+        game_actions : Actions
             The actions performed during `game` in the SPADL representation.
         game_states : pd.DataFrame, default=None
             DataFrame with the game state representation of each action. If

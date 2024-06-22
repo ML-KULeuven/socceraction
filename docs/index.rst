@@ -37,6 +37,7 @@ contains the following components:
 
    api/data
    api/spadl_regular
+   api/attributes
    api/xthreat
    api/vaep
    api/spadl_atomic

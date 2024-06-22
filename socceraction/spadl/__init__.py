@@ -12,12 +12,13 @@ __all__ = [
     'results_df',
     'add_names',
     'play_left_to_right',
+    'to_gamestates',
 ]
 
 from . import config, opta, statsbomb, wyscout
 from .config import actiontypes_df, bodyparts_df, results_df
 from .schema import SPADLSchema
-from .utils import add_names, play_left_to_right
+from .utils import add_names, play_left_to_right, to_gamestates
 
 try:
     from . import kloppy

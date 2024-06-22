@@ -64,6 +64,8 @@ def offensive_value(
     # fixed odds of scoring when corner
     corner_idx = actions.type_name.isin(['corner_crossed', 'corner_short'])
     prev_scores[corner_idx] = 0.046500
+    pd.set_option('display.max_columns', None)
+    print(pd.concat([actions[penalty_idx], scores[penalty_idx], prev_scores[penalty_idx]], axis=1))
 
     return scores - prev_scores
 

@@ -9,6 +9,7 @@ xfns_default : list(callable)
 from typing import Optional
 
 import socceraction.atomic.spadl as spadlcfg
+from socceraction.types import GameStatesFeatureTransfomer
 from socceraction.vaep.base import VAEP
 
 from . import features as fs
@@ -72,7 +73,7 @@ class AtomicVAEP(VAEP):
 
     def __init__(
         self,
-        xfns: Optional[list[fs.FeatureTransfomer]] = None,
+        xfns: Optional[list[GameStatesFeatureTransfomer]] = None,
         nb_prev_actions: int = 3,
     ) -> None:
         xfns = xfns_default if xfns is None else xfns

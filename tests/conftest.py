@@ -9,6 +9,7 @@ from pandera.typing import DataFrame
 
 from socceraction.atomic.spadl import AtomicSPADLSchema
 from socceraction.spadl import SPADLSchema
+from socceraction.spadl.utils import add_names
 
 
 def pytest_configure(config: Config) -> None:
@@ -36,3 +37,28 @@ def spadl_actions() -> DataFrame[SPADLSchema]:
 def atomic_spadl_actions() -> DataFrame[AtomicSPADLSchema]:
     json_file = os.path.join(os.path.dirname(__file__), 'datasets', 'spadl', 'atomic_spadl.json')
     return pd.read_json(json_file, orient='records')
+
+
+@pytest.fixture()
+def shot() -> pd.DataFrame:
+    return add_names(
+        pd.DataFrame(
+            [
+                {
+                    "game_id": 8658,
+                    "original_event_id": "a8692197-bb35-453d-9191-fe7daa25f8df",
+                    "period_id": 2,
+                    "time_seconds": 1176.0,
+                    "team_id": 771,
+                    "player_id": 3009.0,
+                    "start_x": 105 - 11,
+                    "start_y": 34,
+                    "end_x": 105.0,
+                    "end_y": 37.01265822784811,
+                    "type_id": 11,
+                    "result_id": 1,
+                    "bodypart_id": 0,
+                }
+            ]
+        )
+    )

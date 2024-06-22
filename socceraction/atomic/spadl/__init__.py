@@ -7,9 +7,10 @@ __all__ = [
     'actiontypes_df',
     'add_names',
     'play_left_to_right',
+    'to_gamestates',
 ]
 
 from .base import convert_to_atomic
 from .config import actiontypes_df, bodyparts_df
 from .schema import AtomicSPADLSchema
-from .utils import add_names, play_left_to_right
+from .utils import add_names, play_left_to_right, to_gamestates

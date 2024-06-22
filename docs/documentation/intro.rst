@@ -27,7 +27,6 @@ In this short introduction, we will work with Statsbomb's dataset of the 2018 Wo
 
 .. code-block:: python
 
-   import pandas as pd
    from socceraction.data.statsbomb import StatsBombLoader
 
    # Set up the StatsBomb data loader
