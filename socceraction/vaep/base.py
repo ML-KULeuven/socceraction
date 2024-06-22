@@ -227,11 +227,17 @@ class VAEP:
             raise ImportError("xgboost is not installed.")
         # Default settings
         if tree_params is None:
-            tree_params = {"n_estimators": 100, "max_depth": 3}
+            tree_params = {
+                "n_estimators": 100,
+                "max_depth": 3,
+                "eval_metric": "auc",
+                "early_stopping_rounds": 10,
+                "enable_categorical": True,
+            }
         if fit_params is None:
-            fit_params = {"eval_metric": "auc", "verbose": True}
+            fit_params = {"verbose": True}
         if eval_set is not None:
-            val_params = {"early_stopping_rounds": 10, "eval_set": eval_set}
+            val_params = {"eval_set": eval_set}
             fit_params = {**fit_params, **val_params}
         # Train the model
         model = xgboost.XGBClassifier(**tree_params)
