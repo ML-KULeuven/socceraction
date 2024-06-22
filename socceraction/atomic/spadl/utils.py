@@ -1,4 +1,5 @@
 """Utility functions for working with Atomic-SPADL dataframes."""
+
 from typing import cast
 
 from pandera.typing import DataFrame
@@ -23,9 +24,9 @@ def add_names(actions: DataFrame[AtomicSPADLSchema]) -> DataFrame[AtomicSPADLSch
     """
     return cast(
         DataFrame[AtomicSPADLSchema],
-        actions.drop(columns=['type_name', 'bodypart_name'], errors='ignore')
-        .merge(spadlconfig.actiontypes_df(), how='left')
-        .merge(spadlconfig.bodyparts_df(), how='left')
+        actions.drop(columns=["type_name", "bodypart_name"], errors="ignore")
+        .merge(spadlconfig.actiontypes_df(), how="left")
+        .merge(spadlconfig.bodyparts_df(), how="left")
         .set_index(actions.index),
     )
 
@@ -57,8 +58,8 @@ def play_left_to_right(
     """
     ltr_actions = actions.copy()
     away_idx = actions.team_id != home_team_id
-    ltr_actions.loc[away_idx, 'x'] = spadlconfig.field_length - actions[away_idx]['x'].values
-    ltr_actions.loc[away_idx, 'y'] = spadlconfig.field_width - actions[away_idx]['y'].values
-    ltr_actions.loc[away_idx, 'dx'] = -actions[away_idx]['dx'].values
-    ltr_actions.loc[away_idx, 'dy'] = -actions[away_idx]['dy'].values
+    ltr_actions.loc[away_idx, "x"] = spadlconfig.field_length - actions[away_idx]["x"].values
+    ltr_actions.loc[away_idx, "y"] = spadlconfig.field_width - actions[away_idx]["y"].values
+    ltr_actions.loc[away_idx, "dx"] = -actions[away_idx]["dx"].values
+    ltr_actions.loc[away_idx, "dy"] = -actions[away_idx]["dy"].values
     return ltr_actions

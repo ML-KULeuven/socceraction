@@ -1,4 +1,5 @@
 """Wyscout event stream data to SPADL converter."""
+
 from typing import Any, Optional, cast
 
 import pandas as pd  # type: ignore
@@ -475,21 +476,22 @@ def convert_simulations(df_events: pd.DataFrame) -> pd.DataFrame:
     selector_simulation = df_events["subtype_id"] == 25
 
     # Select actions preceded by a failed take-on
-    selector_previous_is_failed_take_on = (prev_events["take_on_left"]) | (
-        prev_events["take_on_right"]
-    ) & prev_events["not_accurate"]
+    selector_previous_is_failed_take_on = (
+        (prev_events["take_on_left"])
+        | (prev_events["take_on_right"]) & prev_events["not_accurate"]
+    )
 
     # Transform simulations not preceded by a failed take-on to a failed take-on
     df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "type_id"] = 0
     df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "subtype_id"] = 0
     df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "accurate"] = False
-    df_events.loc[
-        selector_simulation & ~selector_previous_is_failed_take_on, "not_accurate"
-    ] = True
+    df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "not_accurate"] = (
+        True
+    )
     # Set take_on_left or take_on_right to True
-    df_events.loc[
-        selector_simulation & ~selector_previous_is_failed_take_on, "take_on_left"
-    ] = True
+    df_events.loc[selector_simulation & ~selector_previous_is_failed_take_on, "take_on_left"] = (
+        True
+    )
 
     # Remove simulation events which are preceded by a failed take-on
     df_events = df_events[~(selector_simulation & selector_previous_is_failed_take_on)]
@@ -757,18 +759,14 @@ def fix_actions(df_actions: pd.DataFrame) -> pd.DataFrame:
         0, spadlconfig.field_length
     )
     df_actions["start_y"] = (
-        (100 - df_actions["start_y"])
-        * spadlconfig.field_width
-        / 100
+        (100 - df_actions["start_y"]) * spadlconfig.field_width / 100
         # y is from top to bottom in Wyscout
     ).clip(0, spadlconfig.field_width)
     df_actions["end_x"] = (df_actions["end_x"] * spadlconfig.field_length / 100).clip(
         0, spadlconfig.field_length
     )
     df_actions["end_y"] = (
-        (100 - df_actions["end_y"])
-        * spadlconfig.field_width
-        / 100
+        (100 - df_actions["end_y"]) * spadlconfig.field_width / 100
         # y is from top to bottom in Wyscout
     ).clip(0, spadlconfig.field_width)
     df_actions = fix_goalkick_coordinates(df_actions)

@@ -12,6 +12,7 @@ actiontypes : list(str)
     The action types used in the Atomic-SPADL language.
 
 """
+
 import pandas as pd
 
 import socceraction.spadl.config as _spadl
@@ -23,16 +24,16 @@ bodyparts = _spadl.bodyparts
 bodyparts_df = _spadl.bodyparts_df
 
 actiontypes = _spadl.actiontypes + [
-    'receival',
-    'interception',
-    'out',
-    'offside',
-    'goal',
-    'owngoal',
-    'yellow_card',
-    'red_card',
-    'corner',
-    'freekick',
+    "receival",
+    "interception",
+    "out",
+    "offside",
+    "goal",
+    "owngoal",
+    "yellow_card",
+    "red_card",
+    "corner",
+    "freekick",
 ]
 
 
@@ -44,4 +45,4 @@ def actiontypes_df() -> pd.DataFrame:
     pd.DataFrame
         The 'type_id' and 'type_name' of each Atomic-SPADL action type.
     """
-    return pd.DataFrame(list(enumerate(actiontypes)), columns=['type_id', 'type_name'])
+    return pd.DataFrame(list(enumerate(actiontypes)), columns=["type_id", "type_name"])

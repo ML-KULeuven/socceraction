@@ -1,13 +1,13 @@
 """Module for loading Wyscout event data."""
 
 __all__ = [
-    'PublicWyscoutLoader',
-    'WyscoutLoader',
-    'WyscoutCompetitionSchema',
-    'WyscoutGameSchema',
-    'WyscoutPlayerSchema',
-    'WyscoutTeamSchema',
-    'WyscoutEventSchema',
+    "PublicWyscoutLoader",
+    "WyscoutLoader",
+    "WyscoutCompetitionSchema",
+    "WyscoutGameSchema",
+    "WyscoutPlayerSchema",
+    "WyscoutTeamSchema",
+    "WyscoutEventSchema",
 ]
 
 from .loader import PublicWyscoutLoader, WyscoutLoader

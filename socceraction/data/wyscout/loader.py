@@ -1,4 +1,5 @@
 """Implements serializers for Wyscout data."""
+
 import glob
 import os
 import re
@@ -127,13 +128,13 @@ class PublicWyscoutLoader(EventDataLoader):
         self._cache: Optional[dict[str, Any]] = None
 
     def _download_repo(self) -> None:
-        dataset_urls = dict(
-            competitions="https://ndownloader.figshare.com/files/15073685",
-            teams="https://ndownloader.figshare.com/files/15073697",
-            players="https://ndownloader.figshare.com/files/15073721",
-            matches="https://ndownloader.figshare.com/files/14464622",
-            events="https://ndownloader.figshare.com/files/14464685",
-        )
+        dataset_urls = {
+            "competitions": "https://ndownloader.figshare.com/files/15073685",
+            "teams": "https://ndownloader.figshare.com/files/15073697",
+            "players": "https://ndownloader.figshare.com/files/15073721",
+            "matches": "https://ndownloader.figshare.com/files/14464622",
+            "events": "https://ndownloader.figshare.com/files/14464685",
+        }
         # download and unzip Wyscout open data
         for url in dataset_urls.values():
             url_obj = urlopen(url).geturl()

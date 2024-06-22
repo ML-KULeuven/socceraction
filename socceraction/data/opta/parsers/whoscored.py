@@ -1,4 +1,5 @@
 """JSON parser for WhoScored feeds."""
+
 import json  # type: ignore
 import re
 from datetime import datetime, timedelta
@@ -104,29 +105,29 @@ class WhoScoredParser(OptaParser):
         """
         team_home = assertget(self.root, "home")
         team_away = assertget(self.root, "away")
-        game_dict = dict(
+        game_dict = {
             # Fields required by the base schema
-            game_id=self.game_id,
-            season_id=self.season_id,
-            competition_id=self.competition_id,
-            game_day=None,  # Cannot be determined from the data stream
-            game_date=datetime.strptime(
+            "game_id": self.game_id,
+            "season_id": self.season_id,
+            "competition_id": self.competition_id,
+            "game_day": None,  # Cannot be determined from the data stream
+            "game_date": datetime.strptime(
                 assertget(self.root, "startTime"), "%Y-%m-%dT%H:%M:%S"
             ),  # Dates are UTC
-            home_team_id=int(assertget(team_home, "teamId")),
-            away_team_id=int(assertget(team_away, "teamId")),
+            "home_team_id": int(assertget(team_home, "teamId")),
+            "away_team_id": int(assertget(team_away, "teamId")),
             # Optional fields
-            home_score=int(assertget(assertget(self.root["home"], "scores"), "running")),
-            away_score=int(assertget(assertget(self.root["away"], "scores"), "running")),
-            duration=int(self.root.get("expandedMaxMinute"))
+            "home_score": int(assertget(assertget(self.root["home"], "scores"), "running")),
+            "away_score": int(assertget(assertget(self.root["away"], "scores"), "running")),
+            "duration": int(self.root.get("expandedMaxMinute"))
             if "expandedMaxMinute" in self.root
             else None,
-            referee=self.root.get("referee", {}).get("name"),
-            venue=self.root.get("venueName"),
-            attendance=int(self.root.get("attendance")) if "attendance" in self.root else None,
-            home_manager=team_home.get("managerName"),
-            away_manager=team_away.get("managerName"),
-        )
+            "referee": self.root.get("referee", {}).get("name"),
+            "venue": self.root.get("venueName"),
+            "attendance": int(self.root.get("attendance")) if "attendance" in self.root else None,
+            "home_manager": team_home.get("managerName"),
+            "away_manager": team_away.get("managerName"),
+        }
         return {self.game_id: game_dict}
 
     def extract_teams(self) -> dict[int, dict[str, Any]]:
@@ -141,11 +142,11 @@ class WhoScoredParser(OptaParser):
         teams = {}
         for side in [self.root["home"], self.root["away"]]:
             team_id = int(assertget(side, "teamId"))
-            teams[team_id] = dict(
+            teams[team_id] = {
                 # Fields required by the base schema
-                team_id=team_id,
-                team_name=assertget(side, "name"),
-            )
+                "team_id": team_id,
+                "team_name": assertget(side, "name"),
+            }
         return teams
 
     def extract_players(self) -> dict[tuple[int, int], dict[str, Any]]:
@@ -164,17 +165,17 @@ class WhoScoredParser(OptaParser):
             team_id = int(assertget(team, "teamId"))
             for p in team["players"]:
                 player_id = int(assertget(p, "playerId"))
-                players[(game_id, player_id)] = dict(
+                players[(game_id, player_id)] = {
                     # Fields required by the base schema
-                    game_id=game_id,
-                    team_id=team_id,
-                    player_id=player_id,
-                    player_name=assertget(p, "name"),
-                    is_starter=bool(p.get("isFirstEleven", False)),
-                    minutes_played=player_gamestats[(game_id, player_id)]["minutes_played"],
-                    jersey_number=player_gamestats[(game_id, player_id)]["jersey_number"],
+                    "game_id": game_id,
+                    "team_id": team_id,
+                    "player_id": player_id,
+                    "player_name": assertget(p, "name"),
+                    "is_starter": bool(p.get("isFirstEleven", False)),
+                    "minutes_played": player_gamestats[(game_id, player_id)]["minutes_played"],
+                    "jersey_number": player_gamestats[(game_id, player_id)]["jersey_number"],
                     # Fields required by the opta schema
-                    starting_position=player_gamestats[(game_id, player_id)]["position_code"],
+                    "starting_position": player_gamestats[(game_id, player_id)]["position_code"],
                     # Optional fields
                     # WhoScored retrieves player details for the current date,
                     # not for the game date. Hence, we do not innclude this
@@ -182,7 +183,7 @@ class WhoScoredParser(OptaParser):
                     # age=int(p["age"]),
                     # height=float(p.get("height", float("NaN"))),
                     # weight=float(p.get("weight", float("NaN"))),
-                )
+                }
         return players
 
     def extract_events(self) -> dict[tuple[int, int], dict[str, Any]]:
@@ -210,38 +211,40 @@ class WhoScoredParser(OptaParser):
             }
             end_x = attr.get("endX", _get_end_x(qualifiers))
             end_y = attr.get("endY", _get_end_y(qualifiers))
-            events[(self.game_id, event_id)] = dict(
+            events[(self.game_id, event_id)] = {
                 # Fields required by the base schema
-                game_id=self.game_id,
-                event_id=event_id,
-                period_id=self._get_period_id(attr),
-                team_id=int(assertget(attr, "teamId")),
-                player_id=int(attr.get("playerId")) if "playerId" in attr else None,
-                type_id=int(assertget(eventtype, "value")),
+                "game_id": self.game_id,
+                "event_id": event_id,
+                "period_id": self._get_period_id(attr),
+                "team_id": int(assertget(attr, "teamId")),
+                "player_id": int(attr.get("playerId")) if "playerId" in attr else None,
+                "type_id": int(assertget(eventtype, "value")),
                 # type_name=assertget(eventtype, "displayName"),  # added in the opta loader
                 # Fields required by the opta schema
                 # Timestamp is not availe in the data stream. The returned
                 # timestamp  is not accurate, but sufficient for camptability
                 # with the other Opta data streams.
-                timestamp=(time_start + timedelta(seconds=(minute * 60 + second))),
-                minute=minute,
-                second=second,
-                outcome=bool(attr["outcomeType"].get("value")) if "outcomeType" in attr else None,
-                start_x=start_x,
-                start_y=start_y,
-                end_x=end_x if end_x is not None else start_x,
-                end_y=end_y if end_y is not None else start_y,
-                qualifiers=qualifiers,
+                "timestamp": (time_start + timedelta(seconds=(minute * 60 + second))),
+                "minute": minute,
+                "second": second,
+                "outcome": bool(attr["outcomeType"].get("value"))
+                if "outcomeType" in attr
+                else None,
+                "start_x": start_x,
+                "start_y": start_y,
+                "end_x": end_x if end_x is not None else start_x,
+                "end_y": end_y if end_y is not None else start_y,
+                "qualifiers": qualifiers,
                 # Optional fields
-                related_player_id=int(attr.get("relatedPlayerId"))
+                "related_player_id": int(attr.get("relatedPlayerId"))
                 if "relatedPlayerId" in attr
                 else None,
-                touch=bool(attr.get("isTouch", False)),
-                goal=bool(attr.get("isGoal", False)),
-                shot=bool(attr.get("isShot", False)),
+                "touch": bool(attr.get("isTouch", False)),
+                "goal": bool(attr.get("isGoal", False)),
+                "shot": bool(attr.get("isShot", False)),
                 # assist=bool(attr.get('assist')) if "assist" in attr else None,
                 # keypass=bool(attr.get('keypass')) if "keypass" in attr else None,
-            )
+            }
 
         return events
 
@@ -258,14 +261,14 @@ class WhoScoredParser(OptaParser):
         subonevents = [e for e in self.root["events"] if e["type"].get("value") == 19]
         for e in subonevents:
             sub_id = int(assertget(e, "playerId"))
-            sub = dict(
-                game_id=self.game_id,
-                team_id=int(assertget(e, "teamId")),
-                period_id=self._get_period_id(e),
-                period_milliseconds=self._get_period_milliseconds(e),
-                player_in_id=int(assertget(e, "playerId")),
-                player_out_id=int(assertget(e, "relatedPlayerId")),
-            )
+            sub = {
+                "game_id": self.game_id,
+                "team_id": int(assertget(e, "teamId")),
+                "period_id": self._get_period_id(e),
+                "period_milliseconds": self._get_period_milliseconds(e),
+                "player_in_id": int(assertget(e, "playerId")),
+                "player_out_id": int(assertget(e, "relatedPlayerId")),
+            }
             subs[(self.game_id, sub_id)] = sub
         return subs
 
@@ -303,19 +306,19 @@ class WhoScoredParser(OptaParser):
                     x = float(assertget(p, "vertical"))
                     y = float(assertget(p, "horizontal"))
                     position_code = _position_mapping(formation, x, y)
-                    positions[(self.game_id, player_id, start_minute)] = dict(
-                        game_id=self.game_id,
-                        team_id=team_id,
-                        player_id=player_id,
-                        period_id=period_id,
-                        period_milliseconds=(period_minute * 60 * 1000),
-                        start_milliseconds=(start_minute * 60 * 1000),
-                        end_milliseconds=(end_minute * 60 * 1000),
-                        formation_scheme=formation,
-                        player_position=position_code,
-                        player_position_x=x,
-                        player_position_y=y,
-                    )
+                    positions[(self.game_id, player_id, start_minute)] = {
+                        "game_id": self.game_id,
+                        "team_id": team_id,
+                        "player_id": player_id,
+                        "period_id": period_id,
+                        "period_milliseconds": (period_minute * 60 * 1000),
+                        "start_milliseconds": (start_minute * 60 * 1000),
+                        "end_milliseconds": (end_minute * 60 * 1000),
+                        "formation_scheme": formation,
+                        "player_position": position_code,
+                        "player_position_x": x,
+                        "player_position_y": y,
+                    }
         return positions
 
     def extract_teamgamestats(self) -> dict[tuple[int, int], dict[str, Any]]:

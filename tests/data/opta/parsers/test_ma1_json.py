@@ -3,7 +3,6 @@ from datetime import datetime
 
 import pandas as pd
 from pytest import fixture
-
 from socceraction.data.opta import (
     OptaCompetitionSchema,
     OptaGameSchema,
@@ -77,7 +76,7 @@ def test_extract_players(ma1json_parser: MA1JSONParser) -> None:
         "game_id": "bsu6pjne1eqz2hs8r3685vbhl",
         "player_id": "b40xhpgxf8cvruo6vumzu3u1h",
         "player_name": "Enrico Valentini",
-        "team_id": 'aojwbjr39s1w2mcd9l2bf2dhk',
+        "team_id": "aojwbjr39s1w2mcd9l2bf2dhk",
         "jersey_number": 22,
         "minutes_played": 93,
         "starting_position": "Defender",

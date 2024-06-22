@@ -1,4 +1,5 @@
 """JSON parser for Stats Perform MA1 feeds."""
+
 from datetime import datetime
 from typing import Any, Optional
 
@@ -16,20 +17,20 @@ class MA1JSONParser(OptaJSONParser):
     """
 
     def _get_matches(self) -> list[dict[str, Any]]:
-        if 'matchInfo' in self.root:
+        if "matchInfo" in self.root:
             return [self.root]
-        if 'match' in self.root:
-            return self.root['match']
+        if "match" in self.root:
+            return self.root["match"]
         raise MissingDataError
 
     def _get_match_info(self, match: dict[str, Any]) -> dict[str, Any]:
-        if 'matchInfo' in match:
-            return match['matchInfo']
+        if "matchInfo" in match:
+            return match["matchInfo"]
         raise MissingDataError
 
     def _get_live_data(self, match: dict[str, Any]) -> dict[str, Any]:
-        if 'liveData' in match:
-            return match['liveData']
+        if "liveData" in match:
+            return match["liveData"]
         return {}
 
     def _get_name(self, obj: dict[str, Any]) -> Optional[str]:
@@ -60,16 +61,16 @@ class MA1JSONParser(OptaJSONParser):
         competitions = {}
         for match in self._get_matches():
             match_info = self._get_match_info(match)
-            season = assertget(match_info, 'tournamentCalendar')
-            season_id = assertget(season, 'id')
-            competition = assertget(match_info, 'competition')
-            competition_id = assertget(competition, 'id')
-            competitions[(competition_id, season_id)] = dict(
-                season_id=season_id,
-                season_name=assertget(season, 'name'),
-                competition_id=competition_id,
-                competition_name=assertget(competition, 'name'),
-            )
+            season = assertget(match_info, "tournamentCalendar")
+            season_id = assertget(season, "id")
+            competition = assertget(match_info, "competition")
+            competition_id = assertget(competition, "id")
+            competitions[(competition_id, season_id)] = {
+                "season_id": season_id,
+                "season_name": assertget(season, "name"),
+                "competition_id": competition_id,
+                "competition_name": assertget(competition, "name"),
+            }
         return competitions
 
     def extract_games(self) -> dict[str, dict[str, Any]]:
@@ -84,33 +85,33 @@ class MA1JSONParser(OptaJSONParser):
         games = {}
         for match in self._get_matches():
             match_info = self._get_match_info(match)
-            game_id = assertget(match_info, 'id')
-            season = assertget(match_info, 'tournamentCalendar')
-            competition = assertget(match_info, 'competition')
+            game_id = assertget(match_info, "id")
+            season = assertget(match_info, "tournamentCalendar")
+            competition = assertget(match_info, "competition")
             contestant = assertget(match_info, "contestant")
-            game_date = assertget(match_info, 'date')
-            game_time = assertget(match_info, 'time')
+            game_date = assertget(match_info, "date")
+            game_time = assertget(match_info, "time")
             game_datetime = f"{game_date} {game_time}"
-            venue = assertget(match_info, 'venue')
-            games[game_id] = dict(
+            venue = assertget(match_info, "venue")
+            games[game_id] = {
                 # Fields required by the base schema
-                game_id=game_id,
-                competition_id=assertget(competition, 'id'),
-                season_id=assertget(season, 'id'),
-                game_day=int(match_info["week"]) if "week" in match_info else None,
-                game_date=datetime.strptime(game_datetime, "%Y-%m-%dZ %H:%M:%SZ"),
-                home_team_id=self._extract_team_id(contestant, "home"),
-                away_team_id=self._extract_team_id(contestant, "away"),
+                "game_id": game_id,
+                "competition_id": assertget(competition, "id"),
+                "season_id": assertget(season, "id"),
+                "game_day": int(match_info["week"]) if "week" in match_info else None,
+                "game_date": datetime.strptime(game_datetime, "%Y-%m-%dZ %H:%M:%SZ"),
+                "home_team_id": self._extract_team_id(contestant, "home"),
+                "away_team_id": self._extract_team_id(contestant, "away"),
                 # Optional fields
                 # home_score=?,
                 # away_score=?,
                 # duration=?,
                 # referee=?,
-                venue=venue["shortName"] if "shortName" in venue else None,
+                "venue": venue["shortName"] if "shortName" in venue else None,
                 # attendance=?,
                 # home_manager=?,
                 # away_manager=?,
-            )
+            }
             live_data = self._get_live_data(match)
             if "matchDetails" in live_data:
                 match_details = assertget(live_data, "matchDetails")
@@ -144,13 +145,13 @@ class MA1JSONParser(OptaJSONParser):
         teams = {}
         for match in self._get_matches():
             match_info = self._get_match_info(match)
-            contestants = assertget(match_info, 'contestant')
+            contestants = assertget(match_info, "contestant")
             for contestant in contestants:
-                team_id = assertget(contestant, 'id')
-                team = dict(
-                    team_id=team_id,
-                    team_name=assertget(contestant, 'name'),
-                )
+                team_id = assertget(contestant, "id")
+                team = {
+                    "team_id": team_id,
+                    "team_name": assertget(contestant, "name"),
+                }
                 teams[team_id] = team
         return teams
 
@@ -167,7 +168,7 @@ class MA1JSONParser(OptaJSONParser):
         subs = self.extract_substitutions()
         for match in self._get_matches():
             match_info = self._get_match_info(match)
-            game_id = assertget(match_info, 'id')
+            game_id = assertget(match_info, "id")
             live_data = self._get_live_data(match)
             if "lineUp" not in live_data:
                 continue
@@ -178,30 +179,30 @@ class MA1JSONParser(OptaJSONParser):
                 and e["type"] in ["Y2C", "RC"]
                 and "playerId" in e  # not defined if a coach receives a red card
             }
-            lineups = assertget(live_data, 'lineUp')
+            lineups = assertget(live_data, "lineUp")
             for lineup in lineups:
-                team_id = assertget(lineup, 'contestantId')
-                players_in_lineup = assertget(lineup, 'player')
+                team_id = assertget(lineup, "contestantId")
+                players_in_lineup = assertget(lineup, "player")
                 for individual in players_in_lineup:
-                    player_id = assertget(individual, 'playerId')
-                    players[(game_id, player_id)] = dict(
+                    player_id = assertget(individual, "playerId")
+                    players[(game_id, player_id)] = {
                         # Fields required by the base schema
-                        game_id=game_id,
-                        team_id=team_id,
-                        player_id=player_id,
-                        player_name=self._get_name(individual),
-                        is_starter=assertget(individual, 'position') != "Substitute",
+                        "game_id": game_id,
+                        "team_id": team_id,
+                        "player_id": player_id,
+                        "player_name": self._get_name(individual),
+                        "is_starter": assertget(individual, "position") != "Substitute",
                         # minutes_played="?",
-                        jersey_number=assertget(individual, 'shirtNumber'),
+                        "jersey_number": assertget(individual, "shirtNumber"),
                         # Fields required by the opta schema
-                        starting_position=assertget(individual, 'position'),
-                    )
+                        "starting_position": assertget(individual, "position"),
+                    }
                     if "matchDetails" in live_data and "substitute" in live_data:
                         match_details = assertget(live_data, "matchDetails")
                         if "matchLengthMin" not in match_details:
                             continue
                         # Determine when player entered the pitch
-                        is_starter = assertget(individual, 'position') != "Substitute"
+                        is_starter = assertget(individual, "position") != "Substitute"
                         sub_in = [
                             s
                             for s in subs.values()
@@ -246,18 +247,18 @@ class MA1JSONParser(OptaJSONParser):
         subs = {}
         for match in self._get_matches():
             match_info = self._get_match_info(match)
-            game_id = assertget(match_info, 'id')
+            game_id = assertget(match_info, "id")
             live_data = self._get_live_data(match)
             if "substitute" not in live_data:
                 continue
-            for e in assertget(live_data, 'substitute'):
+            for e in assertget(live_data, "substitute"):
                 sub_id = assertget(e, "playerOnId")
-                subs[(game_id, sub_id)] = dict(
-                    game_id=game_id,
-                    team_id=assertget(e, "contestantId"),
-                    period_id=int(assertget(e, "periodId")),
-                    minute=int(assertget(e, "timeMin")),
-                    player_in_id=assertget(e, "playerOnId"),
-                    player_out_id=assertget(e, "playerOffId"),
-                )
+                subs[(game_id, sub_id)] = {
+                    "game_id": game_id,
+                    "team_id": assertget(e, "contestantId"),
+                    "period_id": int(assertget(e, "periodId")),
+                    "minute": int(assertget(e, "timeMin")),
+                    "player_in_id": assertget(e, "playerOnId"),
+                    "player_out_id": assertget(e, "playerOffId"),
+                }
         return subs

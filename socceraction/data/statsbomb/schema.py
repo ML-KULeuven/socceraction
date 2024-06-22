@@ -1,4 +1,5 @@
 """SPADL schema for StatsBomb data."""
+
 from typing import Optional
 
 import pandera as pa

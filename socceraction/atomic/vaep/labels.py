@@ -1,4 +1,5 @@
 """Implements the label tranformers of the Atomic-VAEP framework."""
+
 import pandas as pd
 from pandera.typing import DataFrame
 
@@ -24,25 +25,25 @@ def scores(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> pd.Da
         next x actions; otherwise False.
     """
     # merging goals, owngoals and team_ids
-    goals = actions['type_id'] == atomicspadl.actiontypes.index('goal')
-    owngoals = actions['type_id'] == atomicspadl.actiontypes.index('owngoal')
-    y = pd.concat([goals, owngoals, actions['team_id']], axis=1)
-    y.columns = ['goal', 'owngoal', 'team_id']
+    goals = actions["type_id"] == atomicspadl.actiontypes.index("goal")
+    owngoals = actions["type_id"] == atomicspadl.actiontypes.index("owngoal")
+    y = pd.concat([goals, owngoals, actions["team_id"]], axis=1)
+    y.columns = ["goal", "owngoal", "team_id"]
 
     # adding future results
     for i in range(1, nr_actions):
-        for c in ['team_id', 'goal', 'owngoal']:
+        for c in ["team_id", "goal", "owngoal"]:
             shifted = y[c].shift(-i)
             shifted[-i:] = y[c][len(y) - 1]
-            y['%s+%d' % (c, i)] = shifted
+            y["%s+%d" % (c, i)] = shifted
 
-    res = y['goal']
+    res = y["goal"]
     for i in range(1, nr_actions):
-        gi = y['goal+%d' % i] & (y['team_id+%d' % i] == y['team_id'])
-        ogi = y['owngoal+%d' % i] & (y['team_id+%d' % i] != y['team_id'])
+        gi = y["goal+%d" % i] & (y["team_id+%d" % i] == y["team_id"])
+        ogi = y["owngoal+%d" % i] & (y["team_id+%d" % i] != y["team_id"])
         res = res | gi | ogi
 
-    return pd.DataFrame(res, columns=['scores'])
+    return pd.DataFrame(res, columns=["scores"])
 
 
 def concedes(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> pd.DataFrame:
@@ -63,25 +64,25 @@ def concedes(actions: DataFrame[AtomicSPADLSchema], nr_actions: int = 10) -> pd.
         next x actions; otherwise False.
     """
     # merging goals, owngoals and team_ids
-    goals = actions['type_id'] == atomicspadl.actiontypes.index('goal')
-    owngoals = actions['type_id'] == atomicspadl.actiontypes.index('owngoal')
-    y = pd.concat([goals, owngoals, actions['team_id']], axis=1)
-    y.columns = ['goal', 'owngoal', 'team_id']
+    goals = actions["type_id"] == atomicspadl.actiontypes.index("goal")
+    owngoals = actions["type_id"] == atomicspadl.actiontypes.index("owngoal")
+    y = pd.concat([goals, owngoals, actions["team_id"]], axis=1)
+    y.columns = ["goal", "owngoal", "team_id"]
 
     # adding future results
     for i in range(1, nr_actions):
-        for c in ['team_id', 'goal', 'owngoal']:
+        for c in ["team_id", "goal", "owngoal"]:
             shifted = y[c].shift(-i)
             shifted[-i:] = y[c][len(y) - 1]
-            y['%s+%d' % (c, i)] = shifted
+            y["%s+%d" % (c, i)] = shifted
 
-    res = y['owngoal']
+    res = y["owngoal"]
     for i in range(1, nr_actions):
-        gi = y['goal+%d' % i] & (y['team_id+%d' % i] != y['team_id'])
-        ogi = y['owngoal+%d' % i] & (y['team_id+%d' % i] == y['team_id'])
+        gi = y["goal+%d" % i] & (y["team_id+%d" % i] != y["team_id"])
+        ogi = y["owngoal+%d" % i] & (y["team_id+%d" % i] == y["team_id"])
         res = res | gi | ogi
 
-    return pd.DataFrame(res, columns=['concedes'])
+    return pd.DataFrame(res, columns=["concedes"])
 
 
 def goal_from_shot(actions: DataFrame[AtomicSPADLSchema]) -> pd.DataFrame:
