@@ -445,8 +445,11 @@ def time(actions: Actions) -> Features:
         The 'period_id', 'time_seconds' and 'time_seconds_overall' when each
         action was performed.
     """
+    match_time_at_period_start = {1: 0, 2: 45, 3: 90, 4: 105, 5: 120}
     timedf = actions[["period_id", "time_seconds"]].copy()
-    timedf["time_seconds_overall"] = ((timedf.period_id - 1) * 45 * 60) + timedf.time_seconds
+    timedf["time_seconds_overall"] = (
+        timedf.period_id.map(match_time_at_period_start) * 60
+    ) + timedf.time_seconds
     return timedf
 
 
