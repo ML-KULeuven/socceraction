@@ -13,7 +13,7 @@ from typing import Any, Optional, Union, cast
 import pandas as pd  # type: ignore
 from pandera.typing import DataFrame
 
-from socceraction.data.base import EventDataLoader
+from socceraction.data.providers.base import EventDataLoader
 
 from .parsers import (
     F1JSONParser,

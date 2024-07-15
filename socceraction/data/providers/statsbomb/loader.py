@@ -11,7 +11,7 @@ try:
 except ImportError:
     sb = None
 
-from socceraction.data.base import (
+from socceraction.data.providers.base import (
     EventDataLoader,
     ParseError,
     _expand_minute,
@@ -334,8 +334,9 @@ class StatsBombLoader(EventDataLoader):
         eventsdf["related_events"] = eventsdf["related_events"].apply(
             lambda d: d if isinstance(d, list) else []
         )
-        eventsdf["under_pressure"] = eventsdf["under_pressure"].fillna(False).astype(bool)
-        eventsdf["counterpress"] = eventsdf["counterpress"].fillna(False).astype(bool)
+        with pd.option_context("future.no_silent_downcasting", True):
+            eventsdf["under_pressure"] = eventsdf["under_pressure"].fillna(False).astype(bool)
+            eventsdf["counterpress"] = eventsdf["counterpress"].fillna(False).astype(bool)
         eventsdf.rename(
             columns={"id": "event_id", "period": "period_id", "match_id": "game_id"},
             inplace=True,

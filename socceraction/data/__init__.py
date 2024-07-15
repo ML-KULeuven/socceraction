@@ -1,9 +1,17 @@
 """Implements serializers for the event data of various providers."""
 
 __all__ = [
-    "opta",
-    "statsbomb",
-    "wyscout",
+    "OptaLoader",
+    "StatsBombLoader",
+    "WyscoutLoader",
+    "PublicWyscoutLoader",
+    "Dataset",
+    "HDFDataset",
+    "SQLDataset",
+    "PartitionIdentifier",
 ]
 
-from . import opta, statsbomb, wyscout
+from .dataset import Dataset, HDFDataset, PartitionIdentifier, SQLDataset
+from .providers.opta import OptaLoader
+from .providers.statsbomb import StatsBombLoader
+from .providers.wyscout import PublicWyscoutLoader, WyscoutLoader

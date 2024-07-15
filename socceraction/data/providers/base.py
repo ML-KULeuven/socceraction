@@ -8,12 +8,22 @@ import base64
 import json
 import warnings
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Union
 from urllib import request
 
 from pandera.typing import DataFrame
 
 JSONType = Union[str, int, float, bool, None, dict[str, Any], list[Any]]
+
+
+class Provider(Enum):
+    """Enum with all supported data providers."""
+
+    OPTA = "opta"
+    STATSBOMB = "statsbomb"
+    WYSCOUT = "wyscout"
+    OTHER = "other"
 
 
 class ParseError(Exception):
