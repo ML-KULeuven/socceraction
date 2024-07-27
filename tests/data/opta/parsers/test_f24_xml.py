@@ -3,8 +3,8 @@ from datetime import datetime
 
 import pandas as pd
 from pytest import fixture
-from socceraction.data.opta import OptaEventSchema, OptaGameSchema
-from socceraction.data.opta.parsers import F24XMLParser
+from socceraction.data.providers.opta import OptaEventSchema, OptaGameSchema
+from socceraction.data.providers.opta.parsers import F24XMLParser
 
 
 @fixture()

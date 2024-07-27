@@ -1,9 +1,9 @@
 .. _api-data-opta:
 
-socceraction.data.opta
-======================
+socceraction.data.providers.opta
+================================
 
-.. automodule:: socceraction.data.opta
+.. automodule:: socceraction.data.providers.opta
 
 Serializers
 ------------
@@ -13,7 +13,7 @@ Serializers
   :nosignatures:
   :template: class.rst
 
-  socceraction.data.opta.OptaLoader
+  socceraction.data.providers.opta.OptaLoader
 
 
 Schema
@@ -24,8 +24,8 @@ Schema
   :nosignatures:
   :template: schema.rst
 
-  socceraction.data.opta.OptaCompetitionSchema
-  socceraction.data.opta.OptaTeamSchema
-  socceraction.data.opta.OptaPlayerSchema
-  socceraction.data.opta.OptaGameSchema
-  socceraction.data.opta.OptaEventSchema
+  socceraction.data.providers.opta.OptaCompetitionSchema
+  socceraction.data.providers.opta.OptaTeamSchema
+  socceraction.data.providers.opta.OptaPlayerSchema
+  socceraction.data.providers.opta.OptaGameSchema
+  socceraction.data.providers.opta.OptaEventSchema

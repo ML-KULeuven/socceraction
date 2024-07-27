@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from socceraction.data.wyscout import PublicWyscoutLoader
+from socceraction.data.providers.wyscout import PublicWyscoutLoader
 from socceraction.spadl import SPADLSchema
 from socceraction.spadl import config as spadl
 from socceraction.spadl import wyscout as wy

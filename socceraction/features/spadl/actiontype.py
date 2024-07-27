@@ -4,10 +4,10 @@ import pandas as pd
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Features, Mask, SPADLActions
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 
-@ftype("actions")
+@feature_generator("actions", features=["actiontype"])
 def actiontype(actions: SPADLActions, mask: Mask) -> Features:
     """Get the type of each action.
 
@@ -32,7 +32,7 @@ def actiontype(actions: SPADLActions, mask: Mask) -> Features:
     return X.loc[mask]
 
 
-@ftype("actions")
+@feature_generator("actions", features=[f"actiontype_{t}" for t in spadlcfg.actiontypes])
 def actiontype_onehot(actions: SPADLActions, mask: Mask) -> Features:
     """Get the one-hot-encoded type of each action.
 

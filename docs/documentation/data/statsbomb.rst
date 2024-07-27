@@ -1,4 +1,4 @@
-.. currentmodule:: socceraction.data.statsbomb
+.. currentmodule:: socceraction.data.providers.statsbomb
 
 =========================
 Loading StatsBomb data

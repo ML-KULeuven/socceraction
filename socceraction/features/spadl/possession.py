@@ -1,11 +1,13 @@
+"""Feature generators for possession-related features."""
+
 import pandas as pd
 from socceraction.spadl import config as spadlcfg
 from socceraction.types import Features, GameStates, Mask, SPADLActions
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 
-@ftype("actions")
+@feature_generator("actions", features=["player_possession_time"])
 def player_possession_time(actions: SPADLActions, mask: Mask) -> Features:
     """Get the time (sec) a player was in ball possession before attempting the action.
 
@@ -39,7 +41,7 @@ def player_possession_time(actions: SPADLActions, mask: Mask) -> Features:
     return df[["player_possession_time"]].fillna(0.0)
 
 
-@ftype("gamestates")
+@feature_generator("gamestates", features=["team_ai"])
 def team(gamestates: GameStates, mask: Mask) -> Features:
     """Check whether the possession changed during the game state.
 

@@ -1,13 +1,14 @@
 """Attributes on SPADL shots."""
 
 import math
+from typing import Callable
 
 import numpy as np
 import pandas as pd
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Features, Mask, SPADLActions
 
-from ..utils import ftype
+from ..utils import feature_generator
 from .location import custom_grid
 
 _spadl_cfg = {
@@ -26,47 +27,21 @@ _spadl_cfg = {
 }
 
 
-@ftype("actions")
-def goal_from_shot(actions: SPADLActions, mask: Mask) -> Features:
-    """Determine whether a goal was scored from the current action.
-
-    This label can be used to train an xG model.
-
-    Parameters
-    ----------
-    actions : pd.DataFrame
-        The actions of a game in SPADL format.
-    mask : pd.Series
-        A boolean mask to select the shots for which attributes should be
-        computed.
-
-    Returns
-    -------
-    pd.DataFrame
-        A dataframe with a column 'goal' and a row for each shot set to
-        True if a goal was scored from the current shot; otherwise False.
-    """
-    shots = actions.loc[mask]
-    goaldf = pd.DataFrame(index=shots.index)
-    goaldf["goal"] = shots["result_name"] == "success"
-    return goaldf
-
-
-@ftype("actions")
+@feature_generator("actions", features=["dist_shot"])
 def shot_dist(actions: SPADLActions, mask: Mask) -> Features:
     """Compute the distance to the middle of the goal.
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column for the distance to the middle of the goal
         ('dist_shot').
     """
@@ -78,7 +53,7 @@ def shot_dist(actions: SPADLActions, mask: Mask) -> Features:
     return distdf
 
 
-@ftype("actions")
+@feature_generator("actions", features=["dx_shot", "dy_shot"])
 def shot_location(actions: SPADLActions, mask: Mask) -> Features:
     """Compute the distance to the mid line and goal line.
 
@@ -87,15 +62,15 @@ def shot_location(actions: SPADLActions, mask: Mask) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column for the distance to the mid line ('dy_shot')
         and a column for the distance to the goal line ('dx_shot').
     """
@@ -106,24 +81,24 @@ def shot_location(actions: SPADLActions, mask: Mask) -> Features:
     return locationdf
 
 
-@ftype("actions")
+@feature_generator("actions", features=["angle_shot"])
 def shot_angle(actions: SPADLActions, mask: Mask) -> Features:
-    """Compute the angle to the middle of the goal.
+    """Compute the shot to the middle of the goal.
 
     This corresponds to the angle in a polar coordinate system with the origin
     at the center of the goal.
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column for the angle to the middle of the goal
         ('angle_shot').
     """
@@ -136,21 +111,21 @@ def shot_angle(actions: SPADLActions, mask: Mask) -> Features:
     return polardf
 
 
-@ftype("actions")
+@feature_generator("actions", features=["visible_angle_shot"])
 def shot_visible_angle(actions: SPADLActions, mask: Mask) -> Features:
     """Compute the angle formed between the shot location and the two goal posts.
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column for the angle formed between the shot location
         and the two goal posts ('visible_angle_shot').
 
@@ -182,7 +157,7 @@ def shot_visible_angle(actions: SPADLActions, mask: Mask) -> Features:
     return angledf
 
 
-@ftype("actions")
+@feature_generator("actions", features=["relative_angle_shot"])
 def shot_relative_angle(actions: SPADLActions, mask: Mask) -> Features:
     """Compute the relative angle to goal.
 
@@ -193,15 +168,15 @@ def shot_relative_angle(actions: SPADLActions, mask: Mask) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column for the relative angle to the goal
         ('relative_angle_shot').
 
@@ -228,7 +203,7 @@ def shot_relative_angle(actions: SPADLActions, mask: Mask) -> Features:
     return angledf[["relative_angle_shot"]]
 
 
-@ftype("actions")
+@feature_generator("actions", features=["post_dribble", "carry_length"])
 def post_dribble(actions: SPADLActions, mask: Mask) -> Features:
     """Compute features describing the dribble before the shot.
 
@@ -240,15 +215,15 @@ def post_dribble(actions: SPADLActions, mask: Mask) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a boolean column containing whether the shot was
         preceded by a take-on attempt of the shot-taker ('post_dribble') and
         the distance between the end location of the assisting pass and the
@@ -266,7 +241,7 @@ def post_dribble(actions: SPADLActions, mask: Mask) -> Features:
     return pd.DataFrame.from_dict(df, orient="index")
 
 
-@ftype("actions")
+@feature_generator("actions", features=["type_assist"])
 def assist_type(actions: SPADLActions, mask: Mask) -> Features:
     """Return the assist type.
 
@@ -277,15 +252,15 @@ def assist_type(actions: SPADLActions, mask: Mask) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column containing the assist type of each shot
         ('type_assist').
     """
@@ -324,7 +299,7 @@ def assist_type(actions: SPADLActions, mask: Mask) -> Features:
     return pd.DataFrame.from_dict(df, orient="index")
 
 
-@ftype("actions")
+@feature_generator("actions", features=["fastbreak"])
 def fastbreak(actions: SPADLActions, mask: Mask) -> Features:
     """Get whether the shot was part of a counter attack.
 
@@ -334,15 +309,15 @@ def fastbreak(actions: SPADLActions, mask: Mask) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column containing whether shot was part of a fastbreak
         ('fastbreak').
     """
@@ -375,7 +350,7 @@ def fastbreak(actions: SPADLActions, mask: Mask) -> Features:
     return pd.DataFrame.from_dict(df, orient="index")
 
 
-@ftype("actions")
+@feature_generator("actions", features=["rebound", "time_prev_shot"])
 def rebound(actions: SPADLActions, mask: Mask) -> Features:
     """Get whether the shot was a rebound.
 
@@ -383,15 +358,15 @@ def rebound(actions: SPADLActions, mask: Mask) -> Features:
 
     Parameters
     ----------
-    actions : pd.DataFrame
+    actions : SPADLActions
         The actions of a game in SPADL format.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column containing whether shot was a rebound ('rebound')
         and the time since the previous shot ('time_prev_shot').
     """
@@ -422,9 +397,14 @@ def rebound(actions: SPADLActions, mask: Mask) -> Features:
     return pd.DataFrame.from_dict(df, orient="index")
 
 
-def _caley_shot_matrix(cfg=_spadl_cfg):
-    """
-    https://cartilagefreecaptain.sbnation.com/2013/11/13/5098186/shot-matrix-i-shot-location-and-expected-goals
+def _caley_shot_matrix(
+    cfg: dict[str, float] = _spadl_cfg,
+) -> list[list[tuple[float, float, float, float]]]:
+    """Create the zones of Caley's shot location chart [1].
+
+    .. [1] Caley, Micheal. "Shot Matrix I: Shot Location and Expected Goals",
+            Cartilage Freecaptain SBNation, 13 November 2013,
+            https://cartilagefreecaptain.sbnation.com/2013/11/13/5098186/shot-matrix-i-shot-location-and-expected-goals
     """
     m = (cfg["origin_y"] + cfg["width"]) / 2
 
@@ -515,10 +495,12 @@ def _caley_shot_matrix(cfg=_spadl_cfg):
     return zones
 
 
-def _point_in_rect(rect):
+def _point_in_rect(
+    rect: tuple[float, float, float, float],
+) -> Callable[[tuple[float, float]], bool]:
     x1, y1, x2, y2 = rect
 
-    def fn(point):
+    def fn(point: tuple[float, float]) -> bool:
         x, y = point
         if x1 <= x and x <= x2:
             if y1 <= y and y <= y2:
@@ -528,4 +510,6 @@ def _point_in_rect(rect):
     return fn
 
 
-caley_grid = ftype("actions")(custom_grid("caley_zone", _caley_shot_matrix(), _point_in_rect))
+caley_grid = feature_generator("actions", features=["caley_zone"])(
+    custom_grid("caley_zone", _caley_shot_matrix(), _point_in_rect)
+)

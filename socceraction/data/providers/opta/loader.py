@@ -204,7 +204,7 @@ def _extract_ids_from_path(path: str, pattern: str) -> dict[str, Union[str, int]
     return {k: int(v) if v.isdigit() else v for k, v in ids.items()}
 
 
-class OptaLoader(EventDataLoader):
+class OptaLoader(EventDataLoader[int]):
     """Load Opta data feeds from a local folder.
 
     Parameters

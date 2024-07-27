@@ -9,7 +9,7 @@ import json
 import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Generic, TypeVar, Union
 from urllib import request
 
 from pandera.typing import DataFrame
@@ -132,7 +132,10 @@ def _expand_minute(minute: int, periods_duration: list[int]) -> int:
     return expanded_minute
 
 
-class EventDataLoader(ABC):
+T = TypeVar("T", str, int)
+
+
+class EventDataLoader(ABC, Generic[T]):
     """Load event data either from a remote location or from a local folder.
 
     Parameters
@@ -155,14 +158,14 @@ class EventDataLoader(ABC):
         """
 
     @abstractmethod
-    def games(self, competition_id: int, season_id: int) -> DataFrame[Any]:
+    def games(self, competition_id: T, season_id: T) -> DataFrame[Any]:
         """Return a dataframe with all available games in a season.
 
         Parameters
         ----------
-        competition_id : int
+        competition_id : str or int
             The ID of the competition.
-        season_id : int
+        season_id : str or int
             The ID of the season.
 
         Returns
@@ -173,12 +176,12 @@ class EventDataLoader(ABC):
         """
 
     @abstractmethod
-    def teams(self, game_id: int) -> DataFrame[Any]:
+    def teams(self, game_id: T) -> DataFrame[Any]:
         """Return a dataframe with both teams that participated in a game.
 
         Parameters
         ----------
-        game_id : int
+        game_id : str or int
             The ID of the game.
 
         Returns
@@ -189,12 +192,12 @@ class EventDataLoader(ABC):
         """
 
     @abstractmethod
-    def players(self, game_id: int) -> DataFrame[Any]:
+    def players(self, game_id: T) -> DataFrame[Any]:
         """Return a dataframe with all players that participated in a game.
 
         Parameters
         ----------
-        game_id : int
+        game_id : str or int
             The ID of the game.
 
         Returns
@@ -205,12 +208,12 @@ class EventDataLoader(ABC):
         """
 
     @abstractmethod
-    def events(self, game_id: int) -> DataFrame[Any]:
+    def events(self, game_id: T) -> DataFrame[Any]:
         """Return a dataframe with the event stream of a game.
 
         Parameters
         ----------
-        game_id : int
+        game_id : str or int
             The ID of the game.
 
         Returns

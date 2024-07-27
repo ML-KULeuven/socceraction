@@ -1,9 +1,9 @@
 .. _api-data-wyscout:
 
-socceraction.data.wyscout
-=========================
+socceraction.data.providers.wyscout
+===================================
 
-.. automodule:: socceraction.data.wyscout
+.. automodule:: socceraction.data.providers.wyscout
 
 Serializers
 ------------
@@ -13,8 +13,8 @@ Serializers
   :nosignatures:
   :template: class.rst
 
-  socceraction.data.wyscout.WyscoutLoader
-  socceraction.data.wyscout.PublicWyscoutLoader
+  socceraction.data.providers.wyscout.WyscoutLoader
+  socceraction.data.providers.wyscout.PublicWyscoutLoader
 
 Schema
 ------
@@ -24,8 +24,8 @@ Schema
   :nosignatures:
   :template: schema.rst
 
-  socceraction.data.wyscout.WyscoutCompetitionSchema
-  socceraction.data.wyscout.WyscoutTeamSchema
-  socceraction.data.wyscout.WyscoutPlayerSchema
-  socceraction.data.wyscout.WyscoutGameSchema
-  socceraction.data.wyscout.WyscoutEventSchema
+  socceraction.data.providers.wyscout.WyscoutCompetitionSchema
+  socceraction.data.providers.wyscout.WyscoutTeamSchema
+  socceraction.data.providers.wyscout.WyscoutPlayerSchema
+  socceraction.data.providers.wyscout.WyscoutGameSchema
+  socceraction.data.providers.wyscout.WyscoutEventSchema

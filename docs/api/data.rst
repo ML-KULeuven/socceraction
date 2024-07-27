@@ -3,6 +3,39 @@
 socceraction.data
 =================
 
+socceraction.data.dataset
+-------------------------
+
+.. autosummary::
+  :toctree: generated
+  :nosignatures:
+  :template: class.rst
+
+  ~socceraction.data.dataset.HDFDataset
+  ~socceraction.data.dataset.SQLDataset
+
+
+socceraction.data.transforms
+----------------------------
+
+
+.. autosummary::
+  :toctree: generated
+  :nosignatures:
+
+  ~socceraction.data.transforms.PlayActionsLeftToRight
+  ~socceraction.data.transforms.PlayAtomicActionsLeftToRight
+  ~socceraction.data.transforms.StatsBombEventsToActions
+  ~socceraction.data.transforms.OptaEventsToActions
+  ~socceraction.data.transforms.WyscoutEventsToActions
+  ~socceraction.data.transforms.ActionsToFeatures
+  ~socceraction.data.transforms.StatsBombEventsToFeatures
+
+
+
+socceraction.data.providers
+---------------------------
+
 .. list-table::
    :widths: 30 70
 

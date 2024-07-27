@@ -1,4 +1,4 @@
-.. currentmodule:: socceraction.data.opta
+.. currentmodule:: socceraction.data.providers.opta
 
 =========================
 Loading Opta data

@@ -1,4 +1,4 @@
-import socceraction.atomic.spadl as spadlcfg
+import socceraction.atomic.spadl as spadl
 from pandas import testing as tm
 from pandera.typing import DataFrame
 from socceraction.atomic.spadl import AtomicSPADLSchema
@@ -25,8 +25,8 @@ xfns = [
 def test_same_index(atomic_spadl_actions: DataFrame[AtomicSPADLSchema]) -> None:
     """The feature generators should not change the index of the input dataframe."""
     atomic_spadl_actions.index += 10
-    game_actions_with_names = spadlcfg.add_names(atomic_spadl_actions)
-    gamestates = fs.gamestates(game_actions_with_names, 3)
+    game_actions_with_names = spadl.add_names(atomic_spadl_actions)
+    gamestates = spadl.to_gamestates(game_actions_with_names, 3)
     gamestates = fs.play_left_to_right(gamestates, 782)
     for fn in xfns:
         features = fn(gamestates)

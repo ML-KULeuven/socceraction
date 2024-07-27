@@ -3,12 +3,12 @@
 Each serializer should create dataframes that contain at least the fields
 included in these base schemas. Each serializer can add different additional
 fields on top.
-
 """
 
 import pandas as pd
 import pandera as pa
-from pandera.typing import DateTime, Object, Series
+from pandera.typing import Series
+from pandera.typing.common import DateTime, Object
 
 
 class CompetitionSchema(pa.SchemaModel):

@@ -34,7 +34,7 @@ from .schema import (
 )
 
 
-class PublicWyscoutLoader(EventDataLoader):
+class PublicWyscoutLoader(EventDataLoader[int]):
     """
     Load the public Wyscout dataset.
 
@@ -346,7 +346,7 @@ class PublicWyscoutLoader(EventDataLoader):
         )
 
 
-class WyscoutLoader(EventDataLoader):
+class WyscoutLoader(EventDataLoader[int]):
     """Load event data either from a remote location or from a local folder.
 
     Parameters

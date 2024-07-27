@@ -1,11 +1,13 @@
+"""Feature generators that capture the game context."""
+
 import pandas as pd
 import socceraction.spadl.config as spadlcfg
-from socceraction.types import Actions, Features, GameStates, Mask
+from socceraction.types import Actions, Features, Mask, SPADLActions
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 
-@ftype("actions")
+@feature_generator("actions", features=["period_id", "time_seconds", "time_seconds_overall"])
 def time(actions: Actions, mask: Mask) -> Features:
     """Get the time when each action was performed.
 
@@ -39,13 +41,13 @@ def time(actions: Actions, mask: Mask) -> Features:
     return timedf
 
 
-@ftype("gamestates")
-def goalscore(gamestates: GameStates, mask: Mask) -> Features:
+@feature_generator("actions", features=["goalscore_team", "goalscore_opponent", "goalscore_diff"])
+def goalscore(actions: SPADLActions, mask: Mask) -> Features:
     """Get the number of goals scored by each team after the action.
 
     Parameters
     ----------
-    gamestates : GameStates
+    actions : SPADLActions
         The gamestates of a game.
     mask : Mask
         A boolean mask to filter gamestates.
@@ -57,7 +59,6 @@ def goalscore(gamestates: GameStates, mask: Mask) -> Features:
         game state ('goalscore_team'), by the opponent ('goalscore_opponent'),
         and the goal difference between both teams ('goalscore_diff').
     """
-    actions = gamestates[0]
     teamA = actions["team_id"].values[0]
     goals = actions["type_name"].str.contains("shot") & (
         actions["result_id"] == spadlcfg.results.index("success")

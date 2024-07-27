@@ -1,7 +1,7 @@
 .. _api-data-base:
 
-socceraction.data.base
-======================
+socceraction.data.providers.base
+================================
 
 .. automodule:: socceraction.data
 
@@ -13,7 +13,7 @@ Serializers
   :nosignatures:
   :template: class.rst
 
-  socceraction.data.base.EventDataLoader
+  socceraction.data.providers.base.EventDataLoader
 
 
 Schema

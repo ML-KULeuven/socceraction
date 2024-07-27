@@ -1,6 +1,7 @@
 """Tests for the socceraction.data.dataset module."""
 
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from pytest import fixture
@@ -34,7 +35,7 @@ def test_create_sqlite_dataset() -> None:
         assert len(df_events) > 0
 
 
-def test_create_hdf_dataset(tmp_path) -> None:
+def test_create_hdf_dataset(tmp_path: Path) -> None:
     """It should add the requested data to the database."""
     db_path = tmp_path / "db.h5"
     data_loader = StatsBombLoader(getter="remote")
@@ -115,7 +116,7 @@ def test_players(db: Dataset) -> None:
     assert len(df_players) == 30
     df_players = db.players(game_id=3795107)
     assert len(df_players) == 30
-    with pytest.raises(IndexError, match="No game found with ID=0"):
+    with pytest.raises(LookupError, match="No game found with ID=0"):
         df_players = db.players(game_id=0)
 
 
@@ -124,17 +125,8 @@ def test_events(db: Dataset) -> None:
     """It should return the events for a given game."""
     df_events = db.events(game_id=3795107)
     assert len(df_events) > 0
-    with pytest.raises(IndexError, match="No events found for game with ID=0"):
+    with pytest.raises(LookupError, match="No events found for game with ID=0"):
         db.events(game_id=0)
-
-
-@pytest.mark.parametrize("db", database_interfaces)
-def test_actions(db: Dataset) -> None:
-    """It should return the actions for a given game."""
-    df_actions = db.actions(game_id=3795107)
-    assert len(df_actions) > 0
-    with pytest.raises(IndexError, match="No game found with ID=0"):
-        db.actions(game_id=0)
 
 
 @pytest.mark.parametrize("db", database_interfaces)
@@ -143,7 +135,7 @@ def test_get_home_away_team_id(db: Dataset) -> None:
     home_team_id, away_team_id = db.get_home_away_team_id(game_id=3795107)
     assert home_team_id == 782
     assert away_team_id == 914
-    with pytest.raises(IndexError, match="No game found with ID=0"):
+    with pytest.raises(LookupError, match="No game found with ID=0"):
         db.get_home_away_team_id(game_id=0)
 
 
@@ -152,7 +144,7 @@ def test_get_player_name(db: Dataset) -> None:
     """It should return the name of the player with a given ID."""
     player_name = db.get_player_name(player_id=3089)
     assert player_name == "Kevin De Bruyne"
-    with pytest.raises(IndexError, match="No player found with ID=0"):
+    with pytest.raises(LookupError, match="No player found with ID=0"):
         db.get_player_name(player_id=0)
 
 
@@ -169,7 +161,7 @@ def test_get_team_name(db: Dataset) -> None:
     """It should return the name of the team with a given ID."""
     team_name = db.get_team_name(team_id=782)
     assert team_name == "Belgium"
-    with pytest.raises(IndexError, match="No team found with ID=0"):
+    with pytest.raises(LookupError, match="No team found with ID=0"):
         db.get_team_name(team_id=0)
 
 

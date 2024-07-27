@@ -6,11 +6,11 @@ import unittest
 from importlib import reload
 
 import pytest
-import socceraction.data.statsbomb as sb
+import socceraction.data.providers.statsbomb as sb
 from py.path import local
 from pytest import fixture
-from socceraction.data.base import ParseError
-from socceraction.data.statsbomb import (
+from socceraction.data.providers.base import ParseError
+from socceraction.data.providers.statsbomb import (
     StatsBombCompetitionSchema,
     StatsBombEventSchema,
     StatsBombGameSchema,
@@ -58,11 +58,11 @@ class TestWithoutStatsBombPy(unittest.TestCase):
     def setUp(self) -> None:
         self._temp_sbpy = sys.modules.get("statsbombpy")
         sys.modules["statsbombpy"] = None  # type: ignore
-        reload(sys.modules["socceraction.data.statsbomb.loader"])
+        reload(sys.modules["socceraction.data.providers.statsbomb.loader"])
 
     def tearDown(self) -> None:
         sys.modules["statsbombpy"] = self._temp_sbpy  # type: ignore
-        reload(sys.modules["socceraction.data.statsbomb.loader"])
+        reload(sys.modules["socceraction.data.providers.statsbomb.loader"])
 
     def tests_load_without_statsbombpy(self) -> None:
         """It raises an error upon initialization of a remote loader if statsbombpy is not installed."""

@@ -4,10 +4,10 @@ import pandas as pd
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Actions, Features, Mask
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 
-@ftype("actions")
+@feature_generator("actions", features=["bodypart"])
 def bodypart(actions: Actions, mask: Mask) -> Features:
     """Get the body part used to perform each action.
 
@@ -44,7 +44,7 @@ def bodypart(actions: Actions, mask: Mask) -> Features:
     return X.loc[mask]
 
 
-@ftype("actions")
+@feature_generator("actions", features=["bodypart_detailed"])
 def bodypart_detailed(actions: Actions, mask: Mask) -> Features:
     """Get the body part with split by foot used to perform each action.
 
@@ -69,7 +69,7 @@ def bodypart_detailed(actions: Actions, mask: Mask) -> Features:
         An alternative version that does not split between the left and right foot.
     """
     X = pd.DataFrame(index=actions.index)
-    X["bodypart"] = pd.Categorical(
+    X["bodypart_detailed"] = pd.Categorical(
         actions["bodypart_id"].replace(spadlcfg.bodyparts_df().bodypart_name.to_dict()),
         categories=spadlcfg.bodyparts,
         ordered=False,
@@ -77,7 +77,9 @@ def bodypart_detailed(actions: Actions, mask: Mask) -> Features:
     return X.loc[mask]
 
 
-@ftype("actions")
+@feature_generator(
+    "actions", features=[f"bodypart_{bp}" for bp in ["foot", "head", "other", "head_or_other"]]
+)
 def bodypart_onehot(actions: Actions, mask: Mask) -> Features:
     """Get the one-hot-encoded bodypart of each action.
 
@@ -114,13 +116,15 @@ def bodypart_onehot(actions: Actions, mask: Mask) -> Features:
             head_id = spadlcfg.bodyparts.index("head")
             other_id = spadlcfg.bodyparts.index("other")
             head_other_id = spadlcfg.bodyparts.index("head/other")
-            X[col] = actions["bodypart_id"].isin([head_id, other_id, head_other_id])
+            X["bodypart_head_or_other"] = actions["bodypart_id"].isin(
+                [head_id, other_id, head_other_id]
+            )
         else:
             X[col] = actions["bodypart_id"] == bodypart_id
     return pd.DataFrame(X, index=actions.index).loc[mask]
 
 
-@ftype("actions")
+@feature_generator("actions", features=[f"bodypart_detailed_{bp}" for bp in spadlcfg.bodyparts])
 def bodypart_detailed_onehot(actions: Actions, mask: Mask) -> Features:
     """Get the one-hot-encoded bodypart with split by foot of each action.
 
@@ -146,7 +150,7 @@ def bodypart_detailed_onehot(actions: Actions, mask: Mask) -> Features:
     """
     X = {}
     for bodypart_id, bodypart_name in enumerate(spadlcfg.bodyparts):
-        col = "bodypart_" + bodypart_name
+        col = "bodypart_detailed_" + bodypart_name
         if bodypart_name == "foot":
             foot_id = spadlcfg.bodyparts.index("foot")
             left_foot_id = spadlcfg.bodyparts.index("foot_left")
@@ -156,7 +160,9 @@ def bodypart_detailed_onehot(actions: Actions, mask: Mask) -> Features:
             head_id = spadlcfg.bodyparts.index("head")
             other_id = spadlcfg.bodyparts.index("other")
             head_other_id = spadlcfg.bodyparts.index("head/other")
-            X[col] = actions["bodypart_id"].isin([head_id, other_id, head_other_id])
+            X["bodypart_detailed_head_or_other"] = actions["bodypart_id"].isin(
+                [head_id, other_id, head_other_id]
+            )
         else:
             X[col] = actions["bodypart_id"] == bodypart_id
     return pd.DataFrame(X, index=actions.index).loc[mask]

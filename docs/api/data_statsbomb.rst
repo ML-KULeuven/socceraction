@@ -1,9 +1,9 @@
 .. _api-data-statsbomb:
 
-socceraction.data.statsbomb
-===========================
+socceraction.data.providers.statsbomb
+=====================================
 
-.. automodule:: socceraction.data.statsbomb
+.. automodule:: socceraction.data.providers.statsbomb
 
 Serializers
 ------------
@@ -13,7 +13,7 @@ Serializers
   :nosignatures:
   :template: class.rst
 
-  socceraction.data.statsbomb.StatsBombLoader
+  socceraction.data.providers.statsbomb.StatsBombLoader
 
 Schema
 ------
@@ -23,8 +23,8 @@ Schema
    :nosignatures:
    :template: schema.rst
 
-    socceraction.data.statsbomb.StatsBombCompetitionSchema
-    socceraction.data.statsbomb.StatsBombTeamSchema
-    socceraction.data.statsbomb.StatsBombPlayerSchema
-    socceraction.data.statsbomb.StatsBombGameSchema
-    socceraction.data.statsbomb.StatsBombEventSchema
+    socceraction.data.providers.statsbomb.StatsBombCompetitionSchema
+    socceraction.data.providers.statsbomb.StatsBombTeamSchema
+    socceraction.data.providers.statsbomb.StatsBombPlayerSchema
+    socceraction.data.providers.statsbomb.StatsBombGameSchema
+    socceraction.data.providers.statsbomb.StatsBombEventSchema

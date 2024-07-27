@@ -3,7 +3,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional, Tuple, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import pandas as pd
 from pandera.typing import DataFrame
@@ -17,22 +17,39 @@ from socceraction.data.schema import (
     PlayerSchema,
     TeamSchema,
 )
-from socceraction.data.transforms import Transform
+from socceraction.data.transforms import Transform, TransformException
 
 
 @dataclass
 class PartitionIdentifier:
-    """A dataclass to identify a partition of a dataset."""
+    """A partition of a dataset.
 
-    competition_id: Optional[int] = None
-    season_id: Optional[int] = None
-    game_id: Optional[int] = None
+    Attributes
+    ----------
+    competition_id : str or int, optional
+        The ID of the competition.
+    season_id : str or int, optional
+        The ID of the season.
+    game_id : str or int, optional
+        The ID of the game.
+    """
 
-    def to_clause(self) -> str:
+    competition_id: Optional[Union[str, int]] = None
+    season_id: Optional[Union[str, int]] = None
+    game_id: Optional[Union[str, int]] = None
+
+    def to_clause(self, syntax: Literal["sql", "pandas"] = "sql") -> str:
         """Convert the partition to a SQL WHERE clause."""
-        return " AND ".join(
-            f"{key}={value}" for key, value in self.__dict__.items() if value is not None
-        )
+        if syntax.lower() == "sql":
+            return " AND ".join(
+                f"{key}={value}" for key, value in self.__dict__.items() if value is not None
+            )
+        elif syntax.lower() == "pandas":
+            return " and ".join(
+                f"{key} == {value}" for key, value in self.__dict__.items() if value is not None
+            )
+        else:
+            raise ValueError(f"Unsupported syntax: {syntax}")
 
 
 class Dataset(ABC):
@@ -44,7 +61,9 @@ class Dataset(ABC):
     """
 
     def import_data(
-        self, data_loader: EventDataLoader, partition: Optional[PartitionIdentifier] = None
+        self,
+        data_loader: EventDataLoader[Union[str, int]],
+        partition: Optional[PartitionIdentifier] = None,
     ) -> None:
         """Import data, upserting it if it already exists.
 
@@ -59,6 +78,11 @@ class Dataset(ABC):
         partition : PartitionIdentifier, optional
             The IDs of the competition, season and/or game to add.
             If these are not given, all available data is imported.
+
+        Raises
+        ------
+        LookupError
+            If no data is found for the given partition.
         """
         competition_id = partition.competition_id if partition else None
         season_id = partition.season_id if partition else None
@@ -73,7 +97,7 @@ class Dataset(ABC):
                 warnings.warn("No competition data was found.", stacklevel=2)
                 games = data_loader.games(competition_id, season_id)
             else:
-                raise ValueError(
+                raise LookupError(
                     "No competitions were found for the given criteria. "
                     "If no data about available competions is available, "
                     "you can load invididual seasons by providing "
@@ -97,7 +121,7 @@ class Dataset(ABC):
         if game_id is not None:
             games = games.loc[games.game_id == game_id]
         if games.empty:
-            raise ValueError("No games found with given criteria.")
+            raise LookupError("No games found for the given criteria.")
 
         # Load and convert match data
         games_verbose = tqdm(games.itertuples(), total=len(games), desc="Loading game data...")
@@ -180,13 +204,18 @@ class Dataset(ABC):
         -------
         pandas.DataFrame
             A DataFrame of players.
+
+        Raises
+        ------
+        LookupError
+            If no game is found with the provided ID.
         """
         player_games = self.read_table("player_games")
 
         if game_id is not None:
             players = player_games[player_games.game_id == game_id]
             if len(players) == 0:
-                raise IndexError(f"No game found with ID={game_id}") from None
+                raise LookupError(f"No game found with ID={game_id}") from None
             return players
 
         cols = ["team_id", "player_id", "player_name"]
@@ -207,18 +236,23 @@ class Dataset(ABC):
         -------
         pandas.DataFrame
             A DataFrame of events.
+
+        Raises
+        ------
+        LookupError
+            If no game is found with the provided ID.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            events = self.read_table("events", PartitionIdentifier(game_id=game_id))
+            events = self.read_table("events", partitions=[PartitionIdentifier(game_id=game_id)])
         if len(events) == 0:
-            raise IndexError(f"No events found for game with ID={game_id}")
+            raise LookupError(f"No events found for game with ID={game_id}")
         return events
 
     def _insert_events(
         self, events: DataFrame[EventSchema], partition: PartitionIdentifier
     ) -> None:
-        self.insert_partition_table("events", events, partition_identifier)
+        self.insert_partition_table("events", events, partition)
 
     @abstractmethod
     def upsert_table(
@@ -229,12 +263,24 @@ class Dataset(ABC):
     ) -> None:
         """Add a dataframe to the dataset.
 
+        This method should be used to store data in a single table. Typically,
+        this is useful for storing data that is not related to a specific game.
+
+        The data is upserted, meaning that if a row with the same primary key
+        already exists, the row is updated.
+
+        For inserting data that is stored in multiple tables, use the
+        `insert_partition_table` method.
+
         Parameters
         ----------
         table : str
             The name of the table to insert the data into.
         data : pandas.DataFrame
             The data to insert.
+        primary_keys : list[str]
+            The columns that should be used as primary keys. These columns
+            should uniquely identify a row in the data.
         """
 
     @abstractmethod
@@ -242,9 +288,17 @@ class Dataset(ABC):
         self,
         table: str,
         data: DataFrame[Any],
-        partition_identifiers: PartitionIdentifier,
+        partition: PartitionIdentifier,
     ) -> None:
         """Add a dataframe with data of a single game to the dataset.
+
+        This method stores data that is related to a specific competition,
+        season and/or game in a partitioned table.
+
+        The data is overwritten if a table for the given partition already
+        exists.
+
+        For storing data in a single table, use the `upsert_table` method.
 
         Parameters
         ----------
@@ -252,20 +306,23 @@ class Dataset(ABC):
             The name of the table to insert the data into.
         data : pandas.DataFrame
             The data of a single game to insert.
-        partition_identifiers : PartitionIdentifier
+        partition: PartitionIdentifier
             The IDs of the competition, season and game that the data belongs to.
         """
 
     @abstractmethod
-    def read_table(self, table: str, *partitions: PartitionIdentifier) -> DataFrame[Any]:
+    def read_table(
+        self, table: str, *, partitions: Optional[list[PartitionIdentifier]] = None
+    ) -> DataFrame[Any]:
         """Read a table from the dataset.
 
         Parameters
         ----------
         table : str
             The name of the table to read.
-        partitions : list[PartitionIdentifier]
-            The IDs of the competitions, seasons and/or games to read.
+        partitions : list of PartitionIdentifier, optional
+            The IDs of the competitions, seasons and/or games to read. If not
+            provided, all data is read.
 
         Returns
         -------
@@ -290,7 +347,7 @@ class Dataset(ABC):
 
         Raises
         ------
-        IndexError
+        LookupError
             If no game exists with the provided ID.
         """
         try:
@@ -301,7 +358,7 @@ class Dataset(ABC):
                 .values
             )
         except KeyError:
-            raise IndexError(f"No game found with ID={game_id}") from None
+            raise LookupError(f"No game found with ID={game_id}") from None
 
     # Players ################################################################
 
@@ -395,23 +452,88 @@ class Dataset(ABC):
 
     def transform(
         self,
-        transformation: Transform,
-        from_tables: dict[str, str] | None = None,
-        to_table: str | None = None,
+        transformation: Transform[Any],
+        from_table: Union[str, list[str]],
+        to_table: Optional[str],
+        *,
+        partitions: Optional[list[PartitionIdentifier]] = None,
         on_fail: Literal["raise", "warn"] = "warn",
-        *identifiers: PartitionIdentifier,
-    ) -> None:
-        """Apply a transformer to the dataset."""
-        for game_partition in tqdm(identifiers, desc="Transforming dataset"):
+    ) -> Optional[pd.DataFrame]:
+        """Apply a transformer to the dataset.
+
+        Parameters
+        ----------
+        transformation : Transform
+            The transformation to apply.
+        from_table : str or list[str]
+            The table(s) to read data from. If multiple tables are given,
+            the data is passed as a list to the transformation function.
+        to_table : str, optional
+            The table to insert the transformed data into. If not given, the
+            transformed data is returned as a dataframe.
+        partitions : list of PartitionIdentifier, optional
+            The partitions to apply the transformation to. If not given, the
+            transformation is applied to all games.
+        on_fail : {'raise', 'warn'}
+            What to do when a transformation fails. If 'raise', an exception
+            is raised as soon as the transformation fails for a game. If 'warn',
+            a warning is issued and the game is skipped.
+
+        Raises
+        ------
+        TransformException
+            If a transformation fails and `on_fail` is set to 'raise'.
+
+        Returns
+        -------
+        pandas.DataFrame, optional
+            The transformed data, if `to_table` is not None.
+        """
+        all_games = self.games()
+        todo_games = (
+            cast(
+                DataFrame[GameSchema],
+                pd.concat(
+                    [all_games.query(partition.to_clause("pandas")) for partition in partitions]
+                ),
+            )
+            if partitions is not None and len(partitions) > 0
+            else all_games
+        )
+        result = []
+        todo_games_verbose = tqdm(
+            todo_games.itertuples(), total=len(todo_games), desc="Transforming dataset"
+        )
+        for game in todo_games_verbose:
             try:
-                inputs = {
-                    input_name: self.read_table(table_name, *identifiers)
-                    for input_name, table_name in from_tables.items()
-                }
-                output = transformation(game_id, games.loc[game_id], **inputs)
-                self.insert_partition_table(to_table, output, partition)
+                if isinstance(from_table, str):
+                    input = self.read_table(
+                        from_table, partitions=[PartitionIdentifier(game_id=game.game_id)]
+                    )
+                    output = transformation(game, input)
+                else:
+                    inputs = [
+                        self.read_table(t, partitions=[PartitionIdentifier(game_id=game.game_id)])
+                        for t in from_table
+                    ]
+                    output = transformation(game, inputs)
+                if to_table is not None:
+                    self.insert_partition_table(
+                        to_table,
+                        output,
+                        PartitionIdentifier(
+                            competition_id=game.competition_id,
+                            season_id=game.season_id,
+                            game_id=game.game_id,
+                        ),
+                    )
+                else:
+                    result.append(output)
             except Exception as e:
                 if on_fail == "warn":
-                    warnings.warn(f"Failed for game with id={game_id}: {e}", stacklevel=2)
+                    warnings.warn(f"Failed for game with id={game.game_id}: {e}", stacklevel=2)
                 else:
-                    raise RuntimeError(f"Failed for game with id={game_id}.") from e
+                    raise TransformException(game_id=game.game_id) from e
+        if to_table is None:
+            return pd.concat(result)
+        return None

@@ -41,6 +41,7 @@ from .event.statsbomb import (
     statsbomb_goalkeeper_position,
     statsbomb_open_goal,
     statsbomb_shot_impact_height,
+    statsbomb_xg,
 )
 from .spadl.actiontype import actiontype, actiontype_onehot
 from .spadl.bodypart import (
@@ -58,7 +59,6 @@ from .spadl.shot import (
     assist_type,
     caley_grid,
     fastbreak,
-    goal_from_shot,
     post_dribble,
     rebound,
     shot_angle,
@@ -101,6 +101,7 @@ __all__ = [
     "fastbreak",
     "rebound",
     "caley_grid",
+    "statsbomb_xg",
     "statsbomb_open_goal",
     "statsbomb_first_touch",
     "statsbomb_free_projection",

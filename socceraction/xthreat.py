@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -11,12 +11,15 @@ from pandera.typing import DataFrame, Series
 from sklearn.exceptions import NotFittedError
 
 import socceraction.spadl.config as spadlconfig
+from socceraction.base import BaseEstimator
+from socceraction.data import Dataset, PartitionIdentifier
+from socceraction.data.transforms import PlayActionsLeftToRight
 from socceraction.spadl.schema import SPADLSchema
 
 try:
-    from scipy.interpolate import interp2d  # type: ignore
+    from scipy.interpolate import RegularGridInterpolator  # type: ignore
 except ImportError:  # pragma: no cover
-    interp2d = None
+    RegularGridInterpolator = None
 
 M: int = 12
 N: int = 16
@@ -218,7 +221,7 @@ def move_transition_matrix(
     return transition_matrix
 
 
-class ExpectedThreat:
+class ExpectedThreat(BaseEstimator):
     """An implementation of the Expected Threat (xT) model.
 
     The xT model [1]_ can be used to value actions that successfully move
@@ -265,6 +268,17 @@ class ExpectedThreat:
     """
 
     def __init__(self, l: int = N, w: int = M, eps: float = 1e-5) -> None:
+        super().__init__(
+            dataset_transformer=PlayActionsLeftToRight(),
+            column_descriptions={
+                "start_x": "The x-coordinate of the starting location of the action.",
+                "start_y": "The y-coordinate of the starting location of the action.",
+                "end_x": "The x-coordinate of the ending location of the action.",
+                "end_y": "The y-coordinate of the ending location of the action.",
+                "result_id": "The result of the action.",
+                "type_id": "The type of the action.",
+            },
+        )
         self.l = l
         self.w = w
         self.eps = eps
@@ -319,22 +333,33 @@ class ExpectedThreat:
 
         print("# iterations: ", it)
 
-    def fit(self, actions: DataFrame[SPADLSchema]) -> "ExpectedThreat":
+    def train(
+        self,
+        source_data: Dataset | DataFrame[SPADLSchema],
+        partitions: Optional[list[PartitionIdentifier]] = None,
+    ) -> "ExpectedThreat":
         """Fits the xT model with the given actions.
 
         Parameters
         ----------
-        actions : pd.DataFrame
-            Actions, in SPADL format.
+        source_data : ``Dataset`` or a Pandas DataFrame with SPADL actions
+            The data to be used to train the model. If an instance of
+            ``Dataset`` is given, will query the database for the training data.
+            The actions should be oriented from left to right.
+        partitions : list of ``PartitionIdentifier``
+            What seasons to use to train the model if getting data from a Dataset instance.
+            If ``source_data`` is not a ``Dataset``, this argument will be ignored.
 
         Returns
         -------
         self
             Fitted xT model.
         """
-        self.scoring_prob_matrix = scoring_prob(actions, self.l, self.w)
-        self.shot_prob_matrix, self.move_prob_matrix = action_prob(actions, self.l, self.w)
-        self.transition_matrix = move_transition_matrix(actions, self.l, self.w)
+        df_actions = self._prepare_and_check_source_data(source_data, partitions)
+
+        self.scoring_prob_matrix = scoring_prob(df_actions, self.l, self.w)
+        self.shot_prob_matrix, self.move_prob_matrix = action_prob(df_actions, self.l, self.w)
+        self.transition_matrix = move_transition_matrix(df_actions, self.l, self.w)
         self.xT = np.zeros((self.w, self.l))
         self.__solve(
             self.scoring_prob_matrix,
@@ -344,12 +369,21 @@ class ExpectedThreat:
         )
         return self
 
+    def validate(
+        self,
+        source_data: Dataset | DataFrame[SPADLSchema],
+        partitions: Optional[list[PartitionIdentifier]] = None,
+    ) -> dict:
+        raise NotImplementedError("The xT model does not support validation.")
+
     def interpolator(
         self, kind: str = "linear"
-    ) -> Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], npt.NDArray[np.float64]]:
+    ) -> Callable[
+        [tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]], npt.NDArray[np.float64]
+    ]:
         """Interpolate over the pitch.
 
-        This is a wrapper around :func:`scipy.interpolate.interp2d`.
+        This is a wrapper around :func:`scipy.interpolate.RegularGridInterpolator`.
 
         Parameters
         ----------
@@ -366,7 +400,7 @@ class ExpectedThreat:
         callable
             A function that interpolates xT values over the pitch.
         """
-        if interp2d is None:
+        if RegularGridInterpolator is None:
             raise ImportError("Interpolation requires scipy to be installed.")
 
         cell_length = spadlconfig.field_length / self.l
@@ -375,11 +409,14 @@ class ExpectedThreat:
         x = np.arange(0.0, spadlconfig.field_length, cell_length) + 0.5 * cell_length
         y = np.arange(0.0, spadlconfig.field_width, cell_width) + 0.5 * cell_width
 
-        return interp2d(x=x, y=y, z=self.xT, kind=kind, bounds_error=False)
+        return RegularGridInterpolator((x, y), self.xT.T, method=kind, bounds_error=False)
 
-    def rate(
-        self, actions: DataFrame[SPADLSchema], use_interpolation: bool = False
-    ) -> npt.NDArray[np.float64]:
+    def estimate(
+        self,
+        source_data: Dataset | DataFrame[SPADLSchema],
+        partitions: Optional[list[PartitionIdentifier]] = None,
+        use_interpolation: bool = False,
+    ) -> DataFrame[Any]:
         """Compute the xT values for the given actions.
 
         xT should only be used to value actions that move the ball and also
@@ -388,8 +425,14 @@ class ExpectedThreat:
 
         Parameters
         ----------
-        actions : pd.DataFrame
-            Actions, in SPADL format.
+        source_data : ``Dataset`` or a Pandas DataFrame with SPADL actions
+            The data to be used to apply the model. If an instance of
+            ``Dataset`` is given, will query the database for the inference data.
+            The actions should be oriented from left to right.
+        partitions : list of ``PartitionIdentifier`` (default=None)
+            Only xT values for the games in these partitions are returned. By default,
+            xG values are computed for all games in the source data.
+            If ``source_data`` is not a ``Dataset``, this argument will be ignored.
         use_interpolation : bool
             Indicates whether to use bilinear interpolation when inferring xT
             values. Note that this requires Scipy to be installed (pip install
@@ -402,8 +445,10 @@ class ExpectedThreat:
 
         Returns
         -------
-        np.ndarray
-            The xT value for each action.
+        pd.DataFrame
+            A dataframe with a column 'xT', containing the predicted xT value
+            of each actions in the given data, indexed by (game_id, action_id,
+            original_event_id) of the corresponding action.
         """
         if not np.any(self.xT):
             raise NotFittedError()
@@ -420,12 +465,21 @@ class ExpectedThreat:
             w = int(spadlconfig.field_width * 10)
             xs = np.linspace(0, spadlconfig.field_length, l)
             ys = np.linspace(0, spadlconfig.field_width, w)
-            grid = interp(xs, ys)
+            X, Y = np.meshgrid(xs, ys, indexing="ij")
+            grid = interp((X, Y)).T
 
-        ratings = np.empty(len(actions))
+        df_actions = self._prepare_and_check_source_data(source_data, partitions)
+        if isinstance(source_data, Dataset):
+            df_source_idx = pd.MultiIndex.from_frame(
+                df_actions[["game_id", "action_id", "original_event_id"]]
+            )
+        else:
+            df_source_idx = source_data.index
+
+        ratings = np.empty(len(df_actions))
         ratings[:] = np.NaN
 
-        move_actions = get_successful_move_actions(actions.reset_index())
+        move_actions = get_successful_move_actions(df_actions.reset_index())
 
         startxc, startyc = _get_cell_indexes(move_actions.start_x, move_actions.start_y, l, w)
         endxc, endyc = _get_cell_indexes(move_actions.end_x, move_actions.end_y, l, w)
@@ -434,7 +488,7 @@ class ExpectedThreat:
         xT_end = grid[endyc.rsub(w - 1), endxc]
 
         ratings[move_actions.index] = xT_end - xT_start
-        return ratings
+        return pd.DataFrame({"xT": ratings}, index=df_source_idx)
 
     def save_model(self, filepath: str, overwrite: bool = True) -> None:
         """Save the xT value surface in JSON format.

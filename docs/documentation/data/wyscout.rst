@@ -1,5 +1,5 @@
 
-.. currentmodule:: socceraction.data.wyscout
+.. currentmodule:: socceraction.data.providers.wyscout
 
 =========================
 Loading Wyscout data

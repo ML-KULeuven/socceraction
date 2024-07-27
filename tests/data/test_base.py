@@ -2,7 +2,7 @@ import os
 from urllib.error import HTTPError
 
 import pytest
-from socceraction.data.base import (
+from socceraction.data.providers.base import (
     _auth_remoteloadjson,
     _has_auth,
     _localloadjson,

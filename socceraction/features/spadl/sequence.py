@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from socceraction.types import Features, GameStates, Mask
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 
-@ftype("gamestates")
+@feature_generator("gamestates", features=["time_delta_i"])
 def time_delta(gamestates: GameStates, mask: Mask) -> Features:
     """Get the number of seconds between the last and previous actions.
 
@@ -15,6 +15,8 @@ def time_delta(gamestates: GameStates, mask: Mask) -> Features:
     ----------
     gamestates : GameStates
         The game states of a game.
+    mask: Mask
+        A boolean mask to filter game states.
 
     Returns
     -------
@@ -29,7 +31,7 @@ def time_delta(gamestates: GameStates, mask: Mask) -> Features:
     return dt
 
 
-@ftype("gamestates")
+@feature_generator("gamestates", features=["dx_a0i", "dy_a0i", "mov_a0i"])
 def space_delta(gamestates: GameStates, mask: Mask) -> Features:
     """Get the distance covered between the last and previous actions.
 
@@ -37,6 +39,8 @@ def space_delta(gamestates: GameStates, mask: Mask) -> Features:
     ----------
     gamestates : GameStates
         The gamestates of a game.
+    mask: Mask
+        A boolean mask to filter game states.
 
     Returns
     -------
@@ -56,7 +60,7 @@ def space_delta(gamestates: GameStates, mask: Mask) -> Features:
     return spaced
 
 
-@ftype("gamestates")
+@feature_generator("gamestates", features=["speedx_a0i", "speedy_a0i", "speed_a0i"])
 def speed(gamestates: GameStates, mask: Mask) -> Features:
     """Get the speed at which the ball moved during the previous actions.
 

@@ -3,13 +3,13 @@ from datetime import datetime
 
 import pandas as pd
 from pytest import fixture
-from socceraction.data.opta import (
+from socceraction.data.providers.opta import (
     OptaCompetitionSchema,
     OptaGameSchema,
     OptaPlayerSchema,
     OptaTeamSchema,
 )
-from socceraction.data.opta.parsers import F7XMLParser
+from socceraction.data.providers.opta.parsers import F7XMLParser
 
 
 @fixture()

@@ -3,8 +3,8 @@ import sys
 
 import pytest
 from py.path import local
-from socceraction.data import opta as opta
-from socceraction.data.opta import (
+from socceraction.data.providers import opta as opta
+from socceraction.data.providers.opta import (
     OptaCompetitionSchema,
     OptaEventSchema,
     OptaGameSchema,

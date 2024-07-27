@@ -6,9 +6,9 @@ import pytest
 from kloppy import opta, statsbomb, wyscout
 from kloppy.domain import Orientation
 from pandas.testing import assert_frame_equal
-from socceraction.data.opta import OptaLoader
-from socceraction.data.statsbomb import StatsBombLoader
-from socceraction.data.wyscout import PublicWyscoutLoader, WyscoutLoader
+from socceraction.data.providers.opta import OptaLoader
+from socceraction.data.providers.statsbomb import StatsBombLoader
+from socceraction.data.providers.wyscout import PublicWyscoutLoader, WyscoutLoader
 from socceraction.spadl import config as spadl
 from socceraction.spadl import kloppy as kl
 from socceraction.spadl import opta as spadl_opta

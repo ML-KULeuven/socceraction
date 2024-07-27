@@ -1,4 +1,4 @@
-"""Implements serializers for the event data of various providers."""
+"""Load, transform and store event stream data."""
 
 __all__ = [
     "OptaLoader",
@@ -9,8 +9,12 @@ __all__ = [
     "HDFDataset",
     "SQLDataset",
     "PartitionIdentifier",
+    "providers",
+    "schema",
+    "transforms",
 ]
 
+from . import providers, schema, transforms
 from .dataset import Dataset, HDFDataset, PartitionIdentifier, SQLDataset
 from .providers.opta import OptaLoader
 from .providers.statsbomb import StatsBombLoader

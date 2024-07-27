@@ -4,11 +4,11 @@ import pandas as pd
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Features, Mask, SPADLActions
 
-from ..utils import ftype
+from ..utils import feature_generator
 from .actiontype import actiontype_onehot
 
 
-@ftype("actions")
+@feature_generator("actions", features=["result"])
 def result(actions: SPADLActions, mask: Mask) -> Features:
     """Get the result of each action.
 
@@ -33,7 +33,7 @@ def result(actions: SPADLActions, mask: Mask) -> Features:
     return X.loc[mask]
 
 
-@ftype("actions")
+@feature_generator("actions", features=[f"result_{r}" for r in spadlcfg.results])
 def result_onehot(actions: SPADLActions, mask: Mask) -> Features:
     """Get the one-hot-encode result of each action.
 
@@ -56,7 +56,10 @@ def result_onehot(actions: SPADLActions, mask: Mask) -> Features:
     return pd.DataFrame(X, index=actions.index).loc[mask]
 
 
-@ftype("actions")
+@feature_generator(
+    "actions",
+    features=[f"actiontype_{t}_{r}" for t in spadlcfg.actiontypes for r in spadlcfg.results],
+)
 def actiontype_result_onehot(actions: SPADLActions, mask: Mask) -> Features:
     """Get a one-hot encoding of the combination between the type and result of each action.
 

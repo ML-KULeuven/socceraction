@@ -207,10 +207,10 @@ def test_xt_model_init() -> None:
     assert len(xTModel.heatmaps) == 0
 
 
-def test_xt_model_fit(spadl_actions: DataFrame[SPADLSchema]) -> None:
+def test_xt_model_train(spadl_actions: DataFrame[SPADLSchema]) -> None:
     """It should update all instance variables."""
     xTModel = xt.ExpectedThreat()
-    xTModel.fit(spadl_actions)
+    xTModel.train(spadl_actions)
     assert xTModel.scoring_prob_matrix is not None
     assert xTModel.shot_prob_matrix is not None
     assert xTModel.move_prob_matrix is not None
@@ -219,19 +219,19 @@ def test_xt_model_fit(spadl_actions: DataFrame[SPADLSchema]) -> None:
     assert np.sum(xTModel.xT) > 0
 
 
-def test_xt_model_rate_not_fitted(spadl_actions: DataFrame[SPADLSchema]) -> None:
+def test_xt_model_estimate_not_fitted(spadl_actions: DataFrame[SPADLSchema]) -> None:
     """It should raise a NotFittedError."""
     xTModel = xt.ExpectedThreat()
     with pytest.raises(NotFittedError):
-        xTModel.rate(spadl_actions)
+        xTModel.estimate(spadl_actions)
 
 
-def test_xt_model_rate(spadl_actions: DataFrame[SPADLSchema]) -> None:
+def test_xt_model_estimate(spadl_actions: DataFrame[SPADLSchema]) -> None:
     """It should rate all successful move actions and assign all other actions NaN."""
     xTModel = xt.ExpectedThreat()
-    xTModel.fit(spadl_actions)
+    xTModel.estimate(spadl_actions)
     successful_move_actions_idx = xt.get_successful_move_actions(spadl_actions).index
-    ratings = xTModel.rate(spadl_actions)
+    ratings = xTModel.estimate(spadl_actions)
     assert ratings.shape == (len(spadl_actions),)
     assert np.all(~np.isnan(ratings[successful_move_actions_idx]))
     assert np.all(np.isnan(np.delete(ratings, successful_move_actions_idx)))
@@ -239,7 +239,7 @@ def test_xt_model_rate(spadl_actions: DataFrame[SPADLSchema]) -> None:
 
 def test_interpolate_xt_grid_no_scipy(mocker: MockerFixture) -> None:
     """It should raise an ImportError if scipy is not installed."""
-    mocker.patch.object(xt, "interp2d", None)
+    mocker.patch.object(xt, "RegularGridInterpolator", None)
     xTModel = xt.ExpectedThreat()
     with pytest.raises(ImportError, match="Interpolation requires scipy to be installed."):
         xTModel.interpolator()
@@ -261,7 +261,7 @@ def xt_model(sb_worldcup_data: pd.HDFStore) -> xt.ExpectedThreat:
     ).pipe(DataFrame[SPADLSchema])
     # 3. Train xT model
     xTModel = xt.ExpectedThreat(l=16, w=12)
-    xTModel.fit(actions_ltr)
+    xTModel.train(actions_ltr)
     return xTModel
 
 
@@ -270,8 +270,8 @@ def test_predict(sb_worldcup_data: pd.HDFStore, xt_model: xt.ExpectedThreat) -> 
     games = sb_worldcup_data["games"]
     game = games.iloc[-1]
     actions = sb_worldcup_data[f"actions/game_{game.game_id}"]
-    ratings = xt_model.rate(actions)
-    assert ratings.dtype is np.dtype(np.float64)
+    ratings = xt_model.estimate(actions)
+    assert "xT" in ratings.columns
     assert len(ratings) == len(actions)
 
 
@@ -282,6 +282,6 @@ def test_predict_with_interpolation(
     games = sb_worldcup_data["games"]
     game = games.iloc[-1]
     actions = sb_worldcup_data[f"actions/game_{game.game_id}"]
-    ratings = xt_model.rate(actions, use_interpolation=True)
-    assert ratings.dtype is np.dtype(np.float64)
+    ratings = xt_model.estimate(actions, use_interpolation=True)
+    assert "xT" in ratings.columns
     assert len(ratings) == len(actions)

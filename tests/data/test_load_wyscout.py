@@ -1,8 +1,8 @@
 import os
 
 import pytest
-from socceraction.data import wyscout as wy
-from socceraction.data.wyscout import (
+from socceraction.data.providers import wyscout as wy
+from socceraction.data.providers.wyscout import (
     WyscoutCompetitionSchema,
     WyscoutEventSchema,
     WyscoutGameSchema,

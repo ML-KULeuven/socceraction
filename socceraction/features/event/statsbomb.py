@@ -4,9 +4,12 @@ import math
 
 import numpy as np
 import pandas as pd
+from pandera.typing import DataFrame
+from socceraction.data.providers.statsbomb import StatsBombEventSchema
 from socceraction.spadl import config as spadlcfg
+from socceraction.types import Features, Mask
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 _spadl_cfg = {
     "length": 105,
@@ -24,21 +27,35 @@ _spadl_cfg = {
 }
 
 
-def _sb_to_spadl(sb_x, sb_y):
+def _sb_to_spadl(sb_x: float, sb_y: float) -> tuple[float, float]:
     spadl_x = ((sb_x - 1) / 119) * spadlcfg.field_length
     spadl_y = spadlcfg.field_width - ((sb_y - 1) / 79) * spadlcfg.field_width
     return spadl_x, spadl_y
 
 
-def _get_intersect(a1, a2, b1, b2):
+def _get_intersect(
+    a1: tuple[float, float],
+    a2: tuple[float, float],
+    b1: tuple[float, float],
+    b2: tuple[float, float],
+) -> tuple[float, float]:
     """Get the point of intersection of the lines passing through a2,a1 and b2,b1.
 
     Parameters
     ----------
-    a1: [x, y] a point on the first line
-    a2: [x, y] another point on the first line
-    b1: [x, y] a point on the second line
-    b2: [x, y] another point on the second line
+    a1: [float, float]
+        A point on the first line.
+    a2: [float, float]
+        Another point on the first line.
+    b1: [float, float]
+        A point on the second line.
+    b2: [float, float]
+        Another point on the second line.
+
+    Returns
+    -------
+    [float, float]
+        The point of intersection of the two lines.
     """
     s = np.vstack([a1, a2, b1, b2])  # s for stacked
     h = np.hstack((s, np.ones((4, 1))))  # h for homogeneous
@@ -50,7 +67,9 @@ def _get_intersect(a1, a2, b1, b2):
     return (x / z, y / z)
 
 
-def _overlap(min1, max1, min2, max2):
+def _overlap(
+    min1: float, max1: float, min2: float, max2: float
+) -> tuple[bool, None, None] | tuple[float, float, float]:
     start = max(min1, min2)
     end = min(max1, max2)
     d = end - start
@@ -60,7 +79,10 @@ def _overlap(min1, max1, min2, max2):
         return d, start, end
 
 
-def _is_inside_triangle(point, tri_points):
+def _is_inside_triangle(
+    point: tuple[float, float],
+    tri_points: tuple[tuple[float, float], tuple[float, float], tuple[float, float]],
+) -> bool:
     Dx, Dy = point
 
     A, B, C = tri_points
@@ -88,8 +110,35 @@ def _is_inside_triangle(point, tri_points):
     return False
 
 
-@ftype("events")
-def statsbomb_open_goal(events, mask):
+@feature_generator("events", features=["statsbomb_xg"])
+def statsbomb_xg(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
+    """Get the xG value of a shot.
+
+    Parameters
+    ----------
+    events : DataFrame[StatsBombEventSchema]
+        The StatsBomb events of a game.
+    mask : Mask
+        A boolean mask to select the shots for which attributes should be
+        computed.
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    output = {}
+    for idx, shot in events.loc[mask].iterrows():
+        if "shot" in shot.extra:
+            output[idx] = {"statsbomb_xg": shot.extra["shot"]["statsbomb_xg"]}
+        else:
+            output[idx] = {"statsbomb_xg": float("nan")}
+
+    output = pd.DataFrame.from_dict(output, orient="index")
+    return output
+
+
+@feature_generator("events", features=["open_goal"])
+def statsbomb_open_goal(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get whether the shot was taken into an open goal.
 
     This is derived from the 'open_goal' annotation in StatsBomb's event
@@ -97,9 +146,9 @@ def statsbomb_open_goal(events, mask):
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
@@ -113,11 +162,12 @@ def statsbomb_open_goal(events, mask):
             output[idx] = {"open_goal": "open_goal" in shot.extra["shot"]}
 
     output = pd.DataFrame.from_dict(output, orient="index")
+    output["open_goal"] = output["open_goal"].astype("boolean")
     return output
 
 
-@ftype("events")
-def statsbomb_first_touch(events, mask):
+@feature_generator("events", features=["first_touch"])
+def statsbomb_first_touch(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get whether the shot was a first-touch shot.
 
     This is derived from the 'first_time' annotation in StatsBomb's event
@@ -125,9 +175,9 @@ def statsbomb_first_touch(events, mask):
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
@@ -141,11 +191,12 @@ def statsbomb_first_touch(events, mask):
             output[idx] = {"first_touch": "first_time" in shot.extra["shot"]}
 
     output = pd.DataFrame.from_dict(output, orient="index")
+    output["first_touch"] = output["first_touch"].astype("boolean")
     return output
 
 
-@ftype("events")
-def statsbomb_free_projection(events, mask):
+@feature_generator("events", features=["free_projection_pct", "free_projection_gaps"])
+def statsbomb_free_projection(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get the free projection area.
 
     This feature represents the proportion of the goal that is left uncovered by
@@ -156,15 +207,15 @@ def statsbomb_free_projection(events, mask):
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column containing the free projection area
         ('free_projection_pct') and the number of gaps in the projection area
         ('free_projection_gaps').
@@ -177,8 +228,8 @@ def statsbomb_free_projection(events, mask):
     """
     output = {}
     # We have to use StatsBomb coordinates here
-    corner1 = [120, 0]
-    corner2 = [120, 80]
+    corner1 = (120, 0)
+    corner2 = (120, 80)
     goal = [36, 44]
     for idx, shot in events.loc[mask].iterrows():
         if "shot" not in shot.extra or "freeze_frame" not in shot.extra["shot"]:
@@ -199,10 +250,10 @@ def statsbomb_free_projection(events, mask):
             )  # convert to yards
             if def_x > start_x:
                 _, left_bound_y = _get_intersect(
-                    [start_x, start_y], [def_x, def_y - def_width / 2], corner1, corner2
+                    (start_x, start_y), (def_x, def_y - def_width / 2), corner1, corner2
                 )
                 _, right_bound_y = _get_intersect(
-                    [start_x, start_y], [def_x, def_y + def_width / 2], corner1, corner2
+                    (start_x, start_y), (def_x, def_y + def_width / 2), corner1, corner2
                 )
                 new_free_projection = []
                 for projection in free_projection:
@@ -223,21 +274,30 @@ def statsbomb_free_projection(events, mask):
     return output
 
 
-@ftype("events")
-def statsbomb_goalkeeper_position(events, mask):
+@feature_generator(
+    "events",
+    features=[
+        "goalkeeper_x",
+        "goalkeeper_y",
+        "goalkeeper_dist_to_ball",
+        "goalkeeper_dist_to_goal",
+        "goalkeeper_angle_to_goal",
+    ],
+)
+def statsbomb_goalkeeper_position(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get the goalkeeper's position.
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
     Returns
     -------
-    pd.DataFrame
+    Features
         A dataframe with a column containing the goalkeeper's x-coordinate
         ('goalkeeper_x'), y-coordinate ('goalkeeper_y'), distance to the ball
         ('goalkeeper_dist_to_ball'), distance to the center of the goal
@@ -290,8 +350,17 @@ def statsbomb_goalkeeper_position(events, mask):
     return output
 
 
-@ftype("events")
-def statsbomb_defenders_position(events, mask):
+@feature_generator(
+    "events",
+    features=[
+        "dist_to_defender",
+        "under_pressure",
+        "nb_defenders_in_shot_line",
+        "nb_defenders_behind_ball",
+        "one_on_one",
+    ],
+)
+def statsbomb_defenders_position(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get features describing the position of the defending players.
 
     The following features are computed:
@@ -310,9 +379,9 @@ def statsbomb_defenders_position(events, mask):
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
@@ -346,7 +415,7 @@ def statsbomb_defenders_position(events, mask):
             distances.append(math.sqrt((ball_x - defender_x) ** 2 + (ball_y - defender_y) ** 2))
             in_shot_line.append(
                 _is_inside_triangle(
-                    (defender_x, defender_y), [left_post, (ball_x, ball_y), right_post]
+                    (defender_x, defender_y), (left_post, (ball_x, ball_y), right_post)
                 )
             )
             behind_ball.append(defender_x > ball_x)
@@ -367,8 +436,11 @@ def statsbomb_defenders_position(events, mask):
     return output
 
 
-@ftype("events")
-def statsbomb_assist(events, mask):  # noqa: C901
+@feature_generator(
+    "events",
+    features=["end_x_assist", "end_y_assist", "carry_dist", "type_assist", "height_assist"],
+)
+def statsbomb_assist(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:  # noqa: C901
     """Get features describing the assist.
 
     The following features are computed:
@@ -384,9 +456,9 @@ def statsbomb_assist(events, mask):  # noqa: C901
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
@@ -468,8 +540,8 @@ def statsbomb_assist(events, mask):  # noqa: C901
     return output
 
 
-@ftype("events")
-def statsbomb_counterattack(events, mask):
+@feature_generator("events", features=["from_counterattack"])
+def statsbomb_counterattack(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get whether a shot was from a counterattack.
 
     This is derived from the 'play_pattern' annotation in StatsBomb's event
@@ -477,9 +549,9 @@ def statsbomb_counterattack(events, mask):
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 
@@ -497,8 +569,8 @@ def statsbomb_counterattack(events, mask):
     return output
 
 
-@ftype("events")
-def statsbomb_shot_impact_height(events, mask):
+@feature_generator("events", features=["impact_height"])
+def statsbomb_shot_impact_height(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
     """Get the height of the ball when the shot was taken.
 
     This is derived from the bodypart and technique that was used to take the
@@ -507,9 +579,9 @@ def statsbomb_shot_impact_height(events, mask):
 
     Parameters
     ----------
-    events : pd.DataFrame
+    events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
-    mask : pd.Series
+    mask : Mask
         A boolean mask to select the shots for which attributes should be
         computed.
 

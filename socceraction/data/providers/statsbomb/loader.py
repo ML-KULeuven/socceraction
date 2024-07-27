@@ -27,7 +27,7 @@ from .schema import (
 )
 
 
-class StatsBombLoader(EventDataLoader):
+class StatsBombLoader(EventDataLoader[int]):
     """Load Statsbomb data either from a remote location or from a local folder.
 
     To load remote data, this loader uses the `statsbombpy

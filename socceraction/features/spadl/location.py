@@ -1,17 +1,19 @@
 """Feature generators for the location of each action."""
 
+from typing import Callable
+
 import numpy as np
 import pandas as pd
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Features, Mask, SPADLActions
 
-from ..utils import ftype
+from ..utils import feature_generator
 
 _goal_x: float = spadlcfg.field_length
 _goal_y: float = spadlcfg.field_width / 2
 
 
-@ftype("actions")
+@feature_generator("actions", features=["start_x", "start_y"])
 def startlocation(actions: SPADLActions, mask: Mask) -> Features:
     """Get the location where each action started.
 
@@ -30,7 +32,7 @@ def startlocation(actions: SPADLActions, mask: Mask) -> Features:
     return actions.loc[mask, ["start_x", "start_y"]]
 
 
-@ftype("actions")
+@feature_generator("actions", features=["end_x", "end_y"])
 def endlocation(actions: SPADLActions, mask: Mask) -> Features:
     """Get the location where each action ended.
 
@@ -49,7 +51,7 @@ def endlocation(actions: SPADLActions, mask: Mask) -> Features:
     return actions.loc[mask, ["end_x", "end_y"]]
 
 
-@ftype("actions")
+@feature_generator("actions", features=["start_dist_to_goal", "start_angle_to_goal"])
 def startpolar(actions: SPADLActions, mask: Mask) -> Features:
     """Get the polar coordinates of each action's start location.
 
@@ -76,7 +78,7 @@ def startpolar(actions: SPADLActions, mask: Mask) -> Features:
     return polardf.loc[mask]
 
 
-@ftype("actions")
+@feature_generator("actions", features=["end_dist_to_goal", "end_angle_to_goal"])
 def endpolar(actions: SPADLActions, mask: Mask) -> Features:
     """Get the polar coordinates of each action's end location.
 
@@ -103,7 +105,7 @@ def endpolar(actions: SPADLActions, mask: Mask) -> Features:
     return polardf.loc[mask]
 
 
-@ftype("actions")
+@feature_generator("actions", features=["dx", "dy", "movement"])
 def movement(actions: SPADLActions, mask: Mask) -> Features:
     """Get the distance covered by each action.
 
@@ -127,8 +129,32 @@ def movement(actions: SPADLActions, mask: Mask) -> Features:
     return mov.loc[mask]
 
 
-def triangular_grid(name, angle_bins, dist_bins, symmetrical=False):
-    def fn(actions, mask):
+def triangular_grid(
+    name: str, angle_bins: list[float], dist_bins: list[float], symmetrical: bool = False
+) -> Callable[[SPADLActions, Mask], Features]:
+    """Create a feature generator that maps the start location of each action to a triangular grid.
+
+    Parameters
+    ----------
+    name: str
+        The name of the feature.
+    angle_bins: list
+        Array of bins for the angle to the goal.
+        It has to be a list of increasing values between 0 and pi.
+    dist_bins: list
+        Array bins for the distance to the goal.
+        It has to be a list of increasing values starting from 0.
+    symmetrical: bool
+        Whether to mirror the angle bins. Shots from the same angle left from
+        the goal and right from the goal will end up in the same bin.
+
+    Returns
+    -------
+    Callable
+        A feature generator.
+    """
+
+    def fn(actions: SPADLActions, mask: Mask) -> Features:
         zonedf = startpolar(actions, mask)
         if symmetrical:
             zonedf.loc[
@@ -148,8 +174,30 @@ def triangular_grid(name, angle_bins, dist_bins, symmetrical=False):
     return fn
 
 
-def rectangular_grid(name, x_bins, y_bins, symmetrical=False):
-    def fn(actions, mask):
+def rectangular_grid(
+    name: str, x_bins: list[float], y_bins: list[float], symmetrical: bool = False
+) -> Callable[[SPADLActions, Mask], Features]:
+    """Create a feature generator that maps the start location of each action to a rectangular grid.
+
+    Parameters
+    ----------
+    name: str
+        The name of the feature.
+    x_bins: list
+        Array of bins for the x-coordinate.
+    y_bins: list
+        Array bins for the y-coordinate.
+    symmetrical: bool
+        Whether to mirror the y bins. Shots from the same y-coordinate left from
+        the goal and right from the goal will end up in the same bin.
+
+    Returns
+    -------
+    Callable
+        A feature generator.
+    """
+
+    def fn(actions: SPADLActions, mask: Mask) -> Features:
         zonedf = actions.loc[mask, ["start_x", "start_y"]].copy()
         if symmetrical:
             m = spadlcfg.field_width / 2
@@ -167,8 +215,27 @@ def rectangular_grid(name, x_bins, y_bins, symmetrical=False):
     return fn
 
 
-def custom_grid(name, zones, is_in_zone):
-    def fn(actions, mask):
+def custom_grid(
+    name: str, zones: list[list[float]], is_in_zone: Callable
+) -> Callable[[SPADLActions, Mask], Features]:
+    """Create a feature generator that maps the start location of each action to a custom grid.
+
+    Parameters
+    ----------
+    name: str
+        The name of the feature.
+    zones: list
+        List of zones. Each zone is a list of points that define a polygon.
+    is_in_zone: Callable
+        Function that returns whether a point is inside a zone.
+
+    Returns
+    -------
+    Callable
+        A feature generator.
+    """
+
+    def fn(actions: SPADLActions, mask: Mask) -> Features:
         zonedf = actions.loc[mask, ["start_x", "start_y"]].copy()
         zonedf[name] = [0] * len(actions)  # zone 0 if no match
         for i, zone in enumerate(zones):

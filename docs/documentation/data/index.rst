@@ -1,4 +1,4 @@
-.. currentmodule:: socceraction.data
+.. currentmodule:: socceraction.data.providers
 
 *************
 Loading data

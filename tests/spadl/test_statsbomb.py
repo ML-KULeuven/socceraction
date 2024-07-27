@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from socceraction.data.statsbomb import StatsBombLoader
+from socceraction.data.providers.statsbomb import StatsBombLoader
 from socceraction.spadl import SPADLSchema
 from socceraction.spadl import config as spadl
 from socceraction.spadl import statsbomb as sb

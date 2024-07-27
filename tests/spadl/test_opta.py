@@ -3,9 +3,9 @@ import os
 import pandas as pd
 import pytest
 import socceraction.spadl.config as spadlcfg
-from socceraction.data.opta import OptaLoader
-from socceraction.data.opta import parsers as optaparsers
-from socceraction.data.opta.loader import _extract_ids_from_path
+from socceraction.data.providers.opta import OptaLoader
+from socceraction.data.providers.opta import parsers as optaparsers
+from socceraction.data.providers.opta.loader import _extract_ids_from_path
 from socceraction.spadl import SPADLSchema
 from socceraction.spadl import opta as opta
 
