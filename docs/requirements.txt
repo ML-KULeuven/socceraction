@@ -1,4 +1,4 @@
-sphinx==7.4.7
+sphinx==8.0.2
 furo==2024.7.18
 sphinx-autodoc-typehints==2.2.3
 kloppy==3.14.0
