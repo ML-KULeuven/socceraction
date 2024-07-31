@@ -126,14 +126,18 @@ def statsbomb_xg(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Feature
     -------
     pd.DataFrame
     """
-    output = {}
-    for idx, shot in events.loc[mask].iterrows():
-        if "shot" in shot.extra:
-            output[idx] = {"statsbomb_xg": shot.extra["shot"]["statsbomb_xg"]}
-        else:
-            output[idx] = {"statsbomb_xg": float("nan")}
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
 
-    output = pd.DataFrame.from_dict(output, orient="index")
+    # Extract 'statsbomb_xg' where 'shot' exists
+    statsbomb_xg_values = events.loc[mask & mask_shots, "extra"].apply(
+        lambda x: x["shot"]["statsbomb_xg"]
+    )
+
+    # Create the output DataFrame with 'statsbomb_xg' values and NaNs for others
+    output = pd.DataFrame(index=events.loc[mask].index)
+    output["statsbomb_xg"] = float("nan")
+    output.loc[mask_shots, "statsbomb_xg"] = statsbomb_xg_values.values
     return output
 
 

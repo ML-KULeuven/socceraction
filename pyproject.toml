@@ -109,6 +109,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "socceraction/__init__.py"=["D205","D400"]
+"socceraction/ml/evaluation.py"=["ANN001", "ANN201", "ANN202"]
+"socceraction/utils.py"=["ANN001", "ANN201", "ANN202", "ANN002", "ANN003"]
 # "socceraction/xthreat.py"=["DAR000"]
 "tests/**"=["D100","D101","D102","D103","S101"]
 

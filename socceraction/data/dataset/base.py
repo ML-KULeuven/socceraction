@@ -312,7 +312,12 @@ class Dataset(ABC):
 
     @abstractmethod
     def read_table(
-        self, table: str, *, partitions: Optional[list[PartitionIdentifier]] = None
+        self,
+        table: str,
+        *,
+        partitions: Optional[list[PartitionIdentifier]] = None,
+        engine: Literal["pandas", "dask"] = "pandas",
+        show_progress: bool = False,
     ) -> DataFrame[Any]:
         """Read a table from the dataset.
 
@@ -323,6 +328,10 @@ class Dataset(ABC):
         partitions : list of PartitionIdentifier, optional
             The IDs of the competitions, seasons and/or games to read. If not
             provided, all data is read.
+        engine : {'pandas', 'dask'}
+            Whether to return a pandas or dask DataFrame.
+        show_progress : bool
+            Whether to show a progress bar when reading the data.
 
         Returns
         -------
@@ -454,10 +463,12 @@ class Dataset(ABC):
         self,
         transformation: Transform[Any],
         from_table: Union[str, list[str]],
-        to_table: Optional[str],
+        to_table: Optional[str] = None,
         *,
         partitions: Optional[list[PartitionIdentifier]] = None,
         on_fail: Literal["raise", "warn"] = "warn",
+        engine: Literal["pandas", "dask"] = "pandas",
+        show_progress: bool = False,
     ) -> Optional[pd.DataFrame]:
         """Apply a transformer to the dataset.
 
@@ -478,6 +489,12 @@ class Dataset(ABC):
             What to do when a transformation fails. If 'raise', an exception
             is raised as soon as the transformation fails for a game. If 'warn',
             a warning is issued and the game is skipped.
+        engine : {'pandas', 'dask'}
+            The engine to use for the returned data. Ignored if `to_table` is
+            not None.
+        show_progress : bool
+            Whether to show a progress bar when transforming the data. Only
+            used when `engine` is 'pandas'.
 
         Raises
         ------
@@ -500,11 +517,35 @@ class Dataset(ABC):
             if partitions is not None and len(partitions) > 0
             else all_games
         )
-        result = []
-        todo_games_verbose = tqdm(
-            todo_games.itertuples(), total=len(todo_games), desc="Transforming dataset"
+        if engine == "dask":
+            return self._transform_to_dask(
+                transformation, todo_games, from_table, partitions=partitions
+            )
+        return self._transform_to_pandas(
+            transformation,
+            todo_games,
+            from_table,
+            to_table,
+            on_fail=on_fail,
         )
-        for game in todo_games_verbose:
+
+    def _transform_to_pandas(
+        self,
+        transformation: Transform[Any],
+        games: DataFrame[GameSchema],
+        from_table: Union[str, list[str]],
+        to_table: Optional[str] = None,
+        *,
+        on_fail: Literal["raise", "warn"] = "warn",
+        show_progress: bool = False,
+    ) -> Optional[pd.DataFrame]:
+        result = []
+        games_verbose = (
+            tqdm(games.itertuples(), total=len(games), desc="Transforming dataset")
+            if show_progress
+            else games.itertuples()
+        )
+        for game in games_verbose:
             try:
                 if isinstance(from_table, str):
                     input = self.read_table(
@@ -537,3 +578,46 @@ class Dataset(ABC):
         if to_table is None:
             return pd.concat(result)
         return None
+
+    def _transform_to_dask(
+        self,
+        transformation: Transform[Any],
+        games: DataFrame[GameSchema],
+        from_table: Union[str, list[str]],
+        *,
+        partitions: Optional[list[PartitionIdentifier]] = None,
+    ) -> Optional[pd.DataFrame]:
+        test_game = games.iloc[[0]]
+        test_output = self._transform_to_pandas(
+            transformation,
+            test_game,
+            from_table,
+        )
+        if isinstance(from_table, str):
+            input = self.read_table(from_table, partitions=partitions, engine="dask")
+            output = input.map_partitions(
+                DaskTransformWrapper(transformation, games=games), meta=test_output
+            )
+        else:
+            inputs = [self.read_table(t, partitions=partitions, engine="dask") for t in from_table]
+            output = inputs[0].map_partitions(
+                DaskTransformWrapper(transformation, games=games),
+                *inputs[1:],
+                meta=test_output,
+            )
+        return output
+
+
+class DaskTransformWrapper:
+    """A wrapper to apply a transformation to a Dask DataFrame."""
+
+    def __init__(self, transformation: Transform[Any], games: DataFrame[GameSchema]) -> None:
+        self.transformation = transformation
+        self.games = games.set_index("game_id", drop=False)
+
+    def __call__(self, *inputs: DataFrame[Any]) -> DataFrame[Any]:
+        """Apply the transformation to the input data."""
+        game = self.games.loc[inputs[0].game_id[0]]
+        if len(inputs) == 1:
+            return self.transformation(game, inputs[0])
+        return self.transformation(game, inputs)

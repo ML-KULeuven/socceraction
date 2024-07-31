@@ -1,6 +1,6 @@
 """SQLite database interface."""
 
-from typing import Any, Optional, cast
+from typing import Any, Literal, Optional, cast
 
 import pandas as pd
 from pandas.io.sql import SQLDatabase
@@ -66,7 +66,12 @@ class SQLDataset(SQLDatabase, Dataset):
 
     @override
     def read_table(
-        self, table: str, *, partitions: Optional[list[PartitionIdentifier]] = None
+        self,
+        table: str,
+        *,
+        partitions: Optional[list[PartitionIdentifier]] = None,
+        engine: Literal["pandas", "dask"] = "pandas",
+        show_progress: bool = False,
     ) -> DataFrame[Any]:
         query = f"SELECT * FROM {table}"
         filters = []
@@ -75,7 +80,10 @@ class SQLDataset(SQLDatabase, Dataset):
                 filters.append(identifier.to_clause())
         if len(filters) > 0:
             query += f" WHERE {' OR '.join(filters)}"
-        return cast(DataFrame[Any], self.read_query(query))
+        if engine == "dask":
+            raise NotImplementedError
+        else:
+            return cast(DataFrame[Any], self.read_query(query))
 
     @override
     def _insert_events(

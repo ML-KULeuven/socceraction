@@ -1,7 +1,7 @@
 """HDF store interface."""
 
 import warnings
-from typing import Any, Optional, cast
+from typing import Any, Literal, Optional, cast
 
 import pandas as pd
 from pandas.io.pytables import HDFStore, PerformanceWarning
@@ -12,6 +12,11 @@ from typing_extensions import override
 from socceraction.data.schema import EventSchema
 
 from .base import Dataset, PartitionIdentifier
+
+
+def _read_hdf(key, path):
+    df = pd.read_hdf(path, key)
+    return df
 
 
 class HDFDataset(HDFStore, Dataset):
@@ -79,56 +84,68 @@ class HDFDataset(HDFStore, Dataset):
             data_columns=True,
         )
 
-    @override
-    def read_table(  # noqa: C901
-        self, table: str, *, partitions: Optional[list[PartitionIdentifier]] = None
-    ) -> DataFrame[Any]:
+    def _get_keys(self, table: str, partitions: Optional[list[PartitionIdentifier]] = None):
         _, groups, leaves = next(self.walk("/"))
 
-        def _get(node: str, warn_on_fail: bool = False) -> Optional[DataFrame[Any]]:
-            try:
-                return self[node]
-            except KeyError:
-                path = node.split("/", 1)
-                if len(path) < 2 or path[0] not in leaves + groups:
-                    msg = f"No table found with name={node}. The following tables exist: {leaves + groups}"
-                    raise KeyError(msg) from None
-                msg = f"No partition '{path[1]}' found in table '{table}'"
-                if warn_on_fail:
-                    warnings.warn(msg)
-                    return None
-                raise LookupError(msg) from None
+        if table in leaves:
+            return {table}
 
-        result_dfs = []
+        if table not in groups:
+            raise KeyError(
+                f"No table found with name={table}. The following tables exist: {leaves + groups}"
+            )
+
+        games = self.games()
         if partitions is None or len(partitions) == 0:
-            if table in groups:
-                games = self.games()
-                for game_id in tqdm(games.game_id, total=len(games), desc=f"Reading {table}"):
-                    result_dfs.append(_get(f"{table}/game_{game_id}", warn_on_fail=True))
+            return {f"{table}/game_{game_id}" for game_id in games.game_id}
+
+        keys = set()
+        for partition in partitions:
+            if partition.game_id is None:
+                if partition.competition_id is not None:
+                    games = games[games.competition_id == partition.competition_id]
+                if partition.season_id is not None:
+                    games = games[games.season_id == partition.season_id]
+                for game_id in games.game_id:
+                    keys.add(f"{table}/game_{game_id}")
             else:
-                data = _get(table, warn_on_fail=False)
-                assert data is not None
-                return data
+                keys.add(f"{table}/game_{partition.game_id}")
+        return keys
+
+    def _get(self, node: str, warn_on_fail: bool = False) -> Optional[DataFrame[Any]]:
+        try:
+            return self[node]
+        except KeyError:
+            path = node.split("/", 1)
+            msg = f"No partition '{path[1]}' found in table '{path[0]}'"
+            if warn_on_fail:
+                warnings.warn(msg)
+                return None
+            raise LookupError(msg) from None
+
+    @override
+    def read_table(  # noqa: C901
+        self,
+        table: str,
+        *,
+        partitions: Optional[list[PartitionIdentifier]] = None,
+        engine: Literal["pandas", "dask"] = "pandas",
+        show_progress: bool = False,
+    ) -> DataFrame[Any]:
+        keys = self._get_keys(table, partitions)
+        if engine == "dask":
+            import dask.dataframe as dd
+
+            return dd.from_map(_read_hdf, list(keys), path=self._path)
         else:
-            for partition in partitions:
-                if partition.game_id is None:
-                    games = self.games()
-                    if partition.competition_id is not None:
-                        games = games[games.competition_id == partition.competition_id]
-                    if partition.season_id is not None:
-                        games = games[games.season_id == partition.season_id]
-                    for game_id in tqdm(
-                        games.game_id,
-                        total=len(games),
-                        desc=f"Reading partition {partition} of {table}",
-                    ):
-                        result_dfs.append(_get(f"{table}/game_{game_id}", warn_on_fail=True))
-                else:
-                    result_dfs.append(_get(f"{table}/game_{partition.game_id}", warn_on_fail=True))
-        result_dfs = [r for r in result_dfs if r is not None]
-        if len(result_dfs) == 0:
-            return cast(DataFrame[Any], pd.DataFrame())
-        return cast(DataFrame[Any], pd.concat(result_dfs))
+            keys_verbose = tqdm(keys, desc=f"Reading {table}") if show_progress else keys
+            result_dfs = []
+            for key in keys_verbose:
+                result_dfs.append(self[key])
+            result_dfs = [r for r in result_dfs if r is not None]
+            if len(result_dfs) == 0:
+                return cast(DataFrame[Any], pd.DataFrame())
+            return cast(DataFrame[Any], pd.concat(result_dfs))
 
     @override
     def _insert_events(

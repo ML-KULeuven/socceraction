@@ -162,7 +162,7 @@ class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
         features_idx_cols = ["game_id", "action_id", "original_event_id"]
 
         # create mask
-        mask = actions.apply(lambda a: self.mask_fn(a), axis=1).tolist()
+        mask = actions.apply(lambda a: self.mask_fn(a), axis=1)
 
         # get feature generators
         fns: dict[
@@ -261,7 +261,7 @@ class StatsBombEventsToFeatures(Transform[DataFrame[StatsBombEventSchema]]):
         self, game: Series[GameSchema], events: DataFrame[StatsBombEventSchema]
     ) -> Features:
         # create mask
-        mask = events.apply(lambda e: self.mask_fn(e), axis=1).tolist()
+        mask = events.apply(lambda e: self.mask_fn(e), axis=1)
 
         # get feature generators
         fns: dict[
