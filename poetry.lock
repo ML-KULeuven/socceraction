@@ -615,13 +615,13 @@ files = [
 
 [[package]]
 name = "kloppy"
-version = "3.14.0"
+version = "3.15.0"
 description = "Standardizing soccer tracking- and event data"
 optional = true
 python-versions = "*"
 files = [
-    {file = "kloppy-3.14.0-py3-none-any.whl", hash = "sha256:d10b48ac336e7851dfa3763e41ee8b84a72a53934779c072316cd169b07f28b9"},
-    {file = "kloppy-3.14.0.tar.gz", hash = "sha256:1408e11fe337afad2f4b5c2cf2c572b1676bb84f3d84369f69fa8c8f7747d8c8"},
+    {file = "kloppy-3.15.0-py3-none-any.whl", hash = "sha256:e828356db9b4fd80d7799c825660199cec55aafb984f29f92f8e8a752b149282"},
+    {file = "kloppy-3.15.0.tar.gz", hash = "sha256:824740efb54d6e155a0b33e8f6f1285212dd98f0b6dda848b4306730fed216e0"},
 ]
 
 [package.dependencies]
@@ -629,12 +629,13 @@ lxml = ">=4.4.0,<5"
 python-dateutil = ">=2.8.1,<3"
 pytz = ">=2020.1"
 requests = ">=2.0.0,<3"
+sortedcontainers = ">=2"
 typing-extensions = {version = "*", markers = "python_version < \"3.11\""}
 
 [package.extras]
 development = ["pre-commit (==2.6.0)"]
 query = ["networkx (>=2.4,<3)"]
-test = ["black (==22.3.0)", "pandas (>=1.0,<2)", "pandas (>=2)", "polars (>=0.16.6)", "pyarrow (==11.0.0)", "pytest (>=6.2.5,<7)", "pytest-lazy-fixture"]
+test = ["black (==22.3.0)", "moto[s3]", "pandas (>=2)", "polars (>=0.16.6)", "pyarrow", "pytest (>=6.2.5,<7)", "pytest-httpserver", "pytest-lazy-fixture", "s3fs"]
 
 [[package]]
 name = "livereload"
@@ -1880,6 +1881,17 @@ files = [
 ]
 
 [[package]]
+name = "sortedcontainers"
+version = "2.4.0"
+description = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
+optional = true
+python-versions = "*"
+files = [
+    {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
+    {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
+]
+
+[[package]]
 name = "soupsieve"
 version = "2.5"
 description = "A modern CSS selector implementation for Beautiful Soup."
@@ -2425,4 +2437,4 @@ xgboost = ["xgboost"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "91069b2cc6212cb09998f433a7b6b640e4ead9b285d6563839e3e058db7bd440"
+content-hash = "4d75e47dafa026b2a9ec603dc73938f1c3c4c21b08b643cd1d0eb4a414a397ce"
