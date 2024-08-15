@@ -19,7 +19,7 @@ copyright = "2020, DTAI KU Leuven"
 author = "Tom Decroos"
 
 # The full version, including alpha/beta/rc tags
-release = "1.5.2"
+release = "1.5.3"
 
 
 # -- General configuration ---------------------------------------------------

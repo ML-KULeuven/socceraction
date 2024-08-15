@@ -10,4 +10,4 @@ Full documentation is at <https://ml-kuleuven.github.io/socceraction/>.
 :license: MIT, see LICENSE for more details.
 """
 
-__version__ = "1.5.2"
+__version__ = "1.5.3"
