@@ -162,7 +162,7 @@ class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
         features_idx_cols = ["game_id", "action_id", "original_event_id"]
 
         # create mask
-        mask = actions.apply(lambda a: self.mask_fn(a), axis=1)
+        mask = actions.apply(lambda a: self.mask_fn(a), axis=1).values
 
         # get feature generators
         fns: dict[
@@ -241,6 +241,7 @@ class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
         # Fill missing values
         missing_bool = df_attrs.select_dtypes(include=["boolean"]).columns
         df_attrs[missing_bool] = df_attrs[missing_bool].fillna(False).astype(bool)
+        df_attrs.sort_index(axis=1, inplace=True)
 
         return cast(DataFrame[Any], df_attrs.reset_index())
 
@@ -327,5 +328,6 @@ class StatsBombEventsToFeatures(Transform[DataFrame[StatsBombEventSchema]]):
         # Fill missing values
         missing_bool = df_attrs.select_dtypes(include=["boolean"]).columns
         df_attrs[missing_bool] = df_attrs[missing_bool].fillna(False).astype(bool)
+        df_attrs.sort_index(axis=1, inplace=True)
 
         return cast(DataFrame[Any], df_attrs.reset_index())

@@ -527,6 +527,7 @@ class Dataset(ABC):
             from_table,
             to_table,
             on_fail=on_fail,
+            show_progress=show_progress,
         )
 
     def _transform_to_pandas(
@@ -603,6 +604,7 @@ class Dataset(ABC):
             output = inputs[0].map_partitions(
                 DaskTransformWrapper(transformation, games=games),
                 *inputs[1:],
+                # align_dataframes=True,
                 meta=test_output,
             )
         return output
@@ -617,7 +619,8 @@ class DaskTransformWrapper:
 
     def __call__(self, *inputs: DataFrame[Any]) -> DataFrame[Any]:
         """Apply the transformation to the input data."""
-        game = self.games.loc[inputs[0].game_id[0]]
+        game_id = inputs[0].iloc[0]["game_id"]
+        game = self.games.loc[game_id]
         if len(inputs) == 1:
             return self.transformation(game, inputs[0])
         return self.transformation(game, inputs)

@@ -5,6 +5,7 @@ import math
 import numpy as np
 import pandas as pd
 from pandera.typing import DataFrame
+
 from socceraction.data.providers.statsbomb import StatsBombEventSchema
 from socceraction.spadl import config as spadlcfg
 from socceraction.types import Features, Mask
@@ -129,15 +130,15 @@ def statsbomb_xg(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Feature
     # Filter rows where 'shot' exists in 'extra'
     mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
 
+    # Create the output DataFrame with 'statsbomb_xg' values and NaNs for others
+    output = pd.DataFrame(index=events.loc[mask].index)
+    output["statsbomb_xg"] = float("nan")
     # Extract 'statsbomb_xg' where 'shot' exists
     statsbomb_xg_values = events.loc[mask & mask_shots, "extra"].apply(
         lambda x: x["shot"]["statsbomb_xg"]
     )
-
-    # Create the output DataFrame with 'statsbomb_xg' values and NaNs for others
-    output = pd.DataFrame(index=events.loc[mask].index)
-    output["statsbomb_xg"] = float("nan")
     output.loc[mask_shots, "statsbomb_xg"] = statsbomb_xg_values.values
+
     return output
 
 

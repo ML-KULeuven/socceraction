@@ -16,6 +16,7 @@ from .base import Dataset, PartitionIdentifier
 
 def _read_hdf(key, path):
     df = pd.read_hdf(path, key)
+    df = df.set_index(pd.Index([key.split("/")[-1]] * len(df), name="key"))
     return df
 
 
@@ -132,11 +133,16 @@ class HDFDataset(HDFStore, Dataset):
         engine: Literal["pandas", "dask"] = "pandas",
         show_progress: bool = False,
     ) -> DataFrame[Any]:
-        keys = self._get_keys(table, partitions)
+        keys = sorted(list(self._get_keys(table, partitions)))
         if engine == "dask":
             import dask.dataframe as dd
 
-            return dd.from_map(_read_hdf, list(keys), path=self._path)
+            return dd.from_map(
+                _read_hdf,
+                keys,
+                path=self._path,
+                divisions=[k.split("/")[-1] for k in keys],
+            )
         else:
             keys_verbose = tqdm(keys, desc=f"Reading {table}") if show_progress else keys
             result_dfs = []
