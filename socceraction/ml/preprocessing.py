@@ -39,6 +39,7 @@ def simple_proc_for_tree_algorithms(
     """
     catpipe = make_pipeline(
         ColumnsSelector(categoric_features),
+        # AsString(),
         OrdinalEncoder(min_support=5),
         # ColumnApplier(FillNaN('nan')),
         # ColumnApplier(TolerantLabelEncoder())
