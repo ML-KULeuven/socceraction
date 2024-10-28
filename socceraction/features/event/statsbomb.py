@@ -5,7 +5,6 @@ import math
 import numpy as np
 import pandas as pd
 from pandera.typing import DataFrame
-
 from socceraction.data.providers.statsbomb import StatsBombEventSchema
 from socceraction.spadl import config as spadlcfg
 from socceraction.types import Features, Mask
@@ -131,8 +130,8 @@ def statsbomb_xg(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Feature
     mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
 
     # Create the output DataFrame with 'statsbomb_xg' values and NaNs for others
-    output = pd.DataFrame(index=events.loc[mask].index)
-    output["statsbomb_xg"] = float("nan")
+    output = pd.DataFrame({"statsbomb_xg": pd.NA}, index=events.loc[mask].index)
+
     # Extract 'statsbomb_xg' where 'shot' exists
     statsbomb_xg_values = events.loc[mask & mask_shots, "extra"].apply(
         lambda x: x["shot"]["statsbomb_xg"]
@@ -161,13 +160,21 @@ def statsbomb_open_goal(events: DataFrame[StatsBombEventSchema], mask: Mask) -> 
     -------
     pd.DataFrame
     """
-    output = {}
-    for idx, shot in events.loc[mask].iterrows():
-        if "shot" in shot.extra:
-            output[idx] = {"open_goal": "open_goal" in shot.extra["shot"]}
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
 
-    output = pd.DataFrame.from_dict(output, orient="index")
-    output["open_goal"] = output["open_goal"].astype("boolean")
+    # Create the output DataFrame with 'open_goal' for shots and NaNs for others
+    output = pd.DataFrame(
+        data={"open_goal": pd.Series(dtype="boolean", index=events.loc[mask].index)},
+        index=events.loc[mask].index,
+    )
+
+    # Extract 'open_goal' where 'shot' exists
+    statsbomb_open_goal = events.loc[mask & mask_shots, "extra"].apply(
+        lambda x: "open_goal" in x["shot"]
+    )
+    output.loc[mask_shots, "open_goal"] = statsbomb_open_goal.values
+
     return output
 
 
@@ -190,13 +197,21 @@ def statsbomb_first_touch(events: DataFrame[StatsBombEventSchema], mask: Mask) -
     -------
     pd.DataFrame
     """
-    output = {}
-    for idx, shot in events.loc[mask].iterrows():
-        if "shot" in shot.extra:
-            output[idx] = {"first_touch": "first_time" in shot.extra["shot"]}
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
 
-    output = pd.DataFrame.from_dict(output, orient="index")
-    output["first_touch"] = output["first_touch"].astype("boolean")
+    # Create the output DataFrame with 'open_goal' for shots and NaNs for others
+    output = pd.DataFrame(
+        data={"first_touch": pd.Series(dtype="boolean", index=events.loc[mask].index)},
+        index=events.loc[mask].index,
+    )
+
+    # Extract 'open_goal' where 'shot' exists
+    statsbomb_first_touch = events.loc[mask & mask_shots, "extra"].apply(
+        lambda x: "first_time" in x["shot"]
+    )
+    output.loc[mask_shots, "first_touch"] = statsbomb_first_touch.values
+
     return output
 
 
@@ -231,12 +246,23 @@ def statsbomb_free_projection(events: DataFrame[StatsBombEventSchema], mask: Mas
        Models with Freeze Frame Data". DTAI Sports Analytics Lab, September 2,
        2020. https://dtai.cs.kuleuven.be/sports/blog/enhancing-xg-models-with-freeze-frame-data
     """
-    output = {}
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
+
+    # Create the output DataFrame
+    output = pd.DataFrame(
+        data={
+            "free_projection_gaps": pd.Series(dtype="Int64", index=events.loc[mask].index),
+            "free_projection_pct": pd.Series(dtype="float", index=events.loc[mask].index),
+        },
+        index=events.loc[mask].index,
+    )
+
     # We have to use StatsBomb coordinates here
     corner1 = (120, 0)
     corner2 = (120, 80)
     goal = [36, 44]
-    for idx, shot in events.loc[mask].iterrows():
+    for idx, shot in events.loc[mask & mask_shots].iterrows():
         if "shot" not in shot.extra or "freeze_frame" not in shot.extra["shot"]:
             # No freeze frame data available for this shot
             continue
@@ -271,11 +297,10 @@ def statsbomb_free_projection(events: DataFrame[StatsBombEventSchema], mask: Mas
                     else:
                         new_free_projection.append(projection)
                 free_projection = [p for p in new_free_projection if p[1] - p[0] > 0]
-        output[idx] = {
-            "free_projection_gaps": len(free_projection),
-            "free_projection_pct": np.sum(np.diff(free_projection)) / np.diff(goal)[0],
-        }
-    output = pd.DataFrame.from_dict(output, orient="index")
+        output.loc[idx, "free_projection_gaps"] = len(free_projection)
+        output.loc[idx, "free_projection_pct"] = (
+            np.sum(np.diff(free_projection)) / np.diff(goal)[0]
+        )
     return output
 
 
@@ -309,8 +334,22 @@ def statsbomb_goalkeeper_position(events: DataFrame[StatsBombEventSchema], mask:
         ('goalkeeper_dist_to_goal') and the angle to the center of the goal
         ('goalkeeper_angle_to_goal').
     """
-    output = {}
-    for idx, shot in events.loc[mask].iterrows():
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
+
+    # Create the output DataFrame
+    output = pd.DataFrame(
+        data={
+            "goalkeeper_x": pd.Series(dtype="float", index=events.loc[mask].index),
+            "goalkeeper_y": pd.Series(dtype="float", index=events.loc[mask].index),
+            "goalkeeper_dist_to_ball": pd.Series(dtype="float", index=events.loc[mask].index),
+            "goalkeeper_dist_to_goal": pd.Series(dtype="float", index=events.loc[mask].index),
+            "goalkeeper_angle_to_goal": pd.Series(dtype="float", index=events.loc[mask].index),
+        },
+        index=events.loc[mask].index,
+    )
+
+    for idx, shot in events.loc[mask & mask_shots].iterrows():
         if "shot" not in shot.extra or "freeze_frame" not in shot.extra["shot"]:
             # No freeze frame data available for this shot
             continue
@@ -344,14 +383,11 @@ def statsbomb_goalkeeper_position(events: DataFrame[StatsBombEventSchema], mask:
         dy_kb = goalkeeper_y - ball_y
         goalkeeper_dist_to_ball = math.sqrt(dx_kb**2 + dy_kb**2)
 
-        output[idx] = {
-            "goalkeeper_x": goalkeeper_x,
-            "goalkeeper_y": goalkeeper_y,
-            "goalkeeper_dist_to_ball": goalkeeper_dist_to_ball,
-            "goalkeeper_dist_to_goal": goalkeeper_dist_to_goal,
-            "goalkeeper_angle_to_goal": goalkeeper_angle_to_goal,
-        }
-    output = pd.DataFrame.from_dict(output, orient="index")
+        output.loc[idx, "goalkeeper_x"] = goalkeeper_x
+        output.loc[idx, "goalkeeper_y"] = goalkeeper_y
+        output.loc[idx, "goalkeeper_dist_to_ball"] = goalkeeper_dist_to_ball
+        output.loc[idx, "goalkeeper_dist_to_goal"] = goalkeeper_dist_to_goal
+        output.loc[idx, "goalkeeper_angle_to_goal"] = goalkeeper_angle_to_goal
     return output
 
 
@@ -400,10 +436,24 @@ def statsbomb_defenders_position(events: DataFrame[StatsBombEventSchema], mask: 
        Professional Goalkeeper Technique from Broadcast Footage." arXiv preprint
        arXiv:2202.12259 (2022).
     """
-    output = {}
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
+
+    # Create the output DataFrame
+    output = pd.DataFrame(
+        data={
+            "dist_to_defender": pd.Series(dtype="float", index=events.loc[mask].index),
+            "under_pressure": pd.Series(dtype="boolean", index=events.loc[mask].index),
+            "nb_defenders_in_shot_line": pd.Series(dtype="int", index=events.loc[mask].index),
+            "nb_defenders_behind_ball": pd.Series(dtype="int", index=events.loc[mask].index),
+            "one_on_one": pd.Series(dtype="boolean", index=events.loc[mask].index),
+        },
+        index=events.loc[mask].index,
+    )
+
     left_post = (spadlcfg.field_length, spadlcfg.field_width / 2 - _spadl_cfg["goal_width"] / 2)
     right_post = (spadlcfg.field_length, spadlcfg.field_width / 2 + _spadl_cfg["goal_width"] / 2)
-    for idx, shot in events.loc[mask].iterrows():
+    for idx, shot in events.loc[mask & mask_shots].iterrows():
         if "shot" not in shot.extra or "freeze_frame" not in shot.extra["shot"]:
             # No freeze frame data available for this shot
             continue
@@ -424,20 +474,16 @@ def statsbomb_defenders_position(events: DataFrame[StatsBombEventSchema], mask: 
                 )
             )
             behind_ball.append(defender_x > ball_x)
-        output[idx] = {
-            "dist_to_defender": min(distances, default=float("inf")),
-            "under_pressure": shot.under_pressure,
-            "nb_defenders_in_shot_line": sum(in_shot_line),
-            "nb_defenders_behind_ball": sum(behind_ball),
-            "one_on_one": (
-                sum(behind_ball) == 0
-                and sum(in_shot_line) == 0
-                and shot.extra["shot"]["body_part"]["name"] in ["Left Foot", "Right Foot"]
-            ),
-        }
-    output = pd.DataFrame.from_dict(output, orient="index")
-    output["one_on_one"] = output["one_on_one"].astype("boolean")
-    output["under_pressure"] = output["under_pressure"].astype("boolean")
+        output.loc[idx, "dist_to_defender"] = min(distances, default=float("inf"))
+        output.loc[idx, "under_pressure"] = shot.under_pressure
+        output.loc[idx, "nb_defenders_in_shot_line"] = sum(in_shot_line)
+        output.loc[idx, "nb_defenders_behind_ball"] = sum(behind_ball)
+        output.loc[idx, "one_on_one"] = (
+            sum(behind_ball) == 0
+            and sum(in_shot_line) == 0
+            and shot.extra["shot"]["body_part"]["name"] in ["Left Foot", "Right Foot"]
+        )
+
     return output
 
 
@@ -477,12 +523,44 @@ def statsbomb_assist(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Fea
        Professional Goalkeeper Technique from Broadcast Footage." arXiv preprint
        arXiv:2202.12259 (2022).
     """
-    output = {}
-    for event_id, shot in events.loc[mask].iterrows():
-        if "shot" not in shot.extra or "key_pass_id" not in shot.extra["shot"]:
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
+
+    # Create the output DataFrame
+    index = events.loc[mask].index
+    output = pd.DataFrame(
+        {
+            "end_x_assist": pd.Series(dtype="float", index=index),
+            "end_y_assist": pd.Series(dtype="float", index=index),
+            "carry_dist": pd.Series(dtype="float", index=index),
+            "type_assist": pd.Categorical(
+                pd.Series(dtype="category", index=index),
+                categories=[
+                    "standard_pass",
+                    "free_kick",
+                    "corner",
+                    "throw_in",
+                    "cross",
+                    "cut_back",
+                    "through_ball",
+                ],
+                ordered=False,
+            ),
+            "height_assist": pd.Categorical(
+                pd.Series(dtype="category", index=index),
+                categories=["ground", "low", "high"],
+                ordered=True,
+            ),
+        },
+        index=index,
+    )
+
+    indexed_events = events.set_index("event_id")
+    for idx, shot in events.loc[mask & mask_shots].iterrows():
+        if "key_pass_id" not in shot.extra["shot"]:
             # No assist for this shot
             continue
-        assist = events.loc[shot.extra["shot"]["key_pass_id"]]
+        assist = indexed_events.loc[shot.extra["shot"]["key_pass_id"]]
         assist_x, assist_y = _sb_to_spadl(
             assist.extra["pass"]["end_location"][0], assist.extra["pass"]["end_location"][1]
         )
@@ -517,37 +595,20 @@ def statsbomb_assist(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Fea
                 }
                 assist_height = m[assist.extra["pass"]["height"]["name"]]
 
-        output[event_id] = {
-            "end_x_assist": assist_x,
-            "end_y_assist": assist_y,
-            "carry_dist": math.sqrt((shot_x - assist_x) ** 2 + (shot_y - assist_y) ** 2),
-            "type_assist": assist_type,
-            "height_assist": assist_height,
-        }
+        output.loc[idx, "end_x_assist"] = assist_x
+        output.loc[idx, "end_y_assist"] = assist_y
+        output.loc[idx, "carry_dist"] = math.sqrt(
+            (shot_x - assist_x) ** 2 + (shot_y - assist_y) ** 2
+        )
+        output.loc[idx, "type_assist"] = assist_type
+        output.loc[idx, "height_assist"] = assist_height
 
-    output = pd.DataFrame.from_dict(output, orient="index")
-    output["type_assist"] = pd.Categorical(
-        output["type_assist"],
-        categories=[
-            "standard_pass",
-            "free_kick",
-            "corner",
-            "throw_in",
-            "cross",
-            "cut_back",
-            "through_ball",
-        ],
-        ordered=False,
-    )
-    output["height_assist"] = pd.Categorical(
-        output["height_assist"], categories=["ground", "low", "high"], ordered=True
-    )
     return output
 
 
 @feature_generator("events", features=["from_counterattack"])
 def statsbomb_counterattack(events: DataFrame[StatsBombEventSchema], mask: Mask) -> Features:
-    """Get whether a shot was from a counterattack.
+    """Get whether an action was from a counterattack.
 
     This is derived from the 'play_pattern' annotation in StatsBomb's event
     stream data.
@@ -557,20 +618,17 @@ def statsbomb_counterattack(events: DataFrame[StatsBombEventSchema], mask: Mask)
     events : DataFrame[StatsBombEventSchema]
         The StatsBomb events of a game.
     mask : Mask
-        A boolean mask to select the shots for which attributes should be
+        A boolean mask to select the actions for which attributes should be
         computed.
 
     Returns
     -------
     pd.DataFrame
     """
-    output = {}
-    for idx, shot in events.loc[mask].iterrows():
-        output[idx] = {
-            "from_counterattack": shot.play_pattern_name == "From Counter",
-        }
+    # Create the output DataFrame
+    output = pd.DataFrame(index=events.loc[mask].index)
+    output["from_counterattack"] = events.loc[mask, "play_pattern_name"] == "From Counter"
 
-    output = pd.DataFrame.from_dict(output, orient="index")
     return output
 
 
@@ -594,10 +652,25 @@ def statsbomb_shot_impact_height(events: DataFrame[StatsBombEventSchema], mask: 
     -------
     pd.DataFrame
     """
+    # Filter rows where 'shot' exists in 'extra'
+    mask_shots = events.loc[mask]["extra"].apply(lambda x: "shot" in x)
+
+    # Create the output DataFrame
+    index = events.loc[mask].index
+    output = pd.DataFrame(
+        {
+            "impact_height": pd.Categorical(
+                pd.Series(dtype="category", index=index),
+                categories=["ground", "low", "high"],
+                ordered=True,
+            )
+        },
+        index=index,
+    )
+
     # The height of the ball when the ball is touched is not included,
     # but we can use body part and technique as a proxy for this
-    output = {}
-    for idx, shot in events.loc[mask].iterrows():
+    for idx, shot in events.loc[mask & mask_shots].iterrows():
         if "shot" not in shot.extra or "technique" not in shot.extra["shot"]:
             # No freeze frame data available for this shot
             continue
@@ -615,10 +688,6 @@ def statsbomb_shot_impact_height(events: DataFrame[StatsBombEventSchema], mask: 
             height = "low"
         elif shot.extra["shot"]["technique"]["name"] == "Overhead Kick":
             height = "high"
-        output[idx] = {"impact_height": height}
+        output.loc[idx, "impact_height"] = height
 
-    output = pd.DataFrame.from_dict(output, orient="index")
-    output["impact_height"] = pd.Categorical(
-        output["impact_height"], categories=["ground", "low", "high"], ordered=True
-    )
     return output

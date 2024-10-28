@@ -370,31 +370,27 @@ def rebound(actions: SPADLActions, mask: Mask) -> Features:
         A dataframe with a column containing whether shot was a rebound ('rebound')
         and the time since the previous shot ('time_prev_shot').
     """
-    df = {}
-    for idx, shot in actions.loc[mask].iterrows():
-        # (time_prev): Time in seconds from the last shot of the same team
-        # in the same half of the same game. The idea here is try to add some
-        # information about rebounds.
-        _idx = actions.index.get_loc(idx)
-        prev_actions = actions.iloc[:_idx]
-        prev_shots = prev_actions[
-            (prev_actions.type_name.isin(["shot", "shot_penalty", "shot_freekick"]))
-            & (prev_actions.team_id == shot.team_id)
-            & (prev_actions.period_id == shot.period_id)
-        ]
-        if not prev_shots.empty:
-            time_prev_shot = shot["time_seconds"] - prev_shots.iloc[-1]["time_seconds"]
-        else:
-            time_prev_shot = float("inf")
-        # (rebound): Shot in previous two actions
-        rebound = (
-            prev_actions.iloc[-2:].type_name.isin(["shot", "shot_penalty", "shot_freekick"]).any()
-        )
-        df[idx] = {
-            "time_prev_shot": time_prev_shot,
-            "rebound": rebound,
-        }
-    return pd.DataFrame.from_dict(df, orient="index")
+    actions = actions.copy()
+
+    # Identify shot-related actions
+    shot_mask = actions["type_name"].isin(["shot", "shot_freekick", "shot_penalty"])
+
+    # Create new columns for shot indices, times, and action IDs
+    actions["shot_idx"] = actions["action_id"].where(shot_mask)
+    actions["shot_time_seconds"] = actions["time_seconds"].where(shot_mask)
+
+    # Forward-fill and shift shot-related columns to get the last shot per group
+    actions[["last_shot_idx", "last_shot_time_seconds"]] = (
+        actions.groupby(["game_id", "period_id", "team_id"])[["shot_idx", "shot_time_seconds"]]
+        .ffill()
+        .shift(1)
+    )
+
+    # Calculate the number of actions and time since the previous shot
+    actions["rebound"] = (actions["action_id"] - actions["last_shot_idx"]) <= 2
+    actions["time_prev_shot"] = actions["time_seconds"] - actions["last_shot_time_seconds"]
+
+    return actions.loc[mask, ["rebound", "time_prev_shot"]]
 
 
 def _caley_shot_matrix(
