@@ -14,7 +14,7 @@ from socceraction.data.schema import EventSchema
 from .base import Dataset, PartitionIdentifier
 
 
-def _read_hdf(key, path):
+def _read_hdf(key: str, path: str) -> pd.DataFrame:
     df = pd.read_hdf(path, key)
     df = df.set_index(pd.Index([key.split("/")[-1]] * len(df), name="key"))
     return df
@@ -85,7 +85,9 @@ class HDFDataset(HDFStore, Dataset):
             data_columns=True,
         )
 
-    def _get_keys(self, table: str, partitions: Optional[list[PartitionIdentifier]] = None):
+    def _get_keys(
+        self, table: str, partitions: Optional[list[PartitionIdentifier]] = None
+    ) -> set[str]:
         _, groups, leaves = next(self.walk("/"))
 
         if table in leaves:
@@ -103,11 +105,16 @@ class HDFDataset(HDFStore, Dataset):
         keys = set()
         for partition in partitions:
             if partition.game_id is None:
+                selected_games = games.copy()
                 if partition.competition_id is not None:
-                    games = games[games.competition_id == partition.competition_id]
+                    selected_games = selected_games[
+                        selected_games.competition_id == partition.competition_id
+                    ]
                 if partition.season_id is not None:
-                    games = games[games.season_id == partition.season_id]
-                for game_id in games.game_id:
+                    selected_games = selected_games[
+                        selected_games.season_id == partition.season_id
+                    ]
+                for game_id in selected_games.game_id:
                     keys.add(f"{table}/game_{game_id}")
             else:
                 keys.add(f"{table}/game_{partition.game_id}")
@@ -133,7 +140,7 @@ class HDFDataset(HDFStore, Dataset):
         engine: Literal["pandas", "dask"] = "pandas",
         show_progress: bool = False,
     ) -> DataFrame[Any]:
-        keys = sorted(list(self._get_keys(table, partitions)))
+        keys = sorted(self._get_keys(table, partitions))
         if engine == "dask":
             import dask.dataframe as dd
 
