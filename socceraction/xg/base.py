@@ -23,7 +23,7 @@ from socceraction.data import Dataset, PartitionIdentifier
 from socceraction.data.transforms import ActionsToFeatures, Transform
 from socceraction.ml import evaluation
 from socceraction.ml.pipeline import InteractionFeature
-from socceraction.ml.preprocessing import simple_proc_for_linear_algoritms
+from socceraction.ml.preprocessing import simple_proc_for_linear_algorithms
 from socceraction.spadl.schema import SPADLSchema
 from socceraction.types import Features
 from socceraction.xg import labels as lab
@@ -430,7 +430,7 @@ class FreekickXGModel(XGModel):
         }
 
         feature_pipeline = InteractionFeature([dist_colname, angle_colname], dist_x_angle_colname)
-        preprocess_pipeline = simple_proc_for_linear_algoritms(
+        preprocess_pipeline = simple_proc_for_linear_algorithms(
             numeric_features=[dist_colname, angle_colname, dist_x_angle_colname],
             categoric_features=[],
         )
@@ -468,7 +468,7 @@ class BasicOpenplayXGModel(XGModel):
         }
 
         feature_pipeline = InteractionFeature([dist_colname, angle_colname], dist_x_angle_colname)
-        preprocess_pipeline = simple_proc_for_linear_algoritms(
+        preprocess_pipeline = simple_proc_for_linear_algorithms(
             numeric_features=[dist_colname, angle_colname, dist_x_angle_colname],
             categoric_features=[bodypart_colname],
         )
@@ -541,7 +541,7 @@ class XGModelEnsemble(BaseEstimator):
     ) -> "XGModelEnsemble":
         """See :meth:`XGModel.train`."""
         for model in self.models:
-            model.train(source_data, target_colname, partitions)
+            model.train(source_data, partitions)
         return self
 
     def validate(
