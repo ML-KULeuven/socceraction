@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -311,7 +311,6 @@ class ExpectedThreat(BaseEstimator):
         """
         gs = p_scoring * p_shot
         diff = np.ones((self.w, self.l), dtype=np.float64)
-        it = 0
         self.heatmaps.append(self.xT.copy())
 
         while np.any(diff > self.eps):
@@ -329,9 +328,6 @@ class ExpectedThreat(BaseEstimator):
             diff = newxT - self.xT
             self.xT = newxT
             self.heatmaps.append(self.xT.copy())
-            it += 1
-
-        print("# iterations: ", it)
 
     def train(
         self,
@@ -374,6 +370,7 @@ class ExpectedThreat(BaseEstimator):
         source_data: Dataset | DataFrame[SPADLSchema],
         partitions: Optional[list[PartitionIdentifier]] = None,
     ) -> dict:
+        """Validate the xT model."""
         raise NotImplementedError("The xT model does not support validation.")
 
     def interpolator(
