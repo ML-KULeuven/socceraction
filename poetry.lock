@@ -2090,13 +2090,13 @@ test = ["pytest"]
 
 [[package]]
 name = "statsbombpy"
-version = "1.13.1"
+version = "1.14.0"
 description = "easily stream StatsBomb data into Python"
 optional = true
 python-versions = "*"
 files = [
-    {file = "statsbombpy-1.13.1-py3-none-any.whl", hash = "sha256:1019c6712e3ab5aeab3dbabe2c6e477001195443383fb1524048c3b7a4215641"},
-    {file = "statsbombpy-1.13.1.tar.gz", hash = "sha256:4ed3407e32972c0e6ac4c2365e2d5912975a169c02fbffc2dad779dd3e54bd0d"},
+    {file = "statsbombpy-1.14.0-py3-none-any.whl", hash = "sha256:bf5e87a477d5c9a105795f190fea03b04988412b49baa15f6f31438953739a19"},
+    {file = "statsbombpy-1.14.0.tar.gz", hash = "sha256:225a95301a9f9f3ca478f1df9c67c051e4e9e470e97f223c13d91fc85dbf3650"},
 ]
 
 [package.dependencies]
