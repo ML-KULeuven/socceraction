@@ -137,6 +137,7 @@ jobs:
         with:
           name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
           path: ".coverage.*"
+          include-hidden-files: true
       - name: Upload documentation
         if: matrix.session == 'docs-build'
         uses: actions/upload-artifact@v4
