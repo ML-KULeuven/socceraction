@@ -166,7 +166,10 @@ def _get_type_id(args: tuple[str, bool, dict[int, Any]]) -> int:  # noqa: C901
         else:
             a = "shot"
     elif eventname == "save":
-        a = "keeper_save"
+        if 94 in q:
+            a = "non_action"
+        else:
+            a = "keeper_save"
     elif eventname == "claim":
         a = "keeper_claim"
     elif eventname == "punch":
