@@ -4,11 +4,9 @@ Contributor guide
 This document lays out guidelines and advice for contributing to this project.
 If you're thinking of contributing, please start by reading this document and
 getting a feel for how contributing to this project works. If you have any
-questions, feel free to reach out to either `Tom Decroos`_, or `Pieter
-Robberechts`_, the primary maintainers.
+questions, feel free to reach out to `Pieter Robberechts`_, the primary maintainer.
 
-.. _Tom Decroos: https://tomdecroos.github.io
-.. _Pieter Robberechts: https://people.cs.kuleuven.be/~pieter.robberechts/
+.. _Pieter Robberechts: http://www.cs.kuleuven.be/cgi-bin/e-post.pl?epost=Pieter.Robberechts
 
 The guide is split into sections based on the type of contribution you're
 thinking of making.
@@ -40,8 +38,8 @@ and/or steps to reproduce the issue.
 Feature requests
 ----------------
 
-Socceraction is not actively developed. It's primary use is to enable
-reproducability of our research. If you believe there is a feature missing,
+Socceraction is not actively developed. Its primary use is to enable
+reproducibility of our research. If you believe there is a feature missing,
 feel free to raise a feature request on the `Issue Tracker`_, but please do be
 aware that the overwhelming likelihood is that your feature request will not
 be accepted.
@@ -57,15 +55,15 @@ the ``docs/`` directory of the codebase. They're written in
 `reStructuredText`_, and use `Sphinx`_ to generate the full suite of
 documentation.
 
-You do not have to setup a development environment to make small changes to
+You do not have to set up a development environment to make small changes to
 the docs. Instead, you can `edit files directly on GitHub`_ and suggest changes.
 
 When contributing documentation, please do your best to follow the style of the
 documentation files. This means a soft-limit of 79 characters wide in your text
-files and a semi-formal, yet friendly and approachable, prose style.
+files and a semiformal, yet friendly and approachable, prose style.
 
-When presenting Python code, use single-quoted strings (``'hello'`` instead of
-``"hello"``).
+When presenting Python code, use double-quoted strings (``"hello"`` instead of
+``'hello'``).
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _Sphinx: http://sphinx-doc.org/index.html
@@ -85,7 +83,7 @@ project.
 Setting up your development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You need Python 3.7.1+ and the following tools:
+You need Python 3.9+ and the following tools:
 
 - Poetry_
 - Nox_
@@ -96,6 +94,7 @@ Install the package with development requirements:
 .. code:: console
 
    $ poetry install
+   $ poetry self add poetry-plugin-export
 
 You can now run an interactive Python session.
 
@@ -166,7 +165,7 @@ a few guidelines:
 
 - Line-length can exceed 79 characters, to 100, when convenient.
 - Line-length can exceed 100 characters, when doing otherwise would be *terribly* inconvenient.
-- Always use single-quoted strings (e.g. ``'#soccer'``), unless a single-quote occurs within the string.
+- Always use double-quoted strings (e.g. ``"soccer"``), unless a double-quote occurs within the string.
 
 To ensure all code conforms to this format. You can format the code using the
 pre-commit hooks.
