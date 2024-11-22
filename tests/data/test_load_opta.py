@@ -111,10 +111,13 @@ def test_universal_feeds(tmpdir: local) -> None:
     loader = opta.OptaLoader(root=str(tmpdir), parser=parser, feeds=feeds)
 
     if "win" in sys.platform:
-        assert loader.feeds["myfeed"] == "{competition_id}\\{season_id}\\{game_id}.json"
+        expected_feed = "{competition_id}\\{season_id}\\{game_id}.json"
+    elif "linux" in sys.platform or "darwin" in sys.platform:  # Linux/MacOS
+        expected_feed = "{competition_id}/{season_id}/{game_id}.json"
+    else:
+        pytest.skip(f"Unsupported platform: {sys.platform}")
 
-    elif "linux" in sys.platform:
-        assert loader.feeds["myfeed"] == "{competition_id}/{season_id}/{game_id}.json"
+    assert loader.feeds["myfeed"] == expected_feed
 
 
 def test_deepupdate() -> None:
