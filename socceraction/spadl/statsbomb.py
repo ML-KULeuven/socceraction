@@ -72,7 +72,7 @@ def convert_to_actions(
 
     events = events.copy()
     events = _insert_interception_passes(events)
-    events["extra"].fillna({}, inplace=True)
+    events["extra"] = events["extra"].fillna({})
 
     actions["game_id"] = events.game_id
     actions["original_event_id"] = events.event_id

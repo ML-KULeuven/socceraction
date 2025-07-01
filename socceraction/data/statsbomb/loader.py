@@ -4,6 +4,8 @@ import os
 from typing import Any, Optional, cast
 
 import pandas as pd  # type: ignore
+pd.set_option("future.no_silent_downcasting", True)
+
 from pandera.typing import DataFrame
 
 try:

@@ -3,6 +3,8 @@
 from typing import Any, cast
 
 import pandas as pd  # type: ignore
+pd.set_option("future.no_silent_downcasting", True)
+
 from pandera.typing import DataFrame
 
 from . import config as spadlconfig
