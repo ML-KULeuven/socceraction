@@ -3,7 +3,7 @@
 import json  # type: ignore
 import re
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from ...base import MissingDataError
 from .base import OptaParser, _get_end_x, _get_end_y, assertget
@@ -20,8 +20,8 @@ class WhoScoredParser(OptaParser):
 
     Parameters
     ----------
-    path : str
-        Path of the data file.
+    path : Union[str, dict]
+        Path of the data file of dict with data
     competition_id : int
         ID of the competition to which the provided data file belongs. If
         None, this information is extracted from a field 'competition_id' in
@@ -36,13 +36,16 @@ class WhoScoredParser(OptaParser):
 
     def __init__(  # noqa: C901
         self,
-        path: str,
+        path: Union[str, dict],
         competition_id: Optional[int] = None,
         season_id: Optional[int] = None,
         game_id: Optional[int] = None,
     ) -> None:
-        with open(path, encoding="utf-8") as fh:
-            self.root = json.load(fh)
+        if isinstance(path, str):
+            with open(path, encoding="utf-8") as fh:
+                self.root = json.load(fh)
+        else:
+            self.root = path
 
         if competition_id is None:
             try:
