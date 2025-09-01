@@ -1,6 +1,7 @@
 """Feature generators for the body part used to perform an action."""
 
 import pandas as pd
+
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Actions, Features, Mask
 
@@ -75,6 +76,107 @@ def bodypart_detailed(actions: Actions, mask: Mask) -> Features:
         ordered=False,
     )
     return X.loc[mask]
+
+
+@feature_generator("actions", features=["bodypart_prefered"])
+def bodypart_prefered(actions: Actions, mask: Mask) -> Features:
+    """Get the body part using strong / weak foot instead of left / right foot.
+
+    A player's strong foot is determined by the majority of the passes they
+    make with each foot. If a player has an equal number of passes with
+    each foot, either foot is considered the strong foot. If a player performed
+    less than 10 passes in total, the right foot is considered as the strong foot.
+
+    This feature generator can only be used if the dataprovider distinguishes
+    between the left and right foot.
+
+    Parameters
+    ----------
+    actions : Actions
+        The actions of a game.
+    mask : Mask
+        A boolean mask to filter actions.
+
+    Returns
+    -------
+    Features
+        The 'bodypart_id' of each action.
+
+    See Also
+    --------
+    bodypart :
+        An alternative version that does not split between the left and right foot.
+    """
+    # Find each player's strong foot
+    N = 10  # minimum number of actions required
+
+    subset = actions.loc[
+        (actions.type_id == spadlcfg.actiontypes.index("pass"))
+        & (
+            actions.bodypart_id.isin(
+                [
+                    spadlcfg.bodyparts.index("foot_left"),
+                    spadlcfg.bodyparts.index("foot_right"),
+                ]
+            )
+        )
+    ]
+
+    # Keep only players with at least N actions
+    valid_players = subset.groupby("player_id").filter(lambda g: len(g) >= N)
+
+    # Compute distribution
+    distribution = (
+        valid_players.groupby("player_id")["bodypart_id"]
+        .value_counts(normalize=True)
+        .rename("proportion")
+        .reset_index()
+    )
+
+    # Keep only the most frequent bodypart per player
+    most_frequent = (
+        distribution.sort_values(["player_id", "proportion"], ascending=[True, False])
+        .groupby("player_id")
+        .head(1)
+    )
+
+    player_to_strong_foot = most_frequent.set_index("player_id").to_dict(orient="index")
+
+    def _map_player_to_strong_foot(row: pd.Series) -> str:
+        most_used = player_to_strong_foot.get(row["player_id"], None)
+        if most_used is None:
+            # Not enough data, assume right foot is strong
+            if row.bodypart_id == spadlcfg.bodyparts.index("foot_right"):
+                return "foot_strong"
+            elif row.bodypart_id == spadlcfg.bodyparts.index("foot_left"):
+                return "foot_weak"
+            else:
+                return spadlcfg.bodyparts[row.bodypart_id]
+        elif most_used["proportion"] < 0.66:
+            # Player is fairly balanced, assume both feet are strong
+            if row.bodypart_id == spadlcfg.bodyparts.index("foot_right"):
+                return "foot_strong"
+            elif row.bodypart_id == spadlcfg.bodyparts.index("foot_left"):
+                return "foot_strong"
+            else:
+                return spadlcfg.bodyparts[row.bodypart_id]
+        else:
+            if row.bodypart_id == most_used["bodypart_id"]:
+                return "foot_strong"
+            elif row.bodypart_id in [
+                spadlcfg.bodyparts.index("foot_left"),
+                spadlcfg.bodyparts.index("foot_right"),
+            ]:
+                return "foot_weak"
+            return spadlcfg.bodyparts[row.bodypart_id]
+
+    X = pd.DataFrame(index=actions.index).loc[mask]
+    X["bodypart_prefered"] = pd.Categorical(
+        actions.loc[mask].apply(lambda row: _map_player_to_strong_foot(row), axis=1),
+        categories=spadlcfg.bodyparts + ["foot_strong", "foot_weak"],
+        ordered=False,
+    )
+    return X
 
 
 @feature_generator(
