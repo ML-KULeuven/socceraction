@@ -5,6 +5,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+
 import socceraction.spadl.config as spadlcfg
 from socceraction.types import Features, Mask, SPADLActions
 
