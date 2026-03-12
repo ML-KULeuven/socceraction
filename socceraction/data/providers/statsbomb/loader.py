@@ -407,61 +407,79 @@ def extract_player_games(events: pd.DataFrame) -> pd.DataFrame:
     game_minutes = sum(periods_minutes)
 
     game_id = events.game_id.mode().values[0]
-    players = {}
-    # Red cards
-    red_cards = events[
-        events.apply(
-            lambda x: any(
-                e in x.extra
-                and "card" in x.extra[e]
-                and x.extra[e]["card"]["name"] in ["Second Yellow", "Red Card"]
-                for e in ["foul_committed", "bad_behaviour"]
-            ),
-            axis=1,
-        )
-    ]
-    # stats for starting XI
-    for startxi in events[events.type_name == "Starting XI"].itertuples():
+
+    # 1. Starting XI
+    starting_xi = events[events.type_name == "Starting XI"]
+    lineup_list = []
+    for startxi in starting_xi.itertuples():
         team_id, team_name = startxi.team_id, startxi.team_name
-        for player in startxi.extra["tactics"]["lineup"]:
-            player = _flatten_id(player)
-            player = {
-                **player,
-                **{
+        for player_dict in startxi.extra["tactics"]["lineup"]:
+            player = _flatten_id(player_dict)
+            player.update(
+                {
                     "game_id": game_id,
                     "team_id": team_id,
                     "team_name": team_name,
-                    "minutes_played": game_minutes,
-                },
-            }
-            player_red_card = red_cards[red_cards.player_id == player["player_id"]]
-            if len(player_red_card) > 0:
-                red_card_minute = player_red_card.iloc[0].minute
-                player["minutes_played"] = _expand_minute(red_card_minute, periods_minutes)
-            players[player["player_id"]] = player
-    # stats for substitutions
-    for substitution in events[events.type_name == "Substitution"].itertuples():
-        exp_sub_minute = _expand_minute(substitution.minute, periods_minutes)
-        replacement = {
-            "player_id": substitution.extra["substitution"]["replacement"]["id"],
-            "player_name": substitution.extra["substitution"]["replacement"]["name"],
-            "minutes_played": game_minutes - exp_sub_minute,
-            "team_id": substitution.team_id,
-            "game_id": game_id,
-            "team_name": substitution.team_name,
-        }
-        player_red_card = red_cards[red_cards.player_id == replacement["player_id"]]
-        if len(player_red_card) > 0:
-            red_card_minute = player_red_card.iloc[0].minute
-            replacement["minutes_played"] = (
-                _expand_minute(red_card_minute, periods_minutes) - exp_sub_minute
+                    "start_minute": 0,
+                }
             )
-        players[replacement["player_id"]] = replacement
-        players[substitution.player_id]["minutes_played"] = exp_sub_minute
-    pg = pd.DataFrame(players.values()).fillna(0)
+            lineup_list.append(player)
+
+    # 2. Substitutions
+    subs = events[events.type_name == "Substitution"]
+    sub_on_list = []
+    for substitution in subs.itertuples():
+        exp_sub_minute = _expand_minute(substitution.minute, periods_minutes)
+        replacement_info = substitution.extra["substitution"]["replacement"]
+        sub_on_list.append(
+            {
+                "player_id": replacement_info["id"],
+                "player_name": replacement_info["name"],
+                "team_id": substitution.team_id,
+                "game_id": game_id,
+                "team_name": substitution.team_name,
+                "start_minute": exp_sub_minute,
+            }
+        )
+
+    players_df = pd.concat(
+        [pd.DataFrame(lineup_list), pd.DataFrame(sub_on_list)], ignore_index=True
+    )
+    players_df["end_minute"] = game_minutes
+
+    # 3. Subbed off
+    if not subs.empty:
+        subs_off = subs.copy()
+        subs_off["exp_minute"] = subs_off.minute.apply(
+            lambda m: _expand_minute(m, periods_minutes)
+        )
+        sub_off_map = subs_off.groupby("player_id").exp_minute.min()
+        players_df["end_minute"] = players_df.player_id.map(sub_off_map).fillna(
+            players_df.end_minute
+        )
+
+    # 4. Red cards
+    foul_cards = events.extra.str.get("foul_committed").str.get("card").str.get("name")
+    behave_cards = events.extra.str.get("bad_behaviour").str.get("card").str.get("name")
+    red_card_mask = foul_cards.isin(["Second Yellow", "Red Card"]) | behave_cards.isin(
+        ["Second Yellow", "Red Card"]
+    )
+    if red_card_mask.any():
+        red_cards = events[red_card_mask].copy()
+        red_cards["exp_minute"] = red_cards.minute.apply(
+            lambda m: _expand_minute(m, periods_minutes)
+        )
+        red_card_map = red_cards.groupby("player_id").exp_minute.min()
+        players_df["end_minute"] = pd.concat(
+            [players_df.end_minute, players_df.player_id.map(red_card_map)], axis=1
+        ).min(axis=1)
+
+    players_df["minutes_played"] = (players_df.end_minute - players_df.start_minute).clip(lower=0)
+
+    pg = players_df.drop(columns=["start_minute", "end_minute"]).fillna(0)
     for col in pg.columns:
-        if "_id" in col:
-            pg[col] = pg[col].astype(int)  # pylint: disable=E1136,E1137
+        if col.endswith("_id") or col == "minutes_played":
+            pg[col] = pg[col].astype(int)
     return pg
 
 
