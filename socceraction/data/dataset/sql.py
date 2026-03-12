@@ -53,7 +53,7 @@ class SQLDataset(SQLDatabase, Dataset):
         # Drop partition
         if self.has_table(table):
             query = f"""
-                DELETE IGNORE FROM {table}
+                DELETE FROM {table}
                 WHERE competition_id = {partition.competition_id}
                     AND season_id = {partition.season_id}
                     AND game_id = {partition.game_id}
@@ -112,10 +112,16 @@ class SQLDataset(SQLDatabase, Dataset):
         keys : list
             The columns to use to determine duplicates.
         """
+        try:
+            dialect = self.con.dialect.name
+        except AttributeError:
+            dialect = "sqlite"
+
+        row_id = "ctid" if dialect == "postgresql" else "rowid"
         query = f"""
             DELETE FROM {table}
-            WHERE rowid NOT IN (
-                SELECT MIN(rowid)
+            WHERE {row_id} NOT IN (
+                SELECT MIN({row_id})
                 FROM {table}
                 GROUP BY {", ".join(keys)}
             )
