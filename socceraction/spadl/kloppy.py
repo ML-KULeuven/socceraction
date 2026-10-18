@@ -10,7 +10,6 @@ from kloppy.domain import (
     CardType,
     CarryEvent,
     ClearanceEvent,
-    CoordinateSystem,
     Dimension,
     DuelEvent,
     DuelResult,
@@ -22,6 +21,7 @@ from kloppy.domain import (
     GoalkeeperActionType,
     GoalkeeperEvent,
     InterceptionResult,
+    MetricPitchDimensions,
     MiscontrolEvent,
     Orientation,
     Origin,
@@ -30,6 +30,7 @@ from kloppy.domain import (
     PassType,
     PitchDimensions,
     Provider,
+    ProviderCoordinateSystem,
     Qualifier,
     RecoveryEvent,
     SetPieceType,
@@ -48,7 +49,8 @@ from .schema import SPADLSchema
 
 _KLOPPY_VERSION = version.parse(kloppy.__version__)
 _SUPPORTED_PROVIDERS = {
-    Provider.STATSBOMB: version.parse("3.14.0"),
+    Provider.STATSBOMB: version.parse("3.15.0"),
+    # Provider.OPTA: version.parse("3.15.0"),
 }
 
 
@@ -87,8 +89,11 @@ def convert_to_actions(
 
     # Convert the dataset to the SPADL coordinate system
     new_dataset = dataset.transform(
-        to_orientation=Orientation.FIXED_HOME_AWAY,  # FIXME
-        to_coordinate_system=_SoccerActionCoordinateSystem(normalized=False),
+        to_orientation=Orientation.HOME_AWAY,
+        to_coordinate_system=_SoccerActionCoordinateSystem(
+            pitch_length=dataset.metadata.coordinate_system.pitch_length,
+            pitch_width=dataset.metadata.coordinate_system.pitch_width,
+        ),
     )
 
     # Convert the events to SPADL actions
@@ -98,7 +103,7 @@ def convert_to_actions(
             game_id=game_id,
             original_event_id=event.event_id,
             period_id=event.period.id,
-            time_seconds=event.timestamp,
+            time_seconds=event.timestamp.total_seconds(),
             team_id=event.team.team_id if event.team else None,
             player_id=event.player.player_id if event.player else None,
             start_x=event.coordinates.x if event.coordinates else None,
@@ -124,7 +129,7 @@ def convert_to_actions(
     return cast(DataFrame[SPADLSchema], df_actions)
 
 
-class _SoccerActionCoordinateSystem(CoordinateSystem):
+class _SoccerActionCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
         return "SoccerAction"
@@ -139,9 +144,12 @@ class _SoccerActionCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
+        return MetricPitchDimensions(
             x_dim=Dimension(0, spadlconfig.field_length),
             y_dim=Dimension(0, spadlconfig.field_width),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
+            standardized=True,
         )
 
 

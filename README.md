@@ -6,7 +6,7 @@
 	<br/>
 
 [![PyPi](https://img.shields.io/pypi/v/socceraction.svg)](https://pypi.org/project/socceraction)
-[![Python Version: 3.7.1+](https://img.shields.io/badge/Python-3.7.1+-blue.svg)](https://pypi.org/project/socceraction)
+[![Python Version: 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://pypi.org/project/socceraction)
 [![Downloads](https://img.shields.io/pypi/dm/socceraction.svg)](https://pypistats.org/packages/socceraction)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)
 
@@ -64,3 +64,7 @@ The Expected Threat (xT) framework was originally introduced by Karun Singh on h
 
 Distributed under the terms of the [MIT license](https://opensource.org/licenses/MIT),
 socceraction is free and open source software. Although not strictly required, we appreciate it if you include a link to this repo or cite our research in your work if you make use of socceraction.
+
+## Acknowledgments
+
+Funding for this project has been provided by the Flemish Government under the "Onderzoeksprogramma Artificiële Intelligentie (AI) Vlaanderen" programme.
