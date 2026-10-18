@@ -6,7 +6,9 @@ __all__ = [
     "WyscoutLoader",
     "PublicWyscoutLoader",
     "Dataset",
+    "FSSpecAdapter",
     "HDFDataset",
+    "ParquetDataset",
     "SQLDataset",
     "PartitionIdentifier",
     "providers",
@@ -15,7 +17,14 @@ __all__ = [
 ]
 
 from . import providers, schema, transforms
-from .dataset import Dataset, HDFDataset, PartitionIdentifier, SQLDataset
+from .dataset import (
+    Dataset,
+    FSSpecAdapter,
+    HDFDataset,
+    ParquetDataset,
+    PartitionIdentifier,
+    SQLDataset,
+)
 from .providers.opta import OptaLoader
 from .providers.statsbomb import StatsBombLoader
 from .providers.wyscout import PublicWyscoutLoader, WyscoutLoader

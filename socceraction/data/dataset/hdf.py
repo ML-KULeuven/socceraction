@@ -141,9 +141,12 @@ class HDFDataset(HDFStore, Dataset):
         show_progress: bool = False,
     ) -> DataFrame[Any]:
         keys = sorted(self._get_keys(table, partitions))
+        keys = [k for k in keys if k in self]
         if engine == "dask":
             import dask.dataframe as dd
 
+            if len(keys) == 0:
+                return cast(DataFrame[Any], dd.from_pandas(pd.DataFrame(), npartitions=1))
             return dd.from_map(
                 _read_hdf,
                 keys,
@@ -154,7 +157,8 @@ class HDFDataset(HDFStore, Dataset):
             keys_verbose = tqdm(keys, desc=f"Reading {table}") if show_progress else keys
             result_dfs = []
             for key in keys_verbose:
-                result_dfs.append(self[key])
+                if key in self:
+                    result_dfs.append(self[key])
             result_dfs = [r for r in result_dfs if r is not None]
             if len(result_dfs) == 0:
                 return cast(DataFrame[Any], pd.DataFrame())

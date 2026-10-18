@@ -88,3 +88,17 @@ You can then convert the data to the SPADL format using the
    Currently, the data model of kloppy is only complete for StatsBomb data.
    If you use kloppy to load data from other sources and convert it to the
    SPADL format, you may lose some information.
+
+
+Storing and managing datasets
+=============================
+
+Socceraction provides a unified database interface in the
+:mod:`socceraction.data.dataset` module for persisting match event streams,
+metadata, and converted SPADL actions across multiple storage backends
+(Parquet with `fsspec`, SQL databases, and HDF5).
+
+.. toctree::
+  :maxdepth: 1
+
+  dataset

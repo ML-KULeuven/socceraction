@@ -11,8 +11,12 @@ socceraction.data.dataset
   :nosignatures:
   :template: class.rst
 
+  ~socceraction.data.dataset.Dataset
+  ~socceraction.data.dataset.PartitionIdentifier
   ~socceraction.data.dataset.HDFDataset
+  ~socceraction.data.dataset.ParquetDataset
   ~socceraction.data.dataset.SQLDataset
+  ~socceraction.data.dataset.FSSpecAdapter
 
 
 socceraction.data.transforms

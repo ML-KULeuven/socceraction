@@ -33,6 +33,9 @@ T = TypeVar("T")
 class Transform(ABC, Generic[T]):
     """Constructs a transformer for a game dataset."""
 
+    from_table: Optional[Union[str, list[str]]] = None
+    to_table: Optional[str] = None
+
     @abstractmethod
     def __call__(self, game: Series[GameSchema], data: T) -> DataFrame[Any]:
         """Transform the data for a game."""
@@ -46,6 +49,9 @@ class Transform(ABC, Generic[T]):
 class PlayActionsLeftToRight(Transform[DataFrame[SPADLSchema]]):
     """Transforms the orientation of actions such that they are executed from left to right."""
 
+    from_table: Optional[Union[str, list[str]]] = "actions"
+    to_table: Optional[str] = "actions"
+
     @override
     def __call__(
         self, game: Series[GameSchema], actions: DataFrame[SPADLSchema]
@@ -57,6 +63,9 @@ class PlayActionsLeftToRight(Transform[DataFrame[SPADLSchema]]):
 
 class PlayAtomicActionsLeftToRight(Transform[DataFrame[AtomicSPADLSchema]]):
     """Transforms the orientation of actions such that they are executed from left to right."""
+
+    from_table: Optional[Union[str, list[str]]] = "atomic_actions"
+    to_table: Optional[str] = "atomic_actions"
 
     @override
     def __call__(
@@ -70,6 +79,9 @@ class PlayAtomicActionsLeftToRight(Transform[DataFrame[AtomicSPADLSchema]]):
 
 class EventsToActions(Transform[DataFrame[EventSchema]], ABC):
     """Transforms events to SPADL actions."""
+
+    from_table: Optional[Union[str, list[str]]] = "events"
+    to_table: Optional[str] = "actions"
 
     def __init__(
         self,
@@ -118,6 +130,9 @@ class WyscoutEventsToActions(EventsToActions):
 class ActionsToAtomic(Transform[DataFrame[SPADLSchema]]):
     """Convert SPADL actions to atomic SPADL actions."""
 
+    from_table: Optional[Union[str, list[str]]] = "actions"
+    to_table: Optional[str] = "atomic_actions"
+
     def __init__(
         self,
         fn_convert_to_atomic: Optional[
@@ -140,6 +155,9 @@ class ActionsToAtomic(Transform[DataFrame[SPADLSchema]]):
 
 class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
     """Convert SPADL actions to features."""
+
+    from_table: Optional[Union[str, list[str]]] = "actions"
+    to_table: Optional[str] = "features"
 
     def __init__(
         self,
@@ -214,7 +232,7 @@ class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
                 if ftype == "actions":
                     features = fn(actions, mask)
                 elif ftype == "gamestates":
-                    features = fn(masked_gamestates_ltr)
+                    features = fn(masked_gamestates_ltr)  # type: ignore[call-arg]
                 elif ftype is None:
                     raise ValueError("The feature generator does not have and 'ftype'.")
                 else:
@@ -236,7 +254,13 @@ class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
                     attrs.append(result)
 
         features_idx = pd.MultiIndex.from_frame(actions.loc[mask, features_idx_cols])
-        df_attrs = pd.concat(attrs, axis=1).set_index(features_idx)
+        df_attrs = pd.concat(attrs, axis=1)
+        if (
+            not df_attrs.index.equals(actions.loc[mask].index)
+            and df_attrs.index.isin(actions.loc[mask].index).all()
+        ):
+            df_attrs = df_attrs.reindex(actions.loc[mask].index)
+        df_attrs = df_attrs.set_index(features_idx)
 
         # Fill missing values
         missing_bool = df_attrs.select_dtypes(include=["boolean"]).columns
@@ -248,6 +272,9 @@ class ActionsToFeatures(Transform[DataFrame[SPADLSchema]]):
 
 class StatsBombEventsToFeatures(Transform[DataFrame[StatsBombEventSchema]]):
     """Convert StatsBomb events to features."""
+
+    from_table: Optional[Union[str, list[str]]] = "events"
+    to_table: Optional[str] = "features"
 
     def __init__(
         self,
@@ -323,7 +350,13 @@ class StatsBombEventsToFeatures(Transform[DataFrame[StatsBombEventSchema]]):
                 if not result.empty:
                     attrs.append(result)
 
-        df_attrs = pd.concat(attrs, axis=1).set_index(features_idx)
+        df_attrs = pd.concat(attrs, axis=1)
+        if (
+            not df_attrs.index.equals(events.loc[mask].index)
+            and df_attrs.index.isin(events.loc[mask].index).all()
+        ):
+            df_attrs = df_attrs.reindex(events.loc[mask].index)
+        df_attrs = df_attrs.set_index(features_idx)
 
         # Fill missing values
         missing_bool = df_attrs.select_dtypes(include=["boolean"]).columns

@@ -2,12 +2,16 @@
 
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
+from types import TracebackType
 from typing import Any, Literal, Optional, Union, cast
 
 import pandas as pd
 from pandera.typing import DataFrame
 from tqdm import tqdm
+from typing_extensions import Self
 
 from socceraction.data.providers.base import EventDataLoader
 from socceraction.data.schema import (
@@ -39,14 +43,38 @@ class PartitionIdentifier:
     game_id: Optional[Union[str, int]] = None
 
     def to_clause(self, syntax: Literal["sql", "pandas"] = "sql") -> str:
-        """Convert the partition to a SQL WHERE clause."""
+        """Convert the partition to a query filter clause.
+
+        Parameters
+        ----------
+        syntax : {'sql', 'pandas'}, default 'sql'
+            The query syntax to format the clause for.
+
+        Returns
+        -------
+        str
+            The formatted filter clause.
+
+        Raises
+        ------
+        ValueError
+            If syntax is not 'sql' or 'pandas'.
+        """
         if syntax.lower() == "sql":
-            return " AND ".join(
-                f"{key}={value}" for key, value in self.__dict__.items() if value is not None
-            )
+            clauses = []
+            for key, value in self.__dict__.items():
+                if value is not None:
+                    if isinstance(value, str):
+                        escaped = value.replace("'", "''")
+                        clauses.append(f"{key}='{escaped}'")
+                    else:
+                        clauses.append(f"{key}={value}")
+            return " AND ".join(clauses)
         elif syntax.lower() == "pandas":
             return " and ".join(
-                f"{key} == {value}" for key, value in self.__dict__.items() if value is not None
+                f"{key} == {repr(value)}"
+                for key, value in self.__dict__.items()
+                if value is not None
             )
         else:
             raise ValueError(f"Unsupported syntax: {syntax}")
@@ -60,9 +88,47 @@ class Dataset(ABC):
     to easily execute common queries and transformations on the data.
     """
 
+    def _get_games_to_import(
+        self,
+        data_loader: EventDataLoader[Any],
+        competition_id: Optional[Union[str, int]],
+        season_id: Optional[Union[str, int]],
+        game_id: Optional[Union[str, int]],
+    ) -> DataFrame[GameSchema]:
+        competitions = data_loader.competitions()
+        if competitions.empty:
+            if competition_id is not None and season_id is not None:
+                warnings.warn("No competition data was found.", stacklevel=2)
+                games = data_loader.games(competition_id, season_id)
+            else:
+                raise LookupError(
+                    "No competitions were found for the given criteria. "
+                    "If no data about available competions is available, "
+                    "you can load invididual seasons by providing "
+                    "both a competition and season id."
+                )
+        else:
+            if competition_id is not None:
+                competitions = competitions.loc[competitions.competition_id == competition_id]
+            if season_id is not None:
+                competitions = competitions.loc[competitions.season_id == season_id]
+
+            self._insert_competitions(competitions)
+            games = pd.concat(
+                [
+                    data_loader.games(row.competition_id, row.season_id)
+                    for row in competitions.itertuples()
+                ]
+            )
+        if game_id is not None:
+            games = games.loc[games.game_id == game_id]
+        if games.empty:
+            raise LookupError("No games found for the given criteria.")
+        return cast(DataFrame[GameSchema], games)
+
     def import_data(
         self,
-        data_loader: EventDataLoader[Union[str, int]],
+        data_loader: EventDataLoader[Any],
         partition: Optional[PartitionIdentifier] = None,
     ) -> None:
         """Import data, upserting it if it already exists.
@@ -88,40 +154,7 @@ class Dataset(ABC):
         season_id = partition.season_id if partition else None
         game_id = partition.game_id if partition else None
 
-        # Retrieve all available competitions
-        competitions = data_loader.competitions()
-
-        # Store competitions
-        if competitions.empty:
-            if competition_id is not None and season_id is not None:
-                warnings.warn("No competition data was found.", stacklevel=2)
-                games = data_loader.games(competition_id, season_id)
-            else:
-                raise LookupError(
-                    "No competitions were found for the given criteria. "
-                    "If no data about available competions is available, "
-                    "you can load invididual seasons by providing "
-                    "both a competition and season id."
-                )
-        else:
-            if competition_id is not None:
-                competitions = competitions.loc[competitions.competition_id == competition_id]
-            if season_id is not None:
-                competitions = competitions.loc[competitions.season_id == season_id]
-
-            self._insert_competitions(competitions)
-
-            # Retrieve games from all selected competitions
-            games = pd.concat(
-                [
-                    data_loader.games(row.competition_id, row.season_id)
-                    for row in competitions.itertuples()
-                ]
-            )
-        if game_id is not None:
-            games = games.loc[games.game_id == game_id]
-        if games.empty:
-            raise LookupError("No games found for the given criteria.")
+        games = self._get_games_to_import(data_loader, competition_id, season_id, game_id)
 
         # Load and convert match data
         games_verbose = tqdm(games.itertuples(), total=len(games), desc="Loading game data...")
@@ -140,15 +173,17 @@ class Dataset(ABC):
                     ),
                 )
             except FileNotFoundError:
-                warnings.warn(f"Game {game_id} not found. Skipping.", stacklevel=2)
+                warnings.warn(f"Game {game.game_id} not found. Skipping.", stacklevel=2)
             except Exception as e:
-                warnings.warn(f"Error parsing game {game_id}: {e}. Skipping.", stacklevel=2)
+                warnings.warn(f"Error parsing game {game.game_id}: {e}. Skipping.", stacklevel=2)
 
         # Store teams
-        self._insert_teams(cast(DataFrame[TeamSchema], pd.concat(teams)))
+        if len(teams) > 0:
+            self._insert_teams(cast(DataFrame[TeamSchema], pd.concat(teams)))
 
         # Store players
-        self._insert_players(cast(DataFrame[PlayerSchema], pd.concat(players)))
+        if len(players) > 0:
+            self._insert_players(cast(DataFrame[PlayerSchema], pd.concat(players)))
 
         # Store games
         self._insert_games(cast(DataFrame[GameSchema], games))
@@ -360,12 +395,8 @@ class Dataset(ABC):
             If no game exists with the provided ID.
         """
         try:
-            return (
-                self.games()
-                .set_index("game_id")
-                .loc[game_id, ["home_team_id", "away_team_id"]]
-                .values
-            )
+            row = self.games().set_index("game_id").loc[game_id, ["home_team_id", "away_team_id"]]
+            return (int(row["home_team_id"]), int(row["away_team_id"]))
         except KeyError:
             raise LookupError(f"No game found with ID={game_id}") from None
 
@@ -411,7 +442,7 @@ class Dataset(ABC):
 
         """
         df = self.players()
-        return df.loc[df.player_name.str.contains(query, case=False)].head(limit)
+        return df.loc[df.player_name.str.contains(query, case=False, regex=False)].head(limit)
 
     # Teams ##################################################################
 
@@ -455,15 +486,35 @@ class Dataset(ABC):
 
         """
         df = self.teams()
-        return df.loc[df.team_name.str.contains(query, case=False)].head(limit)
+        return df.loc[df.team_name.str.contains(query, case=False, regex=False)].head(limit)
 
     ## Transformations #######################################################
+
+    def _get_todo_games(
+        self, partitions: Optional[list[PartitionIdentifier]]
+    ) -> DataFrame[GameSchema]:
+        all_games = self.games()
+        if partitions is not None and len(partitions) > 0:
+            matching_dfs = []
+            for partition in partitions:
+                clause = partition.to_clause("pandas")
+                if clause:
+                    matching_dfs.append(all_games.query(clause))
+            if len(matching_dfs) > 0:
+                return cast(
+                    DataFrame[GameSchema],
+                    pd.concat(matching_dfs).drop_duplicates(subset=["game_id"]),
+                )
+            return cast(DataFrame[GameSchema], pd.DataFrame(columns=all_games.columns))
+        return all_games
+
+    _DEFAULT_TO_TABLE: Any = object()
 
     def transform(
         self,
         transformation: Transform[Any],
-        from_table: Union[str, list[str]],
-        to_table: Optional[str] = None,
+        from_table: Optional[Union[str, list[str]]] = None,
+        to_table: Optional[str] = _DEFAULT_TO_TABLE,
         *,
         partitions: Optional[list[PartitionIdentifier]] = None,
         on_fail: Literal["raise", "warn"] = "warn",
@@ -476,56 +527,69 @@ class Dataset(ABC):
         ----------
         transformation : Transform
             The transformation to apply.
-        from_table : str or list[str]
+        from_table : str or list[str], optional
             The table(s) to read data from. If multiple tables are given,
             the data is passed as a list to the transformation function.
+            If not specified, the default `from_table` defined on the
+            transformer is used.
         to_table : str, optional
-            The table to insert the transformed data into. If not given, the
-            transformed data is returned as a dataframe.
+            The table to insert the transformed data into. If not specified,
+            the default `to_table` defined on the transformer is used.
+            If explicitly set to None (or if the transformer specifies no
+            default `to_table`), the transformed data is returned as a
+            dataframe without being written to the dataset.
         partitions : list of PartitionIdentifier, optional
             The partitions to apply the transformation to. If not given, the
             transformation is applied to all games.
-        on_fail : {'raise', 'warn'}
+        on_fail : {'raise', 'warn'}, default 'warn'
             What to do when a transformation fails. If 'raise', an exception
             is raised as soon as the transformation fails for a game. If 'warn',
             a warning is issued and the game is skipped.
-        engine : {'pandas', 'dask'}
+        engine : {'pandas', 'dask'}, default 'pandas'
             The engine to use for the returned data. Ignored if `to_table` is
             not None.
-        show_progress : bool
+        show_progress : bool, default False
             Whether to show a progress bar when transforming the data. Only
             used when `engine` is 'pandas'.
 
         Raises
         ------
+        ValueError
+            If no `from_table` is specified and the transformer does not define one.
         TransformException
             If a transformation fails and `on_fail` is set to 'raise'.
 
         Returns
         -------
         pandas.DataFrame, optional
-            The transformed data, if `to_table` is not None.
+            The transformed data, if `to_table` is None.
         """
-        all_games = self.games()
-        todo_games = (
-            cast(
-                DataFrame[GameSchema],
-                pd.concat(
-                    [all_games.query(partition.to_clause("pandas")) for partition in partitions]
-                ),
-            )
-            if partitions is not None and len(partitions) > 0
-            else all_games
+        resolved_from_table = (
+            from_table if from_table is not None else getattr(transformation, "from_table", None)
         )
-        if engine == "dask":
+        if resolved_from_table is None:
+            raise ValueError(
+                f"No 'from_table' specified. Either provide 'from_table' as an argument "
+                f"or specify a default 'from_table' on {transformation}."
+            )
+
+        resolved_to_table = (
+            getattr(transformation, "to_table", None)
+            if to_table is self._DEFAULT_TO_TABLE
+            else to_table
+        )
+
+        todo_games = self._get_todo_games(partitions)
+
+        if engine == "dask" and resolved_to_table is None:
             return self._transform_to_dask(
-                transformation, todo_games, from_table, partitions=partitions
+                transformation, todo_games, resolved_from_table, partitions=partitions
             )
         return self._transform_to_pandas(
             transformation,
             todo_games,
-            from_table,
-            to_table,
+            resolved_from_table,
+            resolved_to_table,
             on_fail=on_fail,
             show_progress=show_progress,
         )
@@ -577,6 +641,8 @@ class Dataset(ABC):
                 else:
                     raise TransformException(game_id=game.game_id) from e
         if to_table is None:
+            if len(result) == 0:
+                return pd.DataFrame()
             return pd.concat(result)
         return None
 
@@ -588,6 +654,11 @@ class Dataset(ABC):
         *,
         partitions: Optional[list[PartitionIdentifier]] = None,
     ) -> Optional[pd.DataFrame]:
+        if games.empty:
+            import dask.dataframe as dd
+
+            return cast(pd.DataFrame, dd.from_pandas(pd.DataFrame(), npartitions=1))
+
         test_game = games.iloc[[0]]
         test_output = self._transform_to_pandas(
             transformation,
@@ -609,6 +680,52 @@ class Dataset(ABC):
             )
         return output
 
+    def __getitem__(self, key: str) -> DataFrame[Any]:
+        """Retrieve a table from the dataset by name.
+
+        Parameters
+        ----------
+        key : str
+            The name of the table to read.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The table data.
+        """
+        return self.read_table(key)
+
+    @contextmanager
+    def transaction(self) -> Iterator[Any]:
+        """Context manager for transactional execution.
+
+        Subclasses may override this to provide backend-specific transactional guarantees.
+        By default, yields the dataset instance without transaction management.
+
+        Yields
+        ------
+        Dataset
+            The dataset instance.
+        """
+        yield self
+
+    @abstractmethod
+    def close(self) -> None:
+        """Close dataset and release any underlying resources."""
+
+    def __enter__(self: Self) -> Self:
+        """Enter runtime context."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        """Exit runtime context and release resources."""
+        self.close()
+
 
 class DaskTransformWrapper:
     """A wrapper to apply a transformation to a Dask DataFrame."""
@@ -619,6 +736,8 @@ class DaskTransformWrapper:
 
     def __call__(self, *inputs: DataFrame[Any]) -> DataFrame[Any]:
         """Apply the transformation to the input data."""
+        if len(inputs[0]) == 0:
+            return pd.DataFrame()
         game_id = inputs[0].iloc[0]["game_id"]
         game = self.games.loc[game_id]
         if len(inputs) == 1:
