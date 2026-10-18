@@ -141,8 +141,17 @@ def _insert_interception_passes(df_events: pd.DataFrame) -> pd.DataFrame:
         interceptions in the StatsBomb notation are transformed into two events.
     """
 
-    def is_interception_pass(x: dict) -> bool:  # type: ignore
-        return x.get("extra", {}).get("pass", {}).get("type", {}).get("name") == "Interception"
+    def is_interception_pass(x: pd.Series) -> bool:
+        extra = x.get("extra")
+        if not isinstance(extra, dict):
+            return False
+        pass_info = extra.get("pass")
+        if not isinstance(pass_info, dict):
+            return False
+        pass_type = pass_info.get("type")
+        if not isinstance(pass_type, dict):
+            return False
+        return pass_type.get("name") == "Interception"
 
     df_events_interceptions = df_events[df_events.apply(is_interception_pass, axis=1)].copy()
 
